@@ -157,6 +157,33 @@ def test_leak_detector_gc_backed_flags_when_growth_persists():
     assert flag.gc_backed is True
 
 
+def test_parse_gc_line_sets_pid_from_logline():
+    lines = [l for l in fixture_text("logcat_gc").splitlines() if l.strip()]
+    e = parse_gc_line(lines[0])
+    assert e.pid == 13999
+
+
+def test_leak_detector_window_ignores_old_growth_flat_recently():
+    detector = LeakDetector()
+    # crecio hace 20 min (t=0..1200s) y luego quedo plana los ultimos 3 min (t=1200..1380s, ventana 180s)
+    growth = [(i * 60.0, 1000.0 + i * 1000.0) for i in range(21)]  # 0..1200s
+    flat = [(1200.0 + i * 30.0, growth[-1][1]) for i in range(1, 7)]  # 1230..1380s, plano
+    points = growth + flat
+    flag = detector.check(points, window_s=180.0)
+    assert flag is None
+
+
+def test_leak_detector_window_flags_recent_growth():
+    detector = LeakDetector()
+    old_flat = [(i * 60.0, 1000.0) for i in range(15)]  # 0..840s plano
+    recent_growth = [(900.0 + i * 20.0, 1000.0 + i * 1000.0) for i in range(7)]  # 900..1020s (dentro de 180s de la ultima)
+    points = old_flat + recent_growth
+    flag = detector.check(points, window_s=180.0)
+    assert flag is not None
+    assert flag.window_s == 180.0
+    assert flag.since_t >= points[-1][0] - 180.0
+
+
 def test_detect_all_flags_java_heap_not_native():
     detector = LeakDetector()
     meminfos = [

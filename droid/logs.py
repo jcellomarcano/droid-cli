@@ -643,13 +643,13 @@ class LogcatStream:
                     return d.serial
         return None
 
-    def close(self) -> None:
+    def close(self, timeout: float = 2.0) -> None:
         self.stopped = True
         p = self.proc
         if p and p.poll() is None:
             try:
                 p.terminate()
-                p.wait(timeout=2)
+                p.wait(timeout=timeout)
             except Exception:
                 try:
                     p.kill()

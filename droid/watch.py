@@ -39,5 +39,5 @@ class LogWatcher(threading.Thread):
             except Exception:
                 self.errors += 1
 
-    def stop(self) -> None:
-        self.stream.close()
+    def stop(self, timeout: float = 0.5) -> None:
+        self.stream.close(timeout=timeout)

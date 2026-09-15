@@ -69,3 +69,13 @@ async def test_net_pane_shows_hosts_events_and_cadence(monkeypatch):
         head_static = pane.query_one("#n_head", Static)
         head_content = str(getattr(head_static, "_Static__content", ""))
         assert "por app acumulado cada 10 s" in head_content
+
+
+def test_net_pane_sockets_table_has_same_min_height_as_hosts_and_events():
+    """F346-C9: #n_sockets (la tabla original, previa a F6) no debe quedar sin piso frente a las
+    dos tablas nuevas en pantallas pequeñas."""
+    css = NetPane.DEFAULT_CSS
+    for sel in ("#n_hosts", "#n_events", "#n_sockets"):
+        idx = css.index(sel)
+        rule = css[idx:css.index("}", idx)]
+        assert "min-height: 4" in rule, f"{sel} no tiene min-height: 4 en {rule!r}"

@@ -1,12 +1,39 @@
-"""Crash/ANR/process-event parsing: pure functions over logcat and trace text."""
+"""Crash/ANR/process-event parsing: pure functions over logcat y trace text.
+
+Representacion de tiempo unica: todo CrashRecord/AnrRecord/ProcEvent.t es un epoch float
+(segundos desde epoch, con fraccion de milisegundos), nunca una cadena "HH:MM:SS.mmm"."""
 import hashlib
 import re
 import time
 from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 
 from . import inspector as inspectormod
 from . import logs as logsmod
+
+
+def _epoch_from_date_time(date: str, time_str: str) -> float:
+    """Convierte fecha+hora de logcat threadtime a epoch float; si la fecha no trae anio
+    se asume el anio actual (igual que memoria.parse_gc_line)."""
+    d = date
+    if len(d) == 5:
+        d = f"{datetime.now().year}-{d}"
+    dt = datetime.strptime(f"{d} {time_str}", "%Y-%m-%d %H:%M:%S.%f")
+    return dt.timestamp()
+
+
+def _epoch_from_full_datetime(text: str) -> float:
+    """Convierte 'YYYY-MM-DD HH:MM:SS[.mmm]' (cabecera de traza ANR, exit-info) a epoch float."""
+    date_part, _, time_part = text.partition(" ")
+    sec_part, _, ms_part = time_part.partition(".")
+    struct = time.strptime(f"{date_part} {sec_part}", "%Y-%m-%d %H:%M:%S")
+    epoch = time.mktime(struct)
+    if ms_part:
+        digits = "".join(ch for ch in ms_part if ch.isdigit())[:3].ljust(3, "0")
+        if digits:
+            epoch += int(digits) / 1000.0
+    return epoch
 
 FRAMEWORK_PREFIXES = (
     "android.", "androidx.", "java.", "javax.", "kotlin.", "kotlinx.",
@@ -35,7 +62,7 @@ ANR_REASON_RE = re.compile(r"^Reason: (.+)$")
 
 @dataclass
 class CrashRecord:
-    t: str
+    t: float
     pid: int
     tid: int
     kind: str
@@ -52,7 +79,7 @@ class CrashRecord:
 
 @dataclass
 class AnrRecord:
-    t: str
+    t: float
     pid: int
     component: str
     reason: str
@@ -66,7 +93,7 @@ class AnrRecord:
 
 @dataclass
 class ProcEvent:
-    t: object
+    t: float
     kind: str
     pid: int
     process: str
@@ -83,8 +110,8 @@ class CrashGroup:
     kind: str
     title: str
     count: int
-    first_t: object
-    last_t: object
+    first_t: float
+    last_t: float
     pids: List[int]
     sample_raw: str
 
@@ -180,7 +207,7 @@ def _parse_java_crash_block(lines: List[str]) -> Optional[CrashRecord]:
         return None
     pid = parsed[0].pid
     tid = parsed[0].tid
-    t = parsed[0].time
+    t = _epoch_from_date_time(parsed[0].date, parsed[0].time)
     exc_type = None
     message = ""
     frames: List[str] = []
@@ -219,7 +246,7 @@ def _parse_native_crash_block(lines: List[str]) -> Optional[CrashRecord]:
     parsed = [p for p in parsed if p is not None]
     if not parsed:
         return None
-    t = parsed[0].time
+    t = _epoch_from_date_time(parsed[0].date, parsed[0].time)
     signal_name = None
     pid = None
     tid = None
@@ -280,7 +307,7 @@ def parse_anr_trace(text: str, package: str, component: Optional[str] = None,
         m = ANR_HEADER_RE.match(line.strip())
         if m:
             pid = int(m.group(1))
-            t = m.group(2)
+            t = _epoch_from_full_datetime(m.group(2))
             break
     if pid is None:
         return None
@@ -331,33 +358,25 @@ def parse_am_line(raw: str) -> Optional[ProcEvent]:
     if ll is None:
         return None
     msg = ll.msg
+    t = _epoch_from_date_time(ll.date, ll.time)
     m = logsmod.AM_START_RE.match(msg)
     if m:
-        return ProcEvent(t=ll.time, kind="start", pid=int(m.group(1)), process=m.group(2),
+        return ProcEvent(t=t, kind="start", pid=int(m.group(1)), process=m.group(2),
                           reason_name="", detail=msg)
     m = logsmod.AM_DIED_RE.match(msg)
     if m:
-        return ProcEvent(t=ll.time, kind="died", pid=int(m.group(2)), process=m.group(1),
+        return ProcEvent(t=t, kind="died", pid=int(m.group(2)), process=m.group(1),
                           reason_name="", detail=msg)
     m = logsmod.AM_KILL_RE.match(msg)
     if m:
-        return ProcEvent(t=ll.time, kind="killed", pid=int(m.group(1)), process=m.group(2),
+        return ProcEvent(t=t, kind="killed", pid=int(m.group(1)), process=m.group(2),
                           reason_name="", detail=msg)
     return None
 
 
 def exit_to_event(rec: "inspectormod.ExitRecord") -> ProcEvent:
-    ts = rec.timestamp
-    date_part, _, time_part = ts.partition(" ")
-    sec_part, _, ms_part = time_part.partition(".")
-    epoch = 0.0
     try:
-        struct = time.strptime(f"{date_part} {sec_part}", "%Y-%m-%d %H:%M:%S")
-        epoch = time.mktime(struct)
-        if ms_part:
-            digits = "".join(ch for ch in ms_part if ch.isdigit())[:3].ljust(3, "0")
-            if digits:
-                epoch += int(digits) / 1000.0
+        epoch = _epoch_from_full_datetime(rec.timestamp)
     except ValueError:
         epoch = 0.0
     detail = rec.description or rec.reason_name
@@ -381,9 +400,9 @@ def group_events(crashes: List[CrashRecord], anrs: List[AnrRecord],
         g.count += 1
         if pid not in g.pids:
             g.pids.append(pid)
-        if str(t) < str(g.first_t):
+        if t < g.first_t:
             g.first_t = t
-        if str(t) > str(g.last_t):
+        if t > g.last_t:
             g.last_t = t
 
     for c in crashes:
@@ -402,6 +421,6 @@ def group_events(crashes: List[CrashRecord], anrs: List[AnrRecord],
         _update(sig, "exit", e.reason_name, e.t, e.pid, e.detail)
 
     result = list(groups.values())
-    result.sort(key=lambda g: str(g.last_t), reverse=True)
+    result.sort(key=lambda g: g.last_t, reverse=True)
     result.sort(key=lambda g: g.count, reverse=True)
     return result

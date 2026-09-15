@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Callable, Deque, Dict, List, Optional, Tuple
 
 from . import adb as adbmod
 from . import config
+from . import logs as logsmod
 from . import memoria
 from .adb import Device, sanitize
 from .watch import LogWatcher
@@ -458,6 +459,7 @@ class InspectSession:
         self._mem_last = 0.0
         self.path: Optional[Path] = None
         self._fh = None
+        self._fh_lock = threading.Lock()
         self.error: Optional[str] = None
         self.thread_names: Dict[int, str] = {}
         self._last_vsync: int = 0
@@ -480,26 +482,37 @@ class InspectSession:
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
 
-    def stop(self) -> None:
+    def stop(self, timeout: float = 2.0) -> None:
+        """Detiene la sesion sin bloquear más de lo necesario: watcher con espera acotada
+        (0.5 s) y los hilos propios con join acotado a `timeout` segundos cada uno."""
         self.running = False
         if self._watcher:
-            self._watcher.stop()
+            self._watcher.stop(timeout=0.5)
             self._watcher = None
-        if self._fh:
-            try:
-                self._write({"type": "end", "ended": datetime.now().isoformat(timespec="seconds"), "samples": len(self.samples)})
-                self._fh.close()
-            except Exception:
-                pass
-            self._fh = None
+        if self._thread is not None and self._thread.is_alive():
+            self._thread.join(timeout=timeout)
+        if self._mem_thread is not None and self._mem_thread.is_alive():
+            self._mem_thread.join(timeout=timeout)
+        with self._fh_lock:
+            if self._fh is not None:
+                try:
+                    self._fh.write(json.dumps(
+                        {"type": "end", "ended": datetime.now().isoformat(timespec="seconds"), "samples": len(self.samples)},
+                        ensure_ascii=False) + "\n")
+                    self._fh.flush()
+                    self._fh.close()
+                except Exception:
+                    pass
+                self._fh = None
 
     def _write(self, obj: dict) -> None:
-        if self._fh:
-            try:
-                self._fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
-                self._fh.flush()
-            except Exception:
-                pass
+        with self._fh_lock:
+            if self._fh is not None:
+                try:
+                    self._fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
+                    self._fh.flush()
+                except Exception:
+                    pass
 
     # --- bucle ---
     def _loop(self) -> None:
@@ -681,7 +694,9 @@ class InspectSession:
                 rec = None
         if rec is None:
             reason_category = reason.split("(")[0].strip()
-            rec = salud.AnrRecord(t=lines[0][:23] if lines else "", pid=self.pid or 0, component=component,
+            first_ll = logsmod.parse(lines[0]) if lines else None
+            t = salud._epoch_from_date_time(first_ll.date, first_ll.time) if first_ll else time.time()
+            rec = salud.AnrRecord(t=t, pid=self.pid or 0, component=component,
                                    reason=reason, main_frames=[], raw="\n".join(lines),
                                    sig=salud.signature_for("anr", reason_category, [component]))
         self.anrs.append(rec)

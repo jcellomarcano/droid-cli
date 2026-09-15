@@ -41,6 +41,7 @@ class GcEvent:
     heap_total_kb: float
     pause_ms: float
     total_ms: float
+    pid: Optional[int] = None
 
     def to_dict(self) -> dict:
         return dict(self.__dict__)
@@ -86,6 +87,7 @@ def parse_gc_line(raw: str) -> Optional[GcEvent]:
         date = f"{datetime.now().year}-{date}"
     dt = datetime.strptime(f"{date} {ll.time}", "%Y-%m-%d %H:%M:%S.%f")
     event.t = dt.timestamp()
+    event.pid = ll.pid
     return event
 
 
@@ -99,6 +101,9 @@ class LeakFlag:
     first_kb: float
     last_kb: float
     gc_backed: bool
+    window_s: float = 180.0
+    min_samples: int = 6
+    min_span_s: float = 60.0
     epistemic: str = "Inferido"
 
     def to_dict(self) -> dict:
@@ -121,6 +126,7 @@ class LeakDetector:
         self,
         points: List[Tuple[float, float]],
         gcs: List[GcEvent] = (),
+        window_s: float = 180.0,
         min_samples: int = 6,
         min_span_s: float = 60.0,
         min_growth_pct: float = 5.0,
@@ -128,6 +134,10 @@ class LeakDetector:
         metric: str = "",
     ) -> Optional[LeakFlag]:
         pts = sorted(points, key=lambda p: p[0])
+        if not pts:
+            return None
+        last_point_t = pts[-1][0]
+        pts = [p for p in pts if p[0] >= last_point_t - window_s]
         if len(pts) < min_samples:
             return None
         since_t, first_kb = pts[0]
@@ -161,13 +171,16 @@ class LeakDetector:
             first_kb=first_kb,
             last_kb=last_kb,
             gc_backed=gc_backed,
+            window_s=window_s,
+            min_samples=min_samples,
+            min_span_s=min_span_s,
         )
 
-    def detect_all(self, meminfos, gcs: List[GcEvent] = (), **kwargs) -> List[LeakFlag]:
+    def detect_all(self, meminfos, gcs: List[GcEvent] = (), window_s: float = 180.0, **kwargs) -> List[LeakFlag]:
         flags = []
         for metric in ("java_heap_kb", "native_heap_kb", "pss_total_kb"):
             points = [(m.t, float(getattr(m, metric))) for m in meminfos]
-            flag = self.check(points, gcs, metric=metric, **kwargs)
+            flag = self.check(points, gcs, window_s=window_s, metric=metric, **kwargs)
             if flag is not None:
                 flags.append(flag)
         return flags

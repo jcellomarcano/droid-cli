@@ -312,6 +312,30 @@ def test_group_events_sorted_by_count_desc():
     assert groups[1].count == 1
 
 
+def test_group_events_mixed_crash_and_exit_sort_chronologically():
+    """F346-C6/C7: CrashRecord.t y ProcEvent.t (exit) son ambos epoch float, asi que un grupo con
+    exits recientes queda antes que uno con un crash mas antiguo (orden cronologico real, no str())."""
+    old_crash_block = [
+        "2026-09-15 08:00:00.000 100 100 E AndroidRuntime: FATAL EXCEPTION: main",
+        "2026-09-15 08:00:00.000 100 100 E AndroidRuntime: Process: com.example.app, PID: 100",
+        "2026-09-15 08:00:00.000 100 100 E AndroidRuntime: com.example.app.OldException: old",
+        "2026-09-15 08:00:00.000 100 100 E AndroidRuntime: \tat com.example.app.Old.once(Old.java:1)",
+    ]
+    old_crash = salud.parse_crash_block(old_crash_block)
+    assert isinstance(old_crash.t, float)
+
+    recent_exit_rec = ExitRecord(timestamp="2026-09-15 17:06:13.502", pid=200, reason=4, reason_name="CRASH",
+                                  subreason="", status=0, importance=0, description="", anr="", rss="")
+    recent_exit = salud.exit_to_event(recent_exit_rec)
+    assert isinstance(recent_exit.t, float)
+    assert recent_exit.t > old_crash.t
+
+    groups = salud.group_events([old_crash], [], [recent_exit])
+    # ambos grupos tienen count=1, asi que el desempate cronologico (last_t desc) decide el orden
+    assert groups[0].sig == "exit:CRASH"
+    assert groups[0].last_t > groups[1].last_t
+
+
 def test_group_events_exits_grouped_by_reason():
     rec1 = ExitRecord(timestamp="2026-09-15 12:00:00.000", pid=1, reason=4, reason_name="CRASH",
                        subreason="", status=0, importance=0, description="", anr="", rss="")

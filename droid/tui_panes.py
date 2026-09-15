@@ -172,11 +172,20 @@ class InspectPane(Vertical):
 
     def _stop(self) -> None:
         if self.session:
-            self.session.stop()
-            s = self.session.summary()
-            self.app.notify(f"Sesión guardada: {self.session.path.name if self.session.path else '-'} · CPU media {s.get('cpu_avg')}% · jank {s.get('jank_pct')}%", timeout=6)
-            self.query_one(MemoriaView).set_session(self.session)
-            self.query_one(SaludView).set_session(self.session)
+            head = self.query_one("#i_head", Static)
+            head.update("[dim]deteniendo…[/]")
+            self._stop_worker(self.session)
+
+    @work(thread=True, exclusive=True, group="inspect_stop")
+    def _stop_worker(self, session) -> None:
+        session.stop()
+        s = session.summary()
+        self.app.call_from_thread(self._on_stopped, session, s)
+
+    def _on_stopped(self, session, s: dict) -> None:
+        self.app.notify(f"Sesión guardada: {session.path.name if session.path else '-'} · CPU media {s.get('cpu_avg')}% · jank {s.get('jank_pct')}%", timeout=6)
+        self.query_one(MemoriaView).set_session(session)
+        self.query_one(SaludView).set_session(session)
 
     def load_replay(self, path: Path) -> None:
         """Carga una sesion grabada (JSONL) y la deja disponible para Resumen y Memoria como una sesion de solo lectura."""
@@ -350,7 +359,7 @@ class MemoriaView(Vertical):
 
     def on_mount(self) -> None:
         self.query_one("#me_breakdown", DataTable).add_columns("Heap", "MB", "")
-        self.query_one("#me_gc", DataTable).add_columns("Hora", "Tipo", "Liberado", "Pausa", "Heap tras GC")
+        self.query_one("#me_gc", DataTable).add_columns("Hora", "Tipo", "PID", "Liberado", "Pausa", "Heap tras GC")
         self.set_interval(0.5, self._refresh)
 
     def set_session(self, session) -> None:
@@ -360,6 +369,11 @@ class MemoriaView(Vertical):
         self._gc_n = -1
 
     def _refresh(self) -> None:
+        try:
+            if self.app.query_one("#i_switch", TabbedContent).active != "i_view_memoria":
+                return
+        except Exception:
+            pass
         ses = self.session
         if ses is None:
             return
@@ -367,7 +381,9 @@ class MemoriaView(Vertical):
         gc_events = list(getattr(ses, "gc_events", None) or [])
         leak_flags = list(getattr(ses, "leak_flags", None) or [])
         head = self.query_one("#me_head", Static)
-        if leak_flags:
+        started = getattr(ses, "started", None)
+        warming_up = started is not None and (datetime.now() - started).total_seconds() < 60.0
+        if leak_flags and not warming_up:
             parts = []
             for f in leak_flags:
                 growth_mb = (f.last_kb - f.first_kb) / 1024.0
@@ -413,9 +429,11 @@ class MemoriaView(Vertical):
         if self._gc_n != len(gc_events):
             self._gc_n = len(gc_events)
             gt.clear()
+            session_pid = getattr(ses, "pid", None)
             for ev in gc_events[-50:]:
-                hora = datetime.fromtimestamp(ev.t).strftime("%H:%M:%S")
-                gt.add_row(hora, ev.kind, theme.kb(ev.freed_kb), f"{ev.pause_ms:.1f} ms", theme.kb(ev.heap_used_kb))
+                hora = theme.fmt_clock(ev.t)
+                pid_txt = str(ev.pid) if ev.pid is not None and ev.pid != session_pid else ""
+                gt.add_row(hora, ev.kind, pid_txt, theme.kb(ev.freed_kb), f"{ev.pause_ms:.1f} ms", theme.kb(ev.heap_used_kb))
 
 
 class SaludView(Vertical):
@@ -455,6 +473,11 @@ class SaludView(Vertical):
         self._selected_sig = None
 
     def _refresh(self) -> None:
+        try:
+            if self.app.query_one("#i_switch", TabbedContent).active != "i_view_salud":
+                return
+        except Exception:
+            pass
         ses = self.session
         if ses is None:
             return
@@ -486,7 +509,7 @@ class SaludView(Vertical):
             for g in groups[:50]:
                 color = colors.get(g.kind, theme.MUTED)
                 title = (g.title or "")[:60]
-                t.add_row(T(g.kind, color, bold=True), g.sig, title, str(g.count), str(g.last_t), key=g.sig)
+                t.add_row(T(g.kind, color, bold=True), g.sig, title, str(g.count), theme.fmt_clock(g.last_t), key=g.sig)
             if groups and self._selected_sig is None:
                 self._show_detail(groups[0].sig)
 
@@ -736,12 +759,6 @@ class DbPane(Vertical):
 
 # ============================================================================ Red
 
-def _fmt_t(ts) -> str:
-    if not ts:
-        return ""
-    return time.strftime("%H:%M:%S", time.localtime(ts))
-
-
 def _fmt_states(states: dict) -> str:
     return " ".join(f"{k}:{v}" for k, v in sorted(states.items())) if states else ""
 
@@ -771,7 +788,7 @@ class NetPane(Vertical):
     NetPane .sparklabel { width: 1fr; height: 1; padding: 0 1; color: $text-muted; }
     NetPane #n_hosts { height: 1fr; min-height: 4; }
     NetPane #n_events { height: 1fr; min-height: 4; }
-    NetPane #n_sockets { height: 1fr; }
+    NetPane #n_sockets { height: 1fr; min-height: 4; }
     NetPane .hint { color: $text-muted; height: 1; padding: 0 1; }
     """
     BINDINGS = [
@@ -902,7 +919,7 @@ class NetPane(Vertical):
                 ht.add_row(T(host, theme.color_for(host)) if host else T("(sin PTR)", theme.MUTED),
                            h_.get("ip", ""), str(h_.get("connections", 0)),
                            _fmt_states(h_.get("states", {})),
-                           _fmt_t(h_.get("first_seen")), _fmt_t(h_.get("last_seen")))
+                           theme.fmt_clock(h_.get("first_seen")), theme.fmt_clock(h_.get("last_seen")))
         events = list(getattr(mon, "events", []) or [])
         if getattr(self, "_events_n", None) != len(events):
             self._events_n = len(events)
@@ -910,7 +927,7 @@ class NetPane(Vertical):
             et.clear()
             for ev in list(reversed(events))[:100]:
                 kind = ev.get("kind", "")
-                et.add_row(_fmt_t(ev.get("t")), T("nuevo" if kind == "new" else "cerrado", theme.OK if kind == "new" else theme.MUTED),
+                et.add_row(theme.fmt_clock(ev.get("t")), T("nuevo" if kind == "new" else "cerrado", theme.OK if kind == "new" else theme.MUTED),
                            ev.get("proto", ""), ev.get("remote", ""), ev.get("state", ""))
         if getattr(self, "_socks_n", None) != (len(mon.sockets), mon._tot_last):
             self._socks_n = (len(mon.sockets), mon._tot_last)

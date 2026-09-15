@@ -3,6 +3,7 @@
 Colores en 256 (ANSI) para el stream de logs y en markup rich para tablas/menú.
 """
 import math
+import time
 from typing import Optional
 
 # --- paletas de identidad (hash estable -> color) ---------------------------
@@ -145,6 +146,14 @@ def rate(bps: float) -> str:
     if bps >= 1024:
         return f"{bps / 1024:.0f} KB/s"
     return f"{bps:.0f} B/s"
+
+
+def fmt_clock(t: Optional[float]) -> str:
+    """Formatea un epoch float como 'HH:MM:SS' en hora local; unica via de formateo de
+    tiempo compartida por la CLI y la TUI (reemplaza los antiguos _fmt_t/_fmt_net_t)."""
+    if not t:
+        return "—"
+    return time.strftime("%H:%M:%S", time.localtime(t))
 
 
 # --- charts (renderables puros, sin I/O) -------------------------------------

@@ -859,6 +859,8 @@ def _replay_chart(data):
     tzinfo = _device_tzinfo(meta.get("device_tz_offset"))
 
     def _wallclock_to_epoch(t_str):
+        if isinstance(t_str, (int, float)):
+            return float(t_str)
         if not isinstance(t_str, str) or ":" not in t_str:
             return None
         try:
@@ -1380,7 +1382,7 @@ def _net_view(mon):
             states = " ".join(f"{k}:{v}" for k, v in sorted((h_.get("states") or {}).items()))
             htbl.add_row(theme.paint(host, theme.color_for(host)) if host else Text("(sin PTR)", style="dim"),
                         h_.get("ip", ""), str(h_.get("connections", 0)), states,
-                        _fmt_net_t(h_.get("first_seen")), _fmt_net_t(h_.get("last_seen")))
+                        theme.fmt_clock(h_.get("first_seen")), theme.fmt_clock(h_.get("last_seen")))
         extras.append(htbl)
     events = list(getattr(mon, "events", None) or [])
     if events:
@@ -1389,7 +1391,7 @@ def _net_view(mon):
             etbl.add_column(col)
         for ev in list(reversed(events))[:8]:
             kind = ev.get("kind", "")
-            etbl.add_row(_fmt_net_t(ev.get("t")), theme.paint("nuevo" if kind == "new" else "cerrado", theme.OK if kind == "new" else theme.MUTED),
+            etbl.add_row(theme.fmt_clock(ev.get("t")), theme.paint("nuevo" if kind == "new" else "cerrado", theme.OK if kind == "new" else theme.MUTED),
                         ev.get("proto", ""), ev.get("remote", ""), ev.get("state", ""))
         extras.append(etbl)
     tbl = Table(box=box.SIMPLE_HEAD, title=f"Sockets ({len(mon.sockets)})", title_justify="left")
@@ -1398,13 +1400,6 @@ def _net_view(mon):
     for s_ in mon.sockets[:15]:
         tbl.add_row(s_.proto, theme.paint(s_.state, theme.OK if s_.state == "ESTAB" else theme.MUTED), s_.local, s_.remote)
     return Group(Panel(Group(*lines), border_style=theme.hx(theme.color_for(mon.dev.key))), *extras, tbl, Text("Ctrl+C para terminar", style="dim"))
-
-
-def _fmt_net_t(ts) -> str:
-    if not ts:
-        return ""
-    import time as _t
-    return _t.strftime("%H:%M:%S", _t.localtime(ts))
 
 
 def cmd_shell(args) -> int:

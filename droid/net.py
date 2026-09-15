@@ -74,10 +74,24 @@ def _looks_like_full_dump(text: str, uid: int) -> bool:
     return other_uid or not has_st
 
 
-def uid_totals(serial: str, uid: int) -> dict:
-    """Bytes rx/tx acumulados por tipo de red (WIFI/MOBILE/…) para un uid. Intenta primero
-    `dumpsys netstats --uid <uid>` (mas rapido cuando de verdad filtra); si el dispositivo lo ignora
-    y devuelve el volcado completo (o uno vacio de lineas st=), recurre a `dumpsys netstats detail`."""
+def uid_totals(serial: str, uid: int, filter_works: Optional[bool] = None) -> dict:
+    """Bytes rx/tx acumulados por tipo de red (WIFI/MOBILE/…) para un uid.
+
+    `filter_works` es lo que ya se aprendió en ciclos anteriores (NetMonitor._uid_filter_works):
+    None -> aun no se sabe, se paga el trial de `--uid` y, si resulta ser un volcado completo, se
+    cae a `detail` (dos llamadas, solo la primera vez); True -> el filtro funciona en este
+    dispositivo, se usa solo `--uid` (una llamada); False -> el filtro no funciona, se usa solo
+    `detail` directamente (una llamada), sin repetir el trial en cada ciclo."""
+    if filter_works is True:
+        text = adbmod.shell(serial, f"dumpsys netstats --uid {uid} 2>/dev/null", timeout=30)
+        result = parse_netstats_totals(text, uid)
+        result["source"] = "uid"
+        return result
+    if filter_works is False:
+        text = adbmod.shell(serial, "dumpsys netstats detail 2>/dev/null", timeout=60)
+        result = parse_netstats_totals(text, uid)
+        result["source"] = "detail"
+        return result
     trial = adbmod.shell(serial, f"dumpsys netstats --uid {uid} 2>/dev/null", timeout=30)
     if _looks_like_full_dump(trial, uid):
         text = adbmod.shell(serial, "dumpsys netstats detail 2>/dev/null", timeout=60)
@@ -163,6 +177,9 @@ class ReverseDns:
         self.timeout = timeout
         self._cache: Dict[str, Optional[str]] = {}
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
+
+    def shutdown(self) -> None:
+        self._executor.shutdown(wait=False)
 
     def lookup(self, ip: str) -> Optional[str]:
         if ip in self._cache:
@@ -290,6 +307,8 @@ class NetMonitor:
         self.events: Deque[dict] = deque(maxlen=500)
         self.hosts: List[dict] = []
         self._prev_sockets: List[Socket] = []
+        self._sockets_baseline_set = False
+        self._uid_filter_works: Optional[bool] = None
 
     def start(self) -> None:
         self.running = True
@@ -298,6 +317,7 @@ class NetMonitor:
 
     def stop(self) -> None:
         self.running = False
+        self.dns.shutdown()
 
     def _loop(self) -> None:
         serial = self.dev.serial
@@ -360,11 +380,18 @@ class NetMonitor:
                 ip, _, _port = sock.remote.rpartition(":")
                 ip = ip.strip("[]") or sock.remote
                 self.dns.lookup(ip)
-            self.events.extend(connection_events(self._prev_sockets, new_sockets, now))
+            if self._sockets_baseline_set:
+                self.events.extend(connection_events(self._prev_sockets, new_sockets, now))
+            else:
+                self._sockets_baseline_set = True
             self.hosts = host_table(new_sockets, self.dns, now)
             self._prev_sockets = new_sockets
             self.sockets = new_sockets
-            tot = uid_totals(self.dev.serial, self.uid)
+            tot = uid_totals(self.dev.serial, self.uid, self._uid_filter_works)
+            self._uid_filter_works = tot["source"] == "uid"
+            if not self.qtaguid_available:
+                self.cadence_label = (f"por app acumulado cada {int(self.totals_every)} s "
+                                       f"(dumpsys netstats {tot['source']})")
             if self.totals_start is None:
                 self.totals_start = tot
             self.totals = tot

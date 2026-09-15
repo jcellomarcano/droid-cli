@@ -481,3 +481,67 @@ def test_summary_reports_crash_anr_counts_and_top_groups(monkeypatch, tmp_path):
     assert len(s["groups"]) == 1
     assert s["groups"][0]["count"] == 1
     assert s["groups"][0]["kind"] == "java"
+
+
+# ----------------------------------------------------------------------------- F346-C3: stop() no bloqueante
+
+
+def test_stop_returns_quickly_with_watcher_ignoring_terminate():
+    """Un watcher cuyo proceso ignora terminate() no debe colgar InspectSession.stop(): su stop(timeout)
+    honra el limite (igual que LogcatStream.close(timeout) hace con p.wait(timeout=...)) y devuelve el
+    control mientras un hilo en segundo plano sigue intentando matar el proceso hasta 5s despues."""
+    import threading
+    import time
+
+    ses = _fake_session()
+
+    class FakeWatcher:
+        def __init__(self):
+            self.stop_calls = []
+
+        def stop(self, timeout=0.5):
+            self.stop_calls.append(timeout)
+            # simula un proceso que ignora SIGTERM: sigue "vivo" 5s en segundo plano,
+            # pero stop() en si mismo respeta el timeout pedido y no bloquea al llamante.
+            threading.Thread(target=lambda: time.sleep(5), daemon=True).start()
+            time.sleep(min(timeout, 0.5))
+
+    fake = FakeWatcher()
+    ses._watcher = fake
+    ses.running = True
+
+    t0 = time.time()
+    ses.stop(timeout=2.0)
+    elapsed = time.time() - t0
+    assert elapsed < 3.0
+    assert fake.stop_calls == [0.5]
+    assert ses.running is False
+    assert ses._watcher is None
+
+
+def test_write_guarded_by_lock_after_stop_closes_fh(tmp_path):
+    """_write() no debe escribir en un fh ya cerrado (F346-C3): tras stop(), _fh es None y _write
+    con el lock activo simplemente no hace nada, sin lanzar."""
+    ses = _fake_session()
+    ses.record = True
+    ses.path = tmp_path / "session.jsonl"
+    ses._fh = open(ses.path, "a", encoding="utf-8")
+    ses.running = True
+    ses.stop(timeout=1.0)
+    assert ses._fh is None
+    # no debe lanzar aunque el fh este cerrado
+    ses._write({"type": "gc", "t": 1.0})
+
+
+def test_gc_event_written_has_pid(tmp_path):
+    """F346-C2: los eventos gc persistidos llevan el pid de la propia linea de logcat, no solo el pid
+    de la sesion, para poder distinguir GC de un pid anterior tras un relanzamiento."""
+    ses = _fake_session()
+    ses.pid = 999
+    line = "2026-09-15 15:09:12.773 13999 14001 I igital.app: Explicit concurrent mark compact GC freed 10130KB AllocSpace bytes, 22(704KB) LOS objects, 95% free, 9010KB/192MB, paused 274us,607us total 19.749ms"
+    from droid import logs as logsmod
+    ll = logsmod.parse(line)
+    ses._on_log_line(ll, line)
+    assert len(ses.gc_events) == 1
+    assert ses.gc_events[0].pid == 13999
+    assert ses.gc_events[0].pid != ses.pid

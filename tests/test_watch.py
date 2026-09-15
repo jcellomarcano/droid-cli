@@ -133,6 +133,34 @@ def test_set_pid_retargets(monkeypatch):
     assert watcher.pid == 4242
 
 
+def test_log_watcher_stop_bounds_wait_when_process_ignores_terminate():
+    """F346-C3: LogWatcher.stop(timeout=0.5) debe acotar la espera del subprocess.wait aunque el
+    proceso ignore terminate() (nunca sale por su cuenta): stop() debe volver en bien menos de 2s."""
+    import subprocess as subprocessmod
+    import time as timemod
+
+    watcher = LogWatcher("EMU123", "emu123key", lambda ll, raw: None, pid=999)
+
+    class FakeProc:
+        def poll(self):
+            return None  # nunca termina por su cuenta
+
+        def terminate(self):
+            pass  # el proceso lo ignora
+
+        def wait(self, timeout=None):
+            raise subprocessmod.TimeoutExpired(cmd="adb logcat", timeout=timeout)
+
+        def kill(self):
+            pass
+
+    watcher.stream.proc = FakeProc()
+    t0 = timemod.time()
+    watcher.stop(timeout=0.3)
+    elapsed = timemod.time() - t0
+    assert elapsed < 1.0
+
+
 def test_log_watcher_extra_tags_defaults_to_empty_set():
     watcher = LogWatcher("EMU123", "emu123key", lambda ll, raw: None, pid=999)
     assert watcher.extra_tags == set()

@@ -45,12 +45,73 @@ def _fake_session_with_crashes():
     )
 
 
+import re
+
+_HHMMSS_RE = re.compile(r"^\d{2}:\d{2}:\d{2}$")
+
+
+async def test_salud_tab_ultima_vez_formats_crash_and_exit_groups_alike(monkeypatch):
+    """F346-C6/C7: 'Última vez' debe mostrar HH:MM:SS tanto para un grupo cuyo ultimo evento es un
+    crash (t epoch float via parse_crash_block) como para uno cuyo ultimo evento es un exit
+    (t epoch float via exit_to_event/ProcEvent), ya que ambos comparten la misma representacion
+    de tiempo y el mismo formateador (theme.fmt_clock)."""
+    app = await _boot(monkeypatch)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        await pilot.press("7")
+        assert await _wait_until(pilot, lambda: app.active_tab == "inspect")
+
+        pane = app.query_one("#inspect_pane", InspectPane)
+        crash = _crash()
+        exit_ev = salud.ProcEvent(t=1789484432.405, kind="exit", pid=999, process="", reason_name="LOW_MEMORY", detail="")
+        groups = salud.group_events([crash], [], [exit_ev])
+        fake = SimpleNamespace(
+            dev=SimpleNamespace(key="dev1", display="Pixel (dev1)"),
+            package="com.example.app", debuggable=True, path=None, interval=1.0,
+            samples=[], meminfos=[], exits=[], gc_events=[], leak_flags=[],
+            crashes=[crash], anrs=[], proc_events=[exit_ev], groups=groups,
+            running=False, pid=10362,
+        )
+        pane.session = fake
+        pane.query_one(SaludView).set_session(fake)
+
+        await pilot.press("h")
+        assert await _wait_until(pilot, lambda: pane.query_one("#sa_groups", DataTable).row_count == 2)
+        table = pane.query_one("#sa_groups", DataTable)
+        last_col_values = [str(table.get_row_at(i)[4]) for i in range(table.row_count)]
+        assert len(last_col_values) == 2
+        for v in last_col_values:
+            assert _HHMMSS_RE.match(v), f"columna 'Última vez' no tiene formato HH:MM:SS: {v!r}"
+
+
 async def _boot(monkeypatch):
     monkeypatch.setattr(adbmod, "list_devices", lambda details=True: [])
     monkeypatch.setattr(adbmod, "adb_path", lambda: "/bin/echo")
     monkeypatch.setattr(DroidApp, "refresh_devices", lambda self: None)
     monkeypatch.setattr(DroidApp, "_tick_periodic", lambda self: None)
     return DroidApp()
+
+
+async def test_salud_view_refresh_noop_when_tab_not_active(monkeypatch):
+    """MATIZ (F346-C4): SaludView._refresh no debe repintar su DataTable mientras la pestaña Salud
+    no esta activa (evita que temporizadores de 0.5s reconstruyan vistas ocultas)."""
+    app = await _boot(monkeypatch)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        await pilot.press("7")
+        assert await _wait_until(pilot, lambda: app.active_tab == "inspect")
+
+        pane = app.query_one("#inspect_pane", InspectPane)
+        fake = _fake_session_with_crashes()
+        pane.session = fake
+        view = pane.query_one(SaludView)
+        view.set_session(fake)
+
+        # nos quedamos en Resumen (la pestaña Salud no esta activa)
+        assert pane.query_one("#i_switch", TabbedContent).active == "i_view_overview"
+        view._refresh()
+        table = pane.query_one("#sa_groups", DataTable)
+        assert table.row_count == 0  # _refresh no hizo nada porque la pestaña no esta activa
 
 
 async def test_salud_tab_shows_grouped_crashes_and_detail(monkeypatch):

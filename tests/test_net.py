@@ -100,6 +100,71 @@ def test_uid_totals_falls_back_to_detail_when_uid_trial_is_garbage(fake_shell):
     assert totals["rx"] == 7758828
 
 
+def test_uid_totals_filter_works_true_uses_only_uid_call(fake_shell):
+    commands = []
+    filtered = "  ident=[{type=1}] uid=10082 set=ALL tag=0x0\n      st=1 rb=10 rp=1 tb=20 tp=2 op=0\n"
+
+    def respond(cmd):
+        commands.append(cmd)
+        if "detail" in cmd:
+            raise AssertionError("no deberia llamar a detail cuando ya se sabe que --uid filtra")
+        return filtered
+
+    fake_shell(respond)
+    totals = net.uid_totals("S", 10082, filter_works=True)
+    assert len(commands) == 1
+    assert totals["source"] == "uid"
+
+
+def test_uid_totals_filter_works_false_uses_only_detail_call(fake_shell):
+    commands = []
+
+    def respond(cmd):
+        commands.append(cmd)
+        if "--uid" in cmd:
+            raise AssertionError("no deberia repetir el trial de --uid cuando ya se sabe que no filtra")
+        return fixture_text("netstats_detail")
+
+    fake_shell(respond)
+    totals = net.uid_totals("S", 10082, filter_works=False)
+    assert len(commands) == 1
+    assert totals["source"] == "detail"
+
+
+def test_net_monitor_learns_uid_filter_across_cycles(fake_shell):
+    """F346-C8: en el primer ciclo (filter_works aun None) uid_totals paga el trial de --uid y,
+    como en este dispositivo no filtra, cae a detail (dos llamadas dumpsys); a partir del segundo
+    ciclo NetMonitor ya sabe que --uid no filtra y llama a detail directamente (una sola llamada)."""
+    from types import SimpleNamespace
+
+    from droid.net import NetMonitor
+
+    dev = SimpleNamespace(serial="S", key="s1", name="Emu")
+    mon = NetMonitor(dev, "com.example.app", interval=1.0, totals_every=1.0)
+    mon.uid = 10082
+
+    calls = []
+
+    def respond(cmd):
+        calls.append(cmd)
+        if "for f in tcp" in cmd:
+            return ""  # sockets_for_uid: sin sockets
+        return fixture_text("netstats_detail")  # tanto --uid como detail devuelven el volcado completo
+
+    fake_shell(respond)
+    mon._refresh_totals()
+    assert len(calls) == 3  # sockets_for_uid + trial --uid + detail
+    assert mon._uid_filter_works is False
+    assert mon.totals["source"] == "detail"
+
+    calls.clear()
+    mon._refresh_totals()
+    assert len(calls) == 2  # sockets_for_uid + una sola llamada dumpsys (detail, sin repetir el trial)
+    dumpsys_calls = [c for c in calls if "dumpsys netstats" in c]
+    assert len(dumpsys_calls) == 1
+    assert "detail" in dumpsys_calls[0]
+
+
 def test_probe_qtaguid_true_when_readable(fake_shell):
     fake_shell("yes")
     assert net.probe_qtaguid("S") is True
@@ -187,6 +252,48 @@ def test_reverse_dns_success_failure_and_cache(monkeypatch):
     assert dns.lookup("203.0.113.2") is None
     assert dns.lookup("203.0.113.2") is None
     assert calls == ["203.0.113.1", "203.0.113.2"]  # el fallo tambien se cachea
+
+
+def test_reverse_dns_shutdown_stops_executor():
+    dns = net.ReverseDns()
+    dns.shutdown()
+    assert dns._executor._shutdown is True
+
+
+def test_net_monitor_stop_shuts_down_dns():
+    from types import SimpleNamespace
+
+    from droid.net import NetMonitor
+
+    dev = SimpleNamespace(serial="S", key="s1", name="Emu")
+    mon = NetMonitor(dev, "com.example.app", interval=1.0)
+    mon.stop()
+    assert mon.dns._executor._shutdown is True
+
+
+def test_net_monitor_first_refresh_reports_no_events(fake_shell):
+    """F346-C8c: el primer refresco de sockets establece la linea base sin reportar altas ficticias
+    por conexiones que ya existian antes de que empezara la sesion."""
+    from types import SimpleNamespace
+
+    from droid.net import NetMonitor
+
+    dev = SimpleNamespace(serial="S", key="s1", name="Emu")
+    mon = NetMonitor(dev, "com.example.app", interval=1.0, totals_every=1.0)
+    mon.uid = 10082
+
+    def respond(cmd):
+        if "for f in tcp" in cmd:
+            return fixture_text("proc_net_sockets")
+        return fixture_text("netstats_detail")
+
+    fake_shell(respond)
+    mon._refresh_totals()
+    assert len(mon.sockets) == 3  # los sockets del uid 10082 en la fixture (ver test_sockets_for_uid_decodes_and_filters)
+    assert len(mon.events) == 0  # linea base: nada reportado como "new" todavia
+
+    mon._refresh_totals()
+    assert len(mon.events) == 0  # el mismo socket sigue ahi, sin cambios
 
 
 def test_iface_counters_parses_proc_net_dev(fake_shell):
