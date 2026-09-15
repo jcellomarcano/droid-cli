@@ -359,12 +359,9 @@ it by hand if you want it gone too (`rm -rf ~/.droid`).
 
 ## Roadmap
 
-- [`docs/ROADMAP-inspector.md`](docs/ROADMAP-inspector.md) - the inspector's phased plan and what
-  is done so far.
-- [`docs/ROADMAP-bundle.md`](docs/ROADMAP-bundle.md) - plan for a single-binary distribution
-  (not built in 0.2).
-- [`docs/design/http-capture.md`](docs/design/http-capture.md) - design for HTTP capture, not
-  built yet.
+- [docs/ROADMAP-inspector.md](docs/ROADMAP-inspector.md): what shipped in 0.2 and what is next in the inspector (HTTP capture is designed in [docs/design/http-capture.md](docs/design/http-capture.md), build analyzer, deep traces).
+- [docs/ROADMAP-remote-adb.md](docs/ROADMAP-remote-adb.md): remote ADB hosts and small device farms over WiFi (a Raspberry Pi with phones on the same network, reached through an SSH tunnel), with the security analysis.
+- [docs/ROADMAP-bundle.md](docs/ROADMAP-bundle.md): a compiled single-binary distribution, macOS first, then Linux, then Windows.
 
 ## Contributing
 
