@@ -1,199 +1,375 @@
 # droid
 
-CLI global para tu Mac que envuelve `adb` con lo que usas a diario. `droid` a secas abre la **app de terminal**
-(pestañas, teclado, logs en vivo); cada pestaña tiene su subcomando para scripts.
+A personal command-line tool for Android development on top of `adb`. It manages devices over USB
+and WiFi, streams colored logcat with filters, keeps every log session in a post-mortem cache, and
+adds a live in-terminal inspector for CPU, memory, frames, crashes, network, files and SQLite
+databases of your own debuggable apps.
 
-- `droid ls` — qué dispositivos hay conectados por **USB** y por **WiFi** (modelo, Android, IP, batería; detecta cuando el mismo móvil está por las dos vías).
-- `droid wifi` — pasar un dispositivo USB a WiFi, reconectarlo por alias, vincular por código (Android 11+).
-- `droid logs` — logcat en vivo con colores, filtros por app/tag/nivel/regex y wrap.
-- **Caché post-mortem** — cada sesión de logs se guarda por dispositivo en `~/.droid/logs/` y sigue ahí cuando el dispositivo muere o se desconecta (con reconexión automática).
-- `droid record` — grabación en background aunque cierres la terminal.
-- `droid apps` — apps de **tus proyectos** instaladas en el dispositivo (versión, debuggable, PID).
-- `droid inspect` — **inspector en vivo**: CPU por hilo, RSS/PSS, Java/Native heap, Views/Activities, fps, jank y percentiles de frame, salidas de la app (crash/ANR/LMK). Sesiones guardadas como JSONL.
-- `droid db` — bases de datos SQLite de apps debuggables: snapshot vía `run-as`, tablas, filas, SQL libre, CSV, `shared_prefs`.
-- `droid net` — tasa por interfaz en vivo, totales por app y sockets abiertos.
-- `droid ps` — procesos e hilos (PID/TID, %CPU) para elegir qué filtrar.
-- **Identidad de color**: cada dispositivo, proceso (PID), hilo y tag tiene un color fijo en toda la herramienta; niveles y estados con colores fijos; excepciones, `FATAL EXCEPTION`/ANR/`has died` y URLs se resaltan solos.
+The interactive app (`droid` with no arguments) is a terminal UI built with
+[Textual](https://textual.textualize.io/). Every tab also has a non-interactive subcommand for
+scripts and CI. The UI itself is in Spanish; this document quotes its labels and shortcuts as they
+appear on screen, so you will see Spanish words inside the English explanations below.
 
-## La app de terminal
+## What it is
+
+`droid` wraps `adb` with the day-to-day workflow of building and debugging Android apps from a
+Mac or Linux terminal: listing devices, following logs with filters that survive process restarts,
+recording sessions that outlive the terminal, and inspecting a running app's CPU, memory, network,
+files and database without attaching a debugger.
+
+## What it is for
+
+It is built around **your own projects**. Most commands that need to pick an app (`droid apps`,
+`droid inspect`, `droid db`, `droid net`, `droid files`) look at `applicationId` values found under
+a projects directory (`~/AndroidStudioProjects` by default, see Configuration) and match them
+against installed, debuggable packages on the device. That keeps the tool's app-facing views
+scoped to apps you actually built, instead of every package on the phone.
+
+## Requirements
+
+- macOS or Linux. (There is no Windows support; see Limitations.)
+- Python 3.9 or newer.
+- `adb`, from Android's platform-tools.
+
+On a clean Mac, get both with Homebrew:
 
 ```bash
-droid            # abre la app (si hay terminal); droid ui / droid app también
-droid ui pixel   # arranca con ese dispositivo seleccionado
+brew install python@3.11
+brew install --cask android-platform-tools
 ```
 
-**Seleccionar y copiar texto:** arrastra con el ratón sobre cualquier panel de log y `ctrl+c` (o `cmd+c`) lo copia al
-portapapeles del Mac (usa `pbcopy`, así que funciona también en Terminal.app, que ignora el método OSC 52 del terminal).
-Las líneas partidas por el ancho de la pantalla se vuelven a unir al copiar, así que lo que pegas son líneas de log completas.
+`adb` also comes with any Android Studio install (inside its SDK's `platform-tools/`); if you
+already have Android Studio, you don't need the cask. If `droid` cannot find `adb` on `PATH`,
+point it at one explicitly:
 
-| Tecla | Qué copia |
+```bash
+droid config adb /path/to/adb
+```
+
+## Install, step by step
+
+```bash
+git clone https://github.com/jcellomarcano/droid-cli.git
+cd droid-cli
+./install.sh
+```
+
+What `install.sh` does to your machine:
+
+1. Picks a Python interpreter: `PYTHON=/path/to/python3.x ./install.sh` forces one; otherwise it
+   tries `python3`, then `python3.13`, `3.12`, `3.11` on `PATH`, then the usual Homebrew keg paths,
+   and stops at the first one that is 3.9 or newer.
+2. Creates a private virtual environment at `.venv` inside the repository (`python -m venv
+   --clear`), so it never touches a system or user-wide Python.
+3. Installs `droid` into that venv in editable mode, pulling in `rich`, `textual` and
+   `textual-autocomplete`.
+4. Symlinks `~/.local/bin/droid` to `.venv/bin/droid` - this is the only thing that goes outside
+   the repository and outside `.venv`.
+5. If `~/.local/bin` is not already on `PATH`, appends a line exporting it to `~/.zshrc` (or
+   `~/.bashrc` if your shell is bash). This only edits your shell rc file when the directory is
+   missing from `PATH`; it does not touch it otherwise.
+6. Creates `~/.droid/logs` and `~/.droid/run` (see Where data lives).
+
+Then open a new terminal (so the `PATH` change takes effect) and run:
+
+```bash
+droid ls
+```
+
+## First run
+
+With no arguments, `droid` opens the terminal UI (equivalent to `droid ui`). If no interactive
+terminal is available, or you prefer scripting, every feature is also a direct subcommand - start
+with `droid ls` to see connected devices, or `droid --help` for the full command list.
+
+## Commands
+
+| Command | What it does |
 |---|---|
-| `y` | la selección; si no hay, las últimas líneas del panel (en una tabla, la fila del cursor) |
-| `Y` | todo el panel o toda la tabla (TSV con cabecera) |
-| `v` | abre el **visor**: texto congelado para leer y recortar con calma |
+| `droid ls` (`devices`) | list connected devices, USB and WiFi |
+| `droid refresh` (`reconnect`) | re-detect devices (`adb reconnect offline`; `--hard` restarts the adb server) |
+| `droid wifi` | set up/connect/pair/disconnect a device over WiFi |
+| `droid logs` (`log`, `logcat`) | live logcat with colors (and automatic caching) |
+| `droid cache` | saved log sessions per device (post-mortem) |
+| `droid record` | record logcat in the background, survives closing the terminal |
+| `droid alias` | give a device a short name |
+| `droid apps` | your projects' apps installed on the device (debuggable) |
+| `droid ps` | processes and threads on the device |
+| `droid inspect` | live inspector: CPU per thread, RAM, frames/jank, app exits |
+| `droid db` | SQLite databases of a debuggable app: tables, rows, SQL, CSV, prefs |
+| `droid files` | file explorer: app sandbox (`run-as`) and `/sdcard`, `/data/local/tmp`, `/proc/<pid>` |
+| `droid net` | network: live per-interface rate, per-app totals, open sockets |
+| `droid shell` | interactive `adb shell` on the chosen device |
+| `droid run` (`x`) | one shell line with `adb` already pointed at the device |
+| `droid adb` | run `adb -s <device> <args...>` |
+| `droid ui` (`app`, `tui`, `menu`) | open the terminal app (same as `droid` with no arguments) |
+| `droid config` | view/change configuration (`~/.droid/config.json`) |
 
-En el visor: ratón o `shift+flechas` selecciona, `a` selecciona todo, `c` copia (la selección o todo), `g` guarda el recorte
-en `~/.droid/clips/`, `e` lo abre en el editor, `w` alterna el ajuste de línea, `Esc` cierra. En logs en vivo, `v` pausa el
-stream para que puedas recortar sin que se mueva (`p` lo reanuda). Lo copiado es texto limpio: la línea cruda de logcat,
-sin colores ni marcos, lista para pegar en un ticket o pasarla por `grep`.
+Every command that takes a device accepts an index from `droid ls`, a serial (or prefix), an
+alias, a model name, an IP, or the literal `usb` / `wifi`. If there is exactly one device, you are
+not asked to pick.
 
-Para usar la selección propia del terminal en vez de la de la app, mantén ⌥ (Option) mientras arrastras.
+Full flags for any command: `droid <command> --help`.
 
-**Autocompletado en todos los campos:** al entrar en un campo aparece una lista de sugerencias con lo que droid ya conoce
-(apps de tus proyectos marcadas con ★, procesos vivos con su PID, paquetes instalados, hilos del proceso elegido, niveles,
-tags vistos en el log, tablas y columnas de la DB abierta, IPs conocidas) más tus valores recientes (`~/.droid/history.json`).
-↑↓ elige, Tab o Enter completa, Esc oculta, y escribir filtra. Los campos con varios valores (paquetes, hilos, PIDs) completan el último token.
+## The terminal UI and its keys
 
-La lista de dispositivos se **refresca sola** al conectar o desconectar (aviso en pantalla); `r`/`F5` refresca a mano y `R` fuerza `adb reconnect offline` para dispositivos atascados.
+Tabs, keys `1`-`9` and `0`, plus `F`:
 
-Pestañas (teclas 1-9, 0): **1 Dispositivos** (Enter: logs, espacio: elegir, w: USB→WiFi, c: conectar, d: desconectar, u: USB, a: alias) ·
-**2 Logs** (barra de filtros: paquete, nivel, grep, hilo, pid; s iniciar/parar, p pausa, x limpiar, e solo W+, t columna hilo, n columna proceso) ·
-**3 Caché** (Enter abre sesión, f seguir, x borrar, o Finder) · **4 Procesos** (t hilos, l logs del proceso) ·
-**5 Apps** (Enter/l logs, i inspeccionar, d base de datos) · **6 Grabar** · **7 Inspector** · **8 DB** · **9 Red** · **0 Consola**: un área donde **pegas un bloque** de comandos y `ctrl+r` (o ▶) lo ejecuta contra el dispositivo actual. Si las líneas no empiezan por `adb` van enteras a `adb shell` (varias líneas = script en el móvil); si empiezan por `adb` corren en el Mac con `adb` ya apuntando al dispositivo (p.ej. `adb shell getprop | grep -iE "…"`). Arriba hay una línea rápida con sugerencias. ctrl+g corta, ctrl+l limpia. `?` muestra la ayuda y el plan.
+`1` Dispositivos (Devices) · `2` Logs · `3` Caché (Cache) · `4` Procesos (Processes) · `5` Apps ·
+`6` Grabar (Record) · `7` Inspector · `8` DB · `9` Red (Network) · `0` Consola (Console) ·
+`F` Archivos (Files)
 
-## Instalación
+### Global keys
 
-```bash
-cd ~/AndroidStudioProjects/droid-cli && ./install.sh
-```
-
-Crea un venv propio, instala `rich` y enlaza `~/.local/bin/droid`. Para quitarlo: `./uninstall.sh`.
-Requisitos: Python 3.9+ y `adb` (platform-tools). Si `adb` no se detecta: `droid config adb /ruta/a/adb`.
-
-## Uso rápido
-
-```bash
-droid                      # = droid ls
-droid ls -a                # incluye WiFi conocidos aunque no estén conectados
-droid ls -w                # tabla en vivo: se refresca sola al conectar/desconectar (adb track-devices)
-droid refresh              # re-detecta: adb reconnect offline + lista   (--hard reinicia el servidor adb)
-droid alias 1 pixel        # nombre corto; sirve en todos los comandos
-
-droid wifi setup pixel     # USB → WiFi (adb tcpip + connect); guarda IP y puerto
-droid wifi connect pixel   # reconectar más tarde (o: droid wifi connect --all)
-droid wifi pair 192.168.1.20:37123 123456   # Android 11+ "Depuración inalámbrica"
-droid wifi disconnect pixel
-droid wifi usb pixel       # volver a modo USB
-
-droid logs                 # pregunta el dispositivo si hay varios
-droid logs pixel -p com.example.app      # solo mi app (sigue reinicios del proceso)
-droid logs pixel -p com.mi.app -l W -g "Retrofit|SQLite" -x "Choreographer"
-droid logs pixel -t "OkHttp*" -t Room --show-tid --date
-droid ps pixel                                   # procesos de apps por %CPU (--all: todos, -s mem)
-droid ps pixel --threads -p com.mi.app           # hilos del proceso: TID, nombre, %CPU
-droid logs pixel -p com.mi.app --thread main --thread "OkHttp*"   # solo esos hilos (columna con nombre)
-droid logs pixel --pid 2981 --tid 3007           # por PID/TID exactos
-droid logs pixel -p com.mi.app --show-thread     # columna con el nombre del hilo sin filtrar
-droid logs pixel -n 200 -c        # últimas 200 líneas / vaciar buffer antes
-droid logs pixel -b all           # todos los buffers (main, system, crash, events, radio)
-
-droid cache                # dispositivos con logs guardados
-droid cache ls pixel       # sesiones (fecha, duración, líneas, filtros, si se cerró bien)
-droid cache show pixel                    # última sesión, con los mismos colores/filtros que logs
-droid cache show pixel -s 2 -p com.mi.app -l E -n 100
-droid cache show pixel -f                 # seguir una sesión en curso (p.ej. de record)
-droid cache path pixel | droid cache open pixel
-droid cache clean --older-than 30d        # o --keep 20 / --all (pide confirmación)
-
-droid record start pixel   # graba en background; sobrevive a cerrar la terminal
-droid record status
-droid record stop --all
-
-droid apps pixel           # apps de ~/AndroidStudioProjects instaladas: versión, debuggable, PID
-
-droid inspect pixel -p com.mi.app                 # vista en vivo (Ctrl+C termina y resume)
-droid inspect pixel -p com.mi.app -d 60s --thread "OkHttp*" --top 20
-droid inspect pixel -p com.mi.app --json -d 30s > perf.jsonl   # para scripts
-droid inspect --list / droid inspect --replay 1   # sesiones guardadas en ~/.droid/inspect
-
-droid db pixel -p com.mi.app                      # DBs → tablas con filas y columnas
-droid db pixel -p com.mi.app --table tasks --limit 20
-droid db pixel -p com.mi.app --query "SELECT id, title FROM tasks WHERE done=0" --csv > pendientes.csv
-droid db pixel -p com.mi.app --prefs              # shared_prefs/*.xml
-droid db pixel -p com.mi.app --export ./snap      # copia la DB (aplica el -wal al cerrar: queda un .db autocontenido)
-
-droid net pixel -p com.mi.app                     # tasa ↓↑ por interfaz, totales de la app, sockets
-droid net pixel --sockets
-droid run -d pixel 'adb shell getprop | grep -iE "_for_attestation|^\[ro\.product\.(brand|model|name|device|manufacturer)\]"'
-                           # línea de shell local: `adb` ya apunta al dispositivo (-s serial); el grep corre en el Mac
-droid run -d pixel 'getprop ro.product.model'      # sin `adb` delante se antepone `adb shell`
-droid run --all -q 'adb shell getprop ro.build.version.release'   # en todos los dispositivos
-droid run -d pixel '!ls ~/Desktop'                 # `!` = comando local sin tocar
-droid shell pixel          # adb shell interactivo del dispositivo elegido
-droid adb pixel reboot     # cualquier comando adb con -s resuelto
-droid config               # ~/.droid/config.json
-```
-
-### Filtros por proceso e hilo
-
-| Opción | Qué hace |
+| Key | Action |
 |---|---|
-| `-p PKG` | por paquete; sigue al proceso aunque se reinicie (incluye `pkg:servicio`) |
-| `--pid N` | por PID exacto (repetible) |
-| `--tid N` | por TID exacto (repetible); muestra la columna TID |
-| `--thread NOMBRE` | por nombre de hilo (`/proc/<pid>/task/*/comm`): substring o comodín (`main`, `OkHttp*`, `pool-*`); necesita `-p` o `--pid`. Muestra la columna de hilo |
-| `--show-tid` / `--show-thread` | solo presentación, sin filtrar |
+| `1`-`9`, `0`, `F` | switch tab |
+| `?` | help screen |
+| `y` | copy the selection, or the visible lines if nothing is selected (in a table, the row under the cursor) |
+| `Y` | copy the whole panel or table (TSV with a header row) |
+| `v` | open the viewer: frozen text for reading and trimming calmly |
+| `r` / `F5` | refresh |
+| `R` | force `adb reconnect offline` for stuck devices |
+| `ctrl+d` | next device |
+| `esc` | leave the focused field |
+| `q` | quit |
 
-`droid ps` lista procesos (PID, usuario, %CPU, RSS) y `droid ps --threads -p PKG` los hilos con su nombre y %CPU para saber qué filtrar. Los nombres de hilo se guardan en la caché (`threads_seen`), así `droid cache show … --thread` funciona en post-mortem si la sesión usó `--thread` o `--show-thread`.
+The device list refreshes itself when a device connects or disconnects.
 
-Selector de dispositivo en cualquier comando: índice de `droid ls`, serial (o prefijo), alias, modelo, IP, o `usb` / `wifi`. Si hay un solo dispositivo no pregunta.
+**Selecting and copying text:** drag with the mouse over any log panel, then `ctrl+c` (or `cmd+c`)
+copies to the Mac clipboard through `pbcopy` - this works in Terminal.app too, which ignores the
+terminal's own OSC 52 copy method. Lines that were wrapped by the screen width are rejoined on
+copy, so what you paste is whole log lines. In the viewer (`v`): mouse or `shift+arrows` selects,
+`a` selects all, `c` copies (selection or everything), `g` saves the clip to `~/.droid/clips/`, `e`
+opens it in your editor, `w` toggles line wrap, `Esc` closes. In live logs, `v` pauses the stream
+so you can trim without it scrolling (`p` resumes it). What gets copied is clean text: the raw
+logcat line, no colors or box characters, ready to paste into a ticket or pipe through `grep`. To
+use the terminal's own selection instead of the app's, hold ⌥ (Option) while dragging.
 
-## Colores en `logs`
+**Autocomplete everywhere:** entering any field shows suggestions droid already knows about
+(your projects' apps marked with ★, live processes with their PID, installed packages, threads of
+the chosen process, levels, tags seen in the log, tables and columns of the open database) plus
+your recent values (`~/.droid/history.json`). `↑↓` picks, `Tab` or `Enter` completes, `Esc` hides
+it, typing filters. Fields that take several values (packages, threads, PIDs) complete the last
+token.
 
-- Nivel con fondo: `V` gris, `D` azul, `I` verde, `W` naranja, `E` rojo, `F` magenta. El mensaje de W/E/F va del color del nivel.
-- Cada TAG tiene un color estable (hash), alineado a la derecha (`--tag-width`).
-- `-g` filtra y resalta; `--hl` resalta sin filtrar. `--raw` da la línea cruda de logcat.
-- `NO_COLOR=1` o `--color never` para tuberías; `--color always` para forzar.
+### Per-tab keys
 
-## Caché post-mortem
+**1 Dispositivos** - `Enter` view logs · `space` select as current · `w` USB→WiFi · `c` connect · `d`
+disconnect · `u` back to USB · `a` alias
 
-- Ruta: `~/.droid/logs/<Modelo>-<serial>/<AAAAMMDD-HHMMSS>.log` + `.json` (dispositivo, filtros, inicio/fin, líneas, PIDs vistos, eventos).
-- Se guarda **todo** lo que emite el dispositivo (los filtros solo afectan a lo que ves) para poder re-filtrar después con `droid cache show`.
-- Si el dispositivo se desconecta o reinicia, `droid logs` espera, reconecta (incluso si vuelve por la otra vía USB↔WiFi) y sigue en el **mismo** archivo desde la última marca de tiempo. Los cortes quedan anotados como líneas `#droid …`.
-- Una sesión "sin cerrar" en `droid cache ls` significa que `droid` murió sin despedirse (p.ej. `kill -9`); el log está igualmente en disco, se hace flush cada segundo.
-- `droid logs` no duplica la caché si ya hay `droid record` activo para ese dispositivo.
+**2 Logs** - filter bar: package, level, grep, thread, pid · `s` start/stop · `p` pause · `x` clear ·
+`e` errors+warnings only · `t` thread column · `n` process column
 
-## Inspector: qué mide y de dónde
+**3 Caché** - `Enter` open session · `f` follow live · `x` delete session · `o` open folder in Finder
 
-| Sección | Fuente | Cada |
+**4 Procesos** - `t` threads of the process · `l` logs of the process
+
+**5 Apps** - `Enter`/`l` logs of that app · `i` inspect · `d` database
+
+**6 Grabar** - `s` record current device · `S` record all · `x` stop selected · `X` stop all
+
+**7 Inspector** - `s` start/stop · `l` logs of the thread · `m` meminfo now · `e` app exits · `f`
+switch app · `o` Resumen (Overview) view · `u` Memoria (Memory) view · `h` Salud (Health) view
+
+**8 DB** - `Enter` on a database: snapshot · `Enter` on a table: rows · `/` SQL · `x` CSV · `p`
+shared_prefs · `r` reload · `b` back to the table list
+
+**9 Red** - `s` start/stop · `r` sockets · `f` switch app · `h` focus hosts · `e` focus events · `k`
+focus sockets
+
+**0 Consola** - a block area: paste one or more commands and `ctrl+r` (or the ▶ button) runs them.
+Lines that do not start with `adb` go whole to `adb shell` on the current device (several lines =
+a script run on the phone); lines starting with `adb` run on the Mac with `adb` already pointed at
+the device (e.g. `adb shell getprop | grep -iE "…"`). There is also a quick one-line field above
+with suggestions. `ctrl+g` kills a running command, `ctrl+l` clears the output, `f` focuses the
+quick line, `b` focuses the block.
+
+**F Archivos** - `backspace` go up a directory · `r` reload · `p` pull to disk · `v` preview a file
+· `b` open a `.db` file directly in the DB tab · `x` delete (asks for confirmation) · `f` focus the
+package field
+
+## Post-mortem log cache
+
+- Path: `~/.droid/logs/<Model>-<serial>/<YYYYMMDD-HHMMSS>.log` plus a `.json` sidecar (device,
+  filters used, start/end time, line count, PIDs seen, events).
+- Everything the device emits is saved (filters only affect what you see live), so you can
+  re-filter later with `droid cache show`.
+- If the device disconnects or reboots, `droid logs` waits, reconnects - even if it comes back
+  over the other transport, USB↔WiFi - and keeps appending to the **same** file from the last
+  timestamp. Gaps are annotated as `#droid …` lines.
+- A session marked "unclosed" in `droid cache ls` means `droid` died without saying goodbye (e.g.
+  `kill -9`); the log is still on disk, since it is flushed every second.
+- `droid logs` does not duplicate the cache if `droid record` is already recording that device.
+
+## Inspector
+
+`droid inspect <device> -p <package>` opens a live view sampled once a second (configurable with
+`--interval`), with an optional fixed duration (`--duration 30s`, `5m`) and JSON output for
+scripts (`--json`). Sessions are recorded to `~/.droid/inspect/` unless you pass `--no-record`.
+
+Review a saved session with `droid inspect --list` (or `--replay <file|#>`); add `--chart` to get
+sparklines and histograms instead of a text summary.
+
+In the TUI, the Inspector tab (`7`) has three views, switched with `o`/`u`/`h`:
+
+- **Resumen** (Overview, `o`) - CPU per thread, RSS/PSS, Java/Native heap, code/graphics, view and
+  activity counts, fps and jank percentiles.
+- **Memoria** (`u`) - see Memory below.
+- **Salud** (`h`) - see Health below.
+
+### What each metric comes from
+
+| Section | Source | Cadence |
 |---|---|---|
-| CPU app y por hilo (% de un core) | `/proc/stat`, `/proc/<pid>/stat`, `/proc/<pid>/task/*/stat` | tick (1 s) |
-| RSS anon/file/swap, nº hilos | `/proc/<pid>/status` | tick |
-| PSS exacto | `run-as <pkg> cat /proc/<pid>/smaps_rollup` (solo debuggables) | tick |
-| PSS total, Java/Native heap (alloc/size), Code, Graphics, Views, Activities | `dumpsys meminfo <pid>` | 10 s (es lento) |
-| fps, jank %, p50/p90/p99, vsync perdidos, UI lenta | `dumpsys gfxinfo <pkg>` (deltas) | tick |
-| Estado (primer plano / visible / en caché) | `/proc/<pid>/oom_score_adj` | tick |
-| Salidas de la app: CRASH, ANR, LOW_MEMORY, SIGNALED… | `dumpsys activity exit-info <pkg>` | al arrancar y al morir |
-| Red: ↓↑ por interfaz | `/proc/net/dev` (deltas) | tick |
-| Red: totales por app (WiFi/móvil) | `dumpsys netstats detail` (uid) | 15 s |
-| Red: sockets de la app | `/proc/net/tcp*`, `udp*` filtrado por uid | 15 s |
-| DB | `run-as <pkg>` + `sqlite3` local sobre el snapshot (copia `.db`, `-wal` y `-shm`; al cerrar queda consolidado) | bajo demanda |
+| App and per-thread CPU (% of one core) | `/proc/stat`, `/proc/<pid>/stat`, `/proc/<pid>/task/*/stat` | every tick (1 s) |
+| RSS anon/file/swap, thread count | `/proc/<pid>/status` | every tick |
+| Exact PSS | `run-as <pkg> cat /proc/<pid>/smaps_rollup` (debuggable apps only) | every tick |
+| Total PSS, Java/Native heap (alloc/size), Code, Graphics, Views, Activities | `dumpsys meminfo <pid>` | every 10 s (it is slow) |
+| fps, jank %, p50/p90/p99, missed vsyncs, slow UI | `dumpsys gfxinfo <pkg>` (deltas) | every tick |
+| State (foreground / visible / cached) | `/proc/<pid>/oom_score_adj` | every tick |
+| App exits: CRASH, ANR, LOW_MEMORY, SIGNALED... | `dumpsys activity exit-info <pkg>` | on start and on death |
+| Network: rate per interface | `/proc/net/dev` (deltas) | every tick |
+| Network: per-app totals (WiFi/mobile) | `dumpsys netstats detail` (by uid) | every 15 s |
+| Network: app sockets | `/proc/net/tcp*`, `udp*` filtered by uid | every 15 s |
+| Database | `run-as <pkg>` + local `sqlite3` over a snapshot (copies `.db`, `-wal` and `-shm`; consolidated on close) | on demand |
 
-Cada snapshot queda en `~/.droid/inspect/<dispositivo>/db/<paquete>/<fecha>/`, así puedes comparar dos momentos con cualquier herramienta SQLite.
+## Health (Salud)
 
-Limitación conocida: Android no expone bytes por app en tiempo real sin root; la gráfica por segundo es por interfaz y los totales por app se actualizan cuando el sistema los consolida.
+The Salud view (`7`, then `h`) groups everything under `dumpsys activity exit-info` - crashes,
+ANRs and process deaths - by **stack signature**, not by raw timestamp, so repeats of the same
+underlying failure collapse into one row with a count instead of flooding the list. Each group
+shows its type, signature, title, how many times it happened, and when it last happened, with a
+timeline sparkline above the table. Keys: `l` opens the logs around that pid, `e` refreshes exit
+data on demand, `o` goes back to Resumen.
 
-## Estructura
+## Memory (Memoria)
+
+The Memoria view (`7`, then `u`) tracks Java heap, Native heap and total PSS over the session, and
+overlays ART GC events parsed from logcat (frequency, bytes freed, pause).
+
+**Leak heuristic.** For each of `java_heap_kb`, `native_heap_kb` and `pss_total_kb`, droid fits a
+least-squares slope over the sampled points and flags a metric as a possible leak when *all* of
+these hold:
+
+- at least 6 samples, spanning at least 60 seconds;
+- the slope is positive (memory is trending up, not down or flat);
+- total growth over the window is at least 5% of the first value, or 2048 KB, whichever is larger;
+- if a GC ran inside the window, the value right after the last GC is still meaningfully higher
+  than the value at the start of the window (otherwise a GC that simply hadn't run yet would look
+  like a leak).
+
+**Limits.** This is a heuristic over a fixed window, not a diagnosis: it is labeled "Inferido"
+(Inferred) in the data, not "confirmed". A short session, a slow leak, or a workload that legitimately
+allocates more memory over time (loading more data, opening more screens) can all produce the same
+slope. Treat a flag as "worth a longer look with the same filters", not as proof of a bug.
+
+## Database
+
+`droid db <device> -p <package>` snapshots an app's SQLite databases through `run-as` (copying the
+`.db` file plus `-wal`/`-shm` so nothing mid-transaction is lost) and lets you browse tables, run
+arbitrary SQL against the local copy, export CSV, or dump `shared_prefs/*.xml`. `--export DIR`
+copies the consolidated database out to disk. In the TUI (tab `8`), `Enter` on a database takes a
+snapshot, `Enter` on a table shows rows, `/` opens a SQL field, `x` exports CSV, `p` shows prefs.
+
+## Network
+
+`droid net <device> [-p <package>]` shows a live per-interface rate, socket list, and per-app
+totals. Without `-p` it reports the whole device; with it, droid also asks `dumpsys netstats
+detail` for that app's WiFi/mobile totals.
+
+**What "per app" means without root:** Android does not expose live per-app byte counters without
+root (the old `xt_qtaguid` interface is gone on current devices). The **rate graph is always
+per-interface**, sampled every tick; the **per-app totals** come from `dumpsys netstats detail`
+and only update when the system consolidates them, roughly every 15 seconds - the TUI labels this
+explicitly rather than implying a live per-app rate. Sockets (`/proc/net/tcp*`, `udp*` filtered by
+the app's uid) refresh on the same 15-second cadence, or on demand with `r` / `--sockets`.
+`droid net --sockets` on its own just lists sockets and exits.
+
+There is no HTTP-level capture (URLs, methods, bodies) in this release; see Limitations and
+`docs/design/http-capture.md` for the plan.
+
+## Files
+
+`droid files <device> [PATH]` (TUI tab `F`) browses four roots: an app's sandbox (via `run-as`,
+selected with `-p`), `/sdcard`, `/data/local/tmp`, or a process's `/proc/<pid>` (with `--pid`).
+`--cat` prints a file as a preview, `--pull DEST` downloads it, `--json` lists a directory as JSON.
+`--rm` deletes the path at `PATH` and asks for confirmation unless you pass `-y`/`--yes`; in the
+TUI, `x` does the same and always confirms first. `b` opens a `.db` file directly in the DB tab
+without leaving Files.
+
+## Console
+
+Tab `0` (`droid run`/`droid shell`/`droid adb` are its CLI equivalents) is a place to paste a
+block of commands and run them against the current device. Lines that do not start with `adb` are
+sent whole to `adb shell` (multiple lines become a script executed on the phone); lines that do
+start with `adb` run on the Mac, with `adb` already resolved to `-s <serial>` for the current
+device - useful for piping through a local `grep`, e.g. `adb shell getprop | grep -iE "…"`. A
+quick one-line field above the block offers the same with autocomplete suggestions. `droid run -d
+<device> '!ls ~/Desktop'` runs a line locally, unmodified, when it starts with `!`.
+
+## Configuration
+
+`droid config` prints the current configuration; `droid config <key> <value>` changes one key.
+Stored at `~/.droid/config.json`.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `adb` | `""` (autodetect) | path to the `adb` binary |
+| `wifi_port` | `5555` | port used for `adb tcpip` |
+| `projects_dir` | `~/AndroidStudioProjects` | where `droid apps` and friends look for your projects' `applicationId` |
+| `tag_width` | `22` | width of the TAG column in `droid logs` |
+| `reconnect` | `true` | retry automatically when a device is lost |
+| `ui_on_empty` | `true` | whether `droid` with no arguments opens the terminal app |
+
+## Where data lives
 
 ```
-droid/
-  cli.py       comandos y parser
-  adb.py       descubrimiento de adb, listado de dispositivos, tcpip/connect/pair
-  ui.py        tablas rich, selector de dispositivo
-  logs.py      parseo de logcat, filtros, colores, stream con reconexión
-  cache.py     sesiones en ~/.droid/logs
-  record.py    grabación en background (worker + pidfiles en ~/.droid/run)
-  wifi.py      setup / connect / pair / usb
-  registry.py  ~/.droid/devices.json (alias, IP, último visto)
-  apps.py      applicationId de tus proyectos ↔ paquetes instalados
-  theme.py     identidad de color (dispositivo, PID, hilo, tag, niveles, estados)
-  suggest.py   sugerencias/autocompletado de los campos de la app (+ historial)
-  runner.py    consola: shell local con `adb` envuelto para apuntar al dispositivo
-  clip.py      portapapeles (pbcopy), recortes en ~/.droid/clips y extracción de texto limpio
-  tui.py       app de terminal (Textual): pestañas 1-6
-  tui_panes.py paneles Inspector / DB / Red (7-9)
-  inspector.py muestreo CPU/RAM/frames/salidas + JSONL
-  db.py        run-as + sqlite3
-  net.py       /proc/net/dev, netstats por uid, sockets
-docs/ROADMAP-inspector.md   plan (hecho: fases 0-3 básicas; pendiente: HTTP con proxy/agente, build analyzer, perfetto)
+~/.droid/
+  config.json      configuration (see above)
+  devices.json     known devices: alias, IP, last seen
+  history.json      recent values per field, for autocomplete
+  logs/            post-mortem log cache, per device
+  run/             pidfiles for background `droid record` workers
+  inspect/         saved inspector sessions (JSONL) and DB snapshots
+  clips/           text clips saved from the viewer (`g`)
 ```
+
+## Uninstall
+
+```bash
+./uninstall.sh
+```
+
+Removes the `~/.local/bin/droid` symlink and deletes `.venv`. The `~/.droid` cache is kept; delete
+it by hand if you want it gone too (`rm -rf ~/.droid`).
+
+## Limitations
+
+- No HTTP-level capture (URLs, methods, bodies) in this release. The plan is a local proxy
+  (`mitmproxy`) - see `docs/design/http-capture.md` - not built yet.
+- No live per-app network byte rate without root; see Network above for exactly what is and is not
+  live.
+- Test fixtures are captured from one emulator; behavior against other devices/Android versions is
+  not covered by the automated tests, only used in practice.
+- No root is used anywhere; every feature that needs app-internal data relies on `run-as` and only
+  works against debuggable builds.
+- The Python 3.9 floor is only verified by CI (see `.github/workflows/ci.yml`), not by hand on an
+  actual 3.9 install.
+
+## Roadmap
+
+- [`docs/ROADMAP-inspector.md`](docs/ROADMAP-inspector.md) - the inspector's phased plan and what
+  is done so far.
+- [`docs/ROADMAP-bundle.md`](docs/ROADMAP-bundle.md) - plan for a single-binary distribution
+  (not built in 0.2).
+- [`docs/design/http-capture.md`](docs/design/http-capture.md) - design for HTTP capture, not
+  built yet.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## License
+
+MIT - see [`LICENSE`](LICENSE).

@@ -17,7 +17,7 @@ if ! "$PY" -c 'import droid, pytest, pytest_asyncio' >/dev/null 2>&1; then
 fi
 for task in "${CHECK_TASKS[@]}"; do
   case "$task" in
-    :pytest) "$PY" -m pytest -q || { rc=$?; [ "$rc" -eq 5 ] && echo "sin tests que ejecutar todavía" || exit "$rc"; } ;;
+    :pytest) "$PY" -m pytest -q || { rc=$?; [ "$rc" -eq 5 ] && [ ! -d tests ] && echo "sin tests que ejecutar todavía" || exit "$rc"; } ;;
     *) echo "unknown task $task" >&2; exit 2 ;;
   esac
 done

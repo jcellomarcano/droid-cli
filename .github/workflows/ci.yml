@@ -67,3 +67,5 @@ jobs:
           tar tzf dist/*.tar.gz > sdist.txt
           if grep -E "fixtures/raw|\.droid/" sdist.txt; then echo "raw material in sdist" >&2; exit 1; fi
           unzip -l dist/*.whl | grep -E "droid/" | head -3
+          unzip -l dist/*.whl | grep -q 'droid/cli.py'
+          if unzip -l dist/*.whl | grep -q 'tests/'; then echo "tests/ leaked into the wheel" >&2; exit 1; fi

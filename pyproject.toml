@@ -4,10 +4,32 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "droid-cli"
-version = "0.1.0"
-description = "CLI para gestionar dispositivos ADB (USB/WiFi), logs con color y caché post-mortem"
+version = "0.2.0"
+description = "Personal ADB CLI: device management over USB/WiFi, colored logcat with a post-mortem cache, and a live in-terminal inspector"
 requires-python = ">=3.9"
+authors = [{name = "Jesús Marcano", email = "jcellomarcano@gmail.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Topic :: Software Development :: Debuggers",
+  "License :: OSI Approved :: MIT License",
+]
 dependencies = ["rich>=13.7", "textual>=0.80", "textual-autocomplete>=4.0"]
+
+[project.urls]
+Homepage = "https://github.com/jcellomarcano/droid-cli"
+Repository = "https://github.com/jcellomarcano/droid-cli"
+Issues = "https://github.com/jcellomarcano/droid-cli/issues"
 
 [project.optional-dependencies]
 test = ["pytest>=8", "pytest-asyncio>=0.23"]

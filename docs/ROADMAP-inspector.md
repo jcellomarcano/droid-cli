@@ -1,4 +1,4 @@
-# Roadmap: `droid inspect` — App inspector / build analyzer
+# Roadmap: `droid inspect` - App inspector / build analyzer
 
 Objetivo: inspeccionar en vivo, desde la terminal, las apps **debuggables de tus proyectos** instaladas
 en tus dispositivos, y analizar sus builds. Solo apps cuyo `applicationId` sale de un módulo Android
@@ -17,7 +17,7 @@ identifiquen sin ambigüedad.
   pestañas por sección, sparklines/gráficas en terminal, atajos de teclado. Toda pestaña tiene
   equivalente no interactivo (`--json`, `--csv`) para scripts y CI.
 
-## Fase 0 — identificación (hecho: `droid apps`)
+## Fase 0 - identificación (hecho: `droid apps`)
 
 - Escaneo de `build.gradle(.kts)` → `applicationId`, `applicationIdSuffix`, `namespace`.
 - Cruce con `pm list packages` + `dumpsys package` → versión, `DEBUGGABLE`, PID, fecha de instalación.
@@ -37,7 +37,14 @@ persistente que se aplica a Logs, CPU, Memoria y Red a la vez:
 - Guardar/cargar filtros con nombre (`~/.droid/filters.json`) y aplicarlos por CLI:
   `droid logs pix --filter red-lenta`.
 
-## Fase 1 — Overview + CPU + RAM (muestreo cada 1 s)  ✔ hecho (2026-09-08): `droid inspect`, pestaña 7
+## Fase 1 - Overview + CPU + RAM (muestreo cada 1 s)  ✔ hecho (2026-09-08): `droid inspect`, pestaña 7
+
+Ampliado (2026-09-15) con dos vistas más dentro de la pestaña 7, además de Resumen (`o`):
+
+- **Memoria** (`u`) - heaps Java/Native, GC, y una heurística de leak sospechoso a partir del
+  crecimiento sostenido de RSS/PSS entre muestras. Ver "Memory" en el README para sus límites.
+- **Salud** (`h`) - agrupa crashes, ANR y muertes de proceso (`dumpsys activity exit-info`) por
+  firma de stack, con línea temporal y teclas `l` (logs del pid) y `e` (refrescar salidas).
 
 | Métrica | Fuente | Notas |
 |---|---|---|
@@ -51,7 +58,7 @@ persistente que se aplica a Logs, CPU, Memoria y Red a la vez:
 
 Comando previsto: `droid inspect <dev> [-p <pkg>] [--interval 1] [--duration 60s] [--json]`.
 
-## Fase 2 — Red (Network inspector)  ◐ parcial: `droid net`, pestaña 9 (tasa por interfaz, totales por uid, sockets). Pendiente: HTTP
+## Fase 2 - Red (Network inspector)  ✔ hecho (2026-09-15) salvo HTTP: `droid net`, pestaña 9 (tasa por interfaz, totales por uid, sockets). HTTP se movió a la próxima versión - ver `docs/design/http-capture.md`
 
 - **Contadores por UID** (`/proc/net/xt_qtaguid` no existe ya; usar `dumpsys netstats detail` y
   `/proc/<pid>/net/dev` delta) → gráfica rx/tx por segundo, total por sesión, WiFi vs móvil.
@@ -65,7 +72,13 @@ Comando previsto: `droid inspect <dev> [-p <pkg>] [--interval 1] [--duration 60s
      request/response, timings por fase (DNS, TLS, TTFB) y trazas WebSocket.
 - Pestaña con lista de peticiones, detalle, filtro por host/código, exportar HAR.
 
-## Fase 3 — Base de datos  ✔ hecho: `droid db`, pestaña 8 (snapshot run-as, tablas, SQL, CSV, prefs). Pendiente: diff entre snapshots en la TUI, DataStore
+## Fase 3 - Base de datos  ✔ hecho (2026-09-15): `droid db`, pestaña 8 (snapshot run-as, tablas, SQL, CSV, prefs). Pendiente: diff entre snapshots en la TUI, DataStore
+
+## Archivos (fuera de las fases originales)  ✔ hecho (2026-09-15): `droid files`, pestaña F (fuera de la numeración de fases porque nació de `droid db`/`run-as`, no del plan original)
+
+Explorador de archivos sobre `run-as` (sandbox de la app) y rutas del dispositivo (`/sdcard`,
+`/data/local/tmp`, `/proc/<pid>`): navegar directorios, ver un archivo, `pull` a disco, abrir un
+`.db` directamente en la pestaña DB, y borrar con confirmación (`-y` en CLI, diálogo en TUI).
 
 - Descubrir DBs: `run-as <pkg> ls databases/` (+ `files/`, `no_backup/`, Room/SQLDelight/Realm).
 - `run-as <pkg> cat databases/x.db > snapshot` → `sqlite3` local (con `-wal` y `-shm` para no perder
@@ -74,7 +87,7 @@ Comando previsto: `droid inspect <dev> [-p <pkg>] [--interval 1] [--duration 60s
 - DataStore / SharedPreferences: `run-as <pkg> cat shared_prefs/*.xml` y `files/datastore/*.preferences_pb`.
 - Modo "live": re-snapshot cada N segundos con el DB Inspector de Android Studio cerrado (evita locks).
 
-## Fase 4 — Build analyzer
+## Fase 4 - Build analyzer
 
 - APK/AAB de tu último build: `apkanalyzer` (cmdline-tools ya instalados en `/opt/android-sdk`):
   tamaño por tipo (dex, res, assets, native libs), número de métodos por paquete, comparar dos
@@ -86,7 +99,7 @@ Comando previsto: `droid inspect <dev> [-p <pkg>] [--interval 1] [--duration 60s
 - Baseline profiles / R8: comprobar `mapping.txt`, desofuscar stacktraces de la caché de logs
   (`droid cache show … --retrace <mapping>`).
 
-## Fase 5 — Traces profundos (opcional)
+## Fase 5 - Traces profundos (opcional)
 
 - `simpleperf record -p <pid>` → flamegraph HTML.
 - `perfetto` con config predefinida (CPU, memoria, frames) → abrir en ui.perfetto.dev.
@@ -118,8 +131,8 @@ Cada collector es independiente y testeable con salidas de `dumpsys` capturadas 
 
 ## Orden sugerido
 
-1. Fase 1 (CPU/RAM/frames) — mayor valor, solo `dumpsys` + `/proc`.
-2. Fase 3 (DB) — muy útil y sencilla con `run-as` + `sqlite3`.
+1. Fase 1 (CPU/RAM/frames) - mayor valor, solo `dumpsys` + `/proc`.
+2. Fase 3 (DB) - muy útil y sencilla con `run-as` + `sqlite3`.
 3. Fase 2 opción 1 (red sin agente), luego el agente si hace falta cuerpo de peticiones.
-4. Fase 4 (build analyzer) — `apkanalyzer` ya está en tu SDK.
+4. Fase 4 (build analyzer) - `apkanalyzer` ya está en tu SDK.
 5. Fase 5.
