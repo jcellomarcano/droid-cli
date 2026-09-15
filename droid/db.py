@@ -3,7 +3,6 @@ import csv
 import io
 import re
 import sqlite3
-import subprocess
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -84,16 +83,22 @@ def pull_database(serial: str, package: str, remote: str, dest_dir: Path) -> Pat
     """Copia la DB (y -wal/-shm si existen) con `adb exec-out run-as pkg cat`. Devuelve la ruta local."""
     local = dest_dir / remote.rsplit("/", 1)[-1]
     for suffix in ("", "-wal", "-shm"):
-        cmd = [adbmod.adb_path(), "-s", serial, "exec-out", "run-as", package, "cat", remote + suffix]
-        with open(str(local) + suffix, "wb") as fh:
-            r = subprocess.run(cmd, stdout=fh, stderr=subprocess.PIPE, timeout=120)
-        if r.returncode != 0 or (local.with_name(local.name + suffix)).stat().st_size == 0 and suffix:
+        dest = Path(str(local) + suffix)
+        try:
+            adbmod.exec_out(serial, ["run-as", package, "cat", remote + suffix], dest, timeout=120)
+        except adbmod.AdbError as e:
             try:
-                (dest_dir / (local.name + suffix)).unlink()
+                dest.unlink()
             except OSError:
                 pass
             if suffix == "":
-                raise RuntimeError(f"no pude copiar {remote}: {r.stderr.decode('utf-8', 'replace').strip()}")
+                raise RuntimeError(f"no pude copiar {remote}: {e}") from e
+            continue
+        if suffix and dest.exists() and dest.stat().st_size == 0:
+            try:
+                dest.unlink()
+            except OSError:
+                pass
     return local
 
 

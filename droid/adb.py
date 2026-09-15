@@ -72,6 +72,17 @@ def shell(serial: str, cmd: str, timeout: float = 15) -> str:
     return run(["shell", cmd], serial=serial, timeout=timeout).stdout
 
 
+def exec_out(serial: str, args: List[str], dest, timeout: float = 120) -> subprocess.CompletedProcess:
+    """`adb -s <serial> exec-out <args...>` con stdout volcado a `dest`. Lanza AdbError si rc != 0."""
+    cmd = [adb_path(), "-s", serial, "exec-out", *args]
+    with open(dest, "wb") as fh:
+        r = subprocess.run(cmd, stdout=fh, stderr=subprocess.PIPE, timeout=timeout)
+    if r.returncode != 0:
+        err = r.stderr.decode("utf-8", "replace") if isinstance(r.stderr, bytes) else (r.stderr or "")
+        raise AdbError(f"exec-out falló: {err.strip()[:300]}")
+    return r
+
+
 def sanitize(s: str) -> str:
     return SANITIZE_RE.sub("_", s).strip("_") or "unknown"
 
