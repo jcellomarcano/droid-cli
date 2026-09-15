@@ -608,6 +608,26 @@ class DbPane(Vertical):
 
 # ============================================================================ Red
 
+def _fmt_t(ts) -> str:
+    if not ts:
+        return ""
+    return time.strftime("%H:%M:%S", time.localtime(ts))
+
+
+def _fmt_states(states: dict) -> str:
+    return " ".join(f"{k}:{v}" for k, v in sorted(states.items())) if states else ""
+
+
+def _remote_with_host(remote: str, dns) -> str:
+    if not dns:
+        return remote
+    ip, _, _port = remote.rpartition(":")
+    ip = ip.strip("[]") or remote
+    cache = getattr(dns, "_cache", {})
+    host = cache.get(ip)
+    return f"{host} ({remote})" if host else remote
+
+
 class NetPane(Vertical):
     DEFAULT_CSS = """
     NetPane { height: 1fr; }
@@ -621,6 +641,8 @@ class NetPane(Vertical):
     NetPane #sp_tx > .sparkline--max-color { color: #5fafff; }
     NetPane #sp_tx > .sparkline--min-color { color: #00305f; }
     NetPane .sparklabel { width: 1fr; height: 1; padding: 0 1; color: $text-muted; }
+    NetPane #n_hosts { height: 1fr; min-height: 4; }
+    NetPane #n_events { height: 1fr; min-height: 4; }
     NetPane #n_sockets { height: 1fr; }
     NetPane .hint { color: $text-muted; height: 1; padding: 0 1; }
     """
@@ -628,6 +650,9 @@ class NetPane(Vertical):
         Binding("s", "toggle", "Iniciar/Parar"),
         Binding("r", "refresh_sockets", "Sockets"),
         Binding("f", "focus_pkg", "App"),
+        Binding("h", "focus_hosts", "Hosts"),
+        Binding("e", "focus_events", "Eventos"),
+        Binding("k", "focus_sockets", "Sockets"),
     ]
 
     def __init__(self, **kw):
@@ -648,12 +673,16 @@ class NetPane(Vertical):
             with Vertical(classes="spark"):
                 yield Static("↑ subida", classes="sparklabel", id="lbl_tx")
                 yield Sparkline([0.0], id="sp_tx")
+        yield DataTable(id="n_hosts", cursor_type="row", zebra_stripes=True)
+        yield DataTable(id="n_events", cursor_type="row", zebra_stripes=True)
         yield DataTable(id="n_sockets", cursor_type="row", zebra_stripes=True)
         yield Static("", id="n_hint", classes="hint")
 
     def on_mount(self) -> None:
+        self.query_one("#n_hosts", DataTable).add_columns("Host", "IP", "Conexiones", "Estados", "Primera", "Última")
+        self.query_one("#n_events", DataTable).add_columns("Hora", "Evento", "Proto", "Remoto", "Estado")
         self.query_one("#n_sockets", DataTable).add_columns("Proto", "Estado", "Local", "Remoto", "UID")
-        self.query_one("#n_hint", Static).update("[dim]s: iniciar/parar · r: refrescar sockets · f: cambiar app[/]")
+        self.query_one("#n_hint", Static).update("[dim]s: iniciar/parar · r: refrescar sockets · f: cambiar app · h: hosts · e: eventos · k: sockets[/]")
         self.set_interval(0.5, self._refresh)
 
     def set_package(self, pkg: str) -> None:
@@ -661,6 +690,15 @@ class NetPane(Vertical):
 
     def action_focus_pkg(self) -> None:
         self.query_one("#n_pkg", Input).focus()
+
+    def action_focus_hosts(self) -> None:
+        self.query_one("#n_hosts", DataTable).focus()
+
+    def action_focus_events(self) -> None:
+        self.query_one("#n_events", DataTable).focus()
+
+    def action_focus_sockets(self) -> None:
+        self.query_one("#n_sockets", DataTable).focus()
 
     @on(Input.Submitted)
     def _submitted(self, ev: Input.Submitted) -> None:
@@ -711,7 +749,11 @@ class NetPane(Vertical):
         dev_c = theme.hx(theme.color_for(mon.dev.key))
         active = [(i, r) for i, r in sorted(last.rates.items()) if r != (0.0, 0.0) or any(s.rates.get(i, (0, 0)) != (0, 0) for s in list(mon.samples)[-30:])]
         parts = [f"[{dev_c} bold]{escape(mon.dev.display)}[/] · red" + (f" · {escape(mon.package)} (uid {mon.uid})" if mon.package else " · todo el dispositivo") + ("" if mon.running else f" · [{theme.hx(theme.WARN)}]parado[/]"),
-                 "  ".join(f"[bold]{i}[/] [{theme.hx(theme.OK)}]↓ {theme.rate(r[0])}[/] [{theme.hx(theme.INFO)}]↑ {theme.rate(r[1])}[/]" for i, r in active) or "[dim]sin tráfico[/]"]
+                 f"[dim]{escape(getattr(mon, 'cadence_label', ''))}[/]"]
+        if last.app_rx_rate is not None:
+            parts.append(f"[bold]app ↓/↑[/] [{theme.hx(theme.OK)}]↓ {theme.rate(last.app_rx_rate)}[/] [{theme.hx(theme.INFO)}]↑ {theme.rate(last.app_tx_rate or 0.0)}[/]")
+        else:
+            parts.append("  ".join(f"[bold]{i}[/] [{theme.hx(theme.OK)}]↓ {theme.rate(r[0])}[/] [{theme.hx(theme.INFO)}]↑ {theme.rate(r[1])}[/]" for i, r in active) or "[dim]sin tráfico[/]")
         if mon.totals:
             t = mon.totals
             sess = ""
@@ -722,12 +764,33 @@ class NetPane(Vertical):
         self.query_one("#n_head", Static).update("\n".join(parts))
         self.query_one("#lbl_rx", Static).update(f"↓ {theme.rate(last.rx_rate)}  [dim]máx {theme.rate(max(self.rx_hist or [0]))}[/]")
         self.query_one("#lbl_tx", Static).update(f"↑ {theme.rate(last.tx_rate)}  [dim]máx {theme.rate(max(self.tx_hist or [0]))}[/]")
+        hosts = getattr(mon, "hosts", []) or []
+        if getattr(self, "_hosts_n", None) != len(hosts):
+            self._hosts_n = len(hosts)
+            ht = self.query_one("#n_hosts", DataTable)
+            ht.clear()
+            for h_ in hosts:
+                host = h_.get("host") or ""
+                ht.add_row(T(host, theme.color_for(host)) if host else T("(sin PTR)", theme.MUTED),
+                           h_.get("ip", ""), str(h_.get("connections", 0)),
+                           _fmt_states(h_.get("states", {})),
+                           _fmt_t(h_.get("first_seen")), _fmt_t(h_.get("last_seen")))
+        events = list(getattr(mon, "events", []) or [])
+        if getattr(self, "_events_n", None) != len(events):
+            self._events_n = len(events)
+            et = self.query_one("#n_events", DataTable)
+            et.clear()
+            for ev in list(reversed(events))[:100]:
+                kind = ev.get("kind", "")
+                et.add_row(_fmt_t(ev.get("t")), T("nuevo" if kind == "new" else "cerrado", theme.OK if kind == "new" else theme.MUTED),
+                           ev.get("proto", ""), ev.get("remote", ""), ev.get("state", ""))
         if getattr(self, "_socks_n", None) != (len(mon.sockets), mon._tot_last):
             self._socks_n = (len(mon.sockets), mon._tot_last)
             t = self.query_one("#n_sockets", DataTable)
             t.clear()
+            dns = getattr(mon, "dns", None)
             for s_ in mon.sockets[:200]:
-                t.add_row(s_.proto, T(s_.state, theme.OK if s_.state == "ESTAB" else theme.MUTED), s_.local, s_.remote, str(s_.uid))
+                t.add_row(s_.proto, T(s_.state, theme.OK if s_.state == "ESTAB" else theme.MUTED), s_.local, _remote_with_host(s_.remote, dns), str(s_.uid))
             self.query_one("#n_hint", Static).update(f"[dim]{len(mon.sockets)} sockets" + (f" del uid {mon.uid}" if mon.uid else "") + " · r: refrescar · s: parar[/]")
 
 

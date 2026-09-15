@@ -233,3 +233,35 @@ def test_exit_events_falls_back_to_host_tz_when_offset_missing_or_invalid():
     assert cli._exit_events([e], None)[0][0] == host_ts
     assert cli._exit_events([e], "not-an-offset")[0][0] == host_ts
     assert cli._exit_events([e])[0][0] == host_ts
+
+
+def test_net_view_shows_hosts_and_events_tables():
+    sample = SimpleNamespace(rates={"wlan0": (1000, 2000)})
+    mon = SimpleNamespace(
+        dev=_dev(), package=None, uid=None, samples=[sample],
+        totals={"rx": 5000, "tx": 6000, "by_type": {"wifi": (3000, 4000)}},
+        totals_start=None, sockets=[],
+        hosts=[{"host": "example.com", "ip": "1.2.3.4", "connections": 3,
+                "states": {"ESTAB": 2}, "first_seen": 1.0, "last_seen": 2.0}],
+        events=[{"t": 2.0, "kind": "new", "proto": "tcp", "local": "0.0.0.0:1234",
+                 "remote": "1.2.3.4:443", "state": "ESTAB"}],
+        cadence_label="por app acumulado cada 10 s (dumpsys netstats)",
+    )
+    out = _render(cli._net_view(mon))
+    assert "Hosts" in out
+    assert "example.com" in out
+    assert "Eventos" in out
+    assert "por app acumulado cada 10 s" in out
+
+
+def test_net_view_tolerates_missing_hosts_and_events():
+    sample = SimpleNamespace(rates={"wlan0": (1000, 2000)})
+    mon = SimpleNamespace(
+        dev=_dev(), package=None, uid=None, samples=[sample],
+        totals={"rx": 5000, "tx": 6000, "by_type": {"wifi": (3000, 4000)}},
+        totals_start=None, sockets=[],
+    )
+    out = _render(cli._net_view(mon))
+    assert "wlan0" in out
+    assert "Hosts" not in out
+    assert "Eventos" not in out

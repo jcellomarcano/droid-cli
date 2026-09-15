@@ -1187,7 +1187,8 @@ def cmd_net(args) -> int:
                 _time.sleep(args.interval)
                 if mon.samples:
                     smp = mon.samples[-1]
-                    print(json.dumps({"t": smp.t, "rates": smp.rates, "totals": mon.totals}), flush=True)
+                    print(json.dumps({"t": smp.t, "rates": smp.rates, "totals": mon.totals,
+                                       "hosts": mon.hosts, "events": list(mon.events)}), flush=True)
         else:
             from rich.live import Live
             with Live(_net_view(mon), console=ui.console, refresh_per_second=4) as live:
@@ -1208,6 +1209,9 @@ def _net_view(mon):
     head = Text()
     head.append(mon.dev.display, style=f"bold {theme.hx(theme.color_for(mon.dev.key))}")
     head.append(f" · red" + (f" · {mon.package} (uid {mon.uid})" if mon.package else " · todo el dispositivo"), style="dim")
+    cadence = getattr(mon, "cadence_label", None)
+    if cadence:
+        head.append(f" · {cadence}", style="dim")
     lines.append(head)
     samples = list(mon.samples)
     last = samples[-1] if samples else None
@@ -1241,12 +1245,42 @@ def _net_view(mon):
                 tipo.append(theme.hbar(v[0] + v[1], max_total, 16), style=theme.hx(theme.WARN))
                 tipo.append("  ")
             lines.append(tipo)
+    extras = []
+    hosts = getattr(mon, "hosts", None) or []
+    if hosts:
+        htbl = Table(box=box.SIMPLE_HEAD, title="Hosts", title_justify="left")
+        for col in ("Host", "IP", "Conexiones", "Estados", "Primera", "Última"):
+            htbl.add_column(col)
+        for h_ in hosts[:10]:
+            host = h_.get("host") or ""
+            states = " ".join(f"{k}:{v}" for k, v in sorted((h_.get("states") or {}).items()))
+            htbl.add_row(theme.paint(host, theme.color_for(host)) if host else Text("(sin PTR)", style="dim"),
+                        h_.get("ip", ""), str(h_.get("connections", 0)), states,
+                        _fmt_net_t(h_.get("first_seen")), _fmt_net_t(h_.get("last_seen")))
+        extras.append(htbl)
+    events = list(getattr(mon, "events", None) or [])
+    if events:
+        etbl = Table(box=box.SIMPLE_HEAD, title="Eventos", title_justify="left")
+        for col in ("Hora", "Evento", "Proto", "Remoto", "Estado"):
+            etbl.add_column(col)
+        for ev in list(reversed(events))[:8]:
+            kind = ev.get("kind", "")
+            etbl.add_row(_fmt_net_t(ev.get("t")), theme.paint("nuevo" if kind == "new" else "cerrado", theme.OK if kind == "new" else theme.MUTED),
+                        ev.get("proto", ""), ev.get("remote", ""), ev.get("state", ""))
+        extras.append(etbl)
     tbl = Table(box=box.SIMPLE_HEAD, title=f"Sockets ({len(mon.sockets)})", title_justify="left")
     for col in ("Proto", "Estado", "Local", "Remoto"):
         tbl.add_column(col)
     for s_ in mon.sockets[:15]:
         tbl.add_row(s_.proto, theme.paint(s_.state, theme.OK if s_.state == "ESTAB" else theme.MUTED), s_.local, s_.remote)
-    return Group(Panel(Group(*lines), border_style=theme.hx(theme.color_for(mon.dev.key))), tbl, Text("Ctrl+C para terminar", style="dim"))
+    return Group(Panel(Group(*lines), border_style=theme.hx(theme.color_for(mon.dev.key))), *extras, tbl, Text("Ctrl+C para terminar", style="dim"))
+
+
+def _fmt_net_t(ts) -> str:
+    if not ts:
+        return ""
+    import time as _t
+    return _t.strftime("%H:%M:%S", _t.localtime(ts))
 
 
 def cmd_shell(args) -> int:
