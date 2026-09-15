@@ -1,0 +1,26 @@
+/proc/10362/task/10362/comm:igital.app
+/proc/10362/task/10363/comm:Signal Catcher
+/proc/10362/task/10364/comm:perfetto_hprof_
+/proc/10362/task/10365/comm:ADB-JDWP Connec
+/proc/10362/task/10367/comm:Jit thread pool
+/proc/10362/task/10368/comm:HeapTaskDaemon
+/proc/10362/task/10369/comm:ReferenceQueueD
+/proc/10362/task/10370/comm:FinalizerDaemon
+/proc/10362/task/10371/comm:FinalizerWatchd
+/proc/10362/task/10372/comm:binder:10362_1
+/proc/10362/task/10373/comm:binder:10362_2
+/proc/10362/task/10374/comm:binder:10362_3
+/proc/10362/task/10395/comm:Profile Saver
+/proc/10362/task/10396/comm:LeakCanary-Heap
+/proc/10362/task/10397/comm:DefaultDispatch
+/proc/10362/task/10398/comm:DefaultDispatch
+/proc/10362/task/10399/comm:DefaultDispatch
+/proc/10362/task/10400/comm:SharedPreferenc
+/proc/10362/task/10402/comm:RenderThread
+/proc/10362/task/10403/comm:TracingMuxer
+/proc/10362/task/10405/comm:LeakCanary-Acti
+/proc/10362/task/10406/comm:ProtoLogBackgro
+/proc/10362/task/10407/comm:hwuiTask0
+/proc/10362/task/10408/comm:hwuiTask1
+/proc/10362/task/10410/comm:SurfaceSyncGrou
+/proc/10362/task/10411/comm:RenderThread

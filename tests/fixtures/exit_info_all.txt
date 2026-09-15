@@ -1,0 +1,802 @@
+ACTIVITY MANAGER PROCESS EXIT INFO (dumpsys activity exit-info)
+Last Timestamp of Persistence Into Persistent Storage: 2026-09-14 23:31:32.073
+  package: com.google.android.inputmethod.latin
+    Historical Process Exit for uid=10033
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 04:28:45.185 pid=25808 realUid=10033 packageUid=10033 definingUid=10033 user=0
+          process=com.google.android.inputmethod.latin reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-08-16 23:41:45.610 pid=2133 realUid=10033 packageUid=10033 definingUid=10033 user=0
+          process=com.google.android.inputmethod.latin reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-07-04 11:48:15.512 pid=2089 realUid=10033 packageUid=10033 definingUid=10033 user=0
+          process=com.google.android.inputmethod.latin reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-07-03 20:02:56.771 pid=2081 realUid=10033 packageUid=10033 definingUid=10033 user=0
+          process=com.google.android.inputmethod.latin reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+  package: com.android.providers.contacts
+    Historical Process Exit for uid=10021
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 01:03:51.720 pid=25118 realUid=10021 packageUid=10021 definingUid=10021 user=0
+          process=android.process.acore reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-07-04 02:03:03.380 pid=1349 realUid=10021 packageUid=10021 definingUid=10021 user=0
+          process=android.process.acore reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.google.android.cellbroadcastreceiver
+    Historical Process Exit for uid=10085
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 01:03:51.719 pid=24960 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-12 00:22:56.653 pid=1164 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-08-18 02:31:00.211 pid=5070 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-08-16 23:41:45.622 pid=1163 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #4:
+          timestamp=2026-07-11 00:35:41.964 pid=12893 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=AnrInfo(anrId=431, anrType=5, timeoutMillis=20022, isUserPerceptible=false)
+        ApplicationExitInfo #5:
+          timestamp=2026-07-10 23:07:15.089 pid=10310 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #6:
+          timestamp=2026-07-10 21:02:10.376 pid=4745 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #7:
+          timestamp=2026-07-10 18:23:45.268 pid=1241 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #8:
+          timestamp=2026-07-06 22:59:33.851 pid=1274 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #9:
+          timestamp=2026-07-04 03:31:29.391 pid=1253 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #10:
+          timestamp=2026-07-03 23:48:15.205 pid=3918 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #11:
+          timestamp=2026-07-03 19:13:06.247 pid=1149 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #12:
+          timestamp=2026-07-03 17:50:47.389 pid=1147 realUid=10085 packageUid=10085 definingUid=10085 user=0
+          process=com.google.android.cellbroadcastreceiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.example.other
+    Historical Process Exit for uid=10096
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 03:52:54.225 pid=7912 realUid=10096 packageUid=10096 definingUid=10096 user=0
+          process=com.example.other reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.example.other due to from pid 9345
+          anrInfo=null
+  package: com.android.providers.blockednumber
+    Historical Process Exit for uid=10021
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 01:03:51.720 pid=25118 realUid=10021 packageUid=10021 definingUid=10021 user=0
+          process=android.process.acore reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-07-04 02:03:03.380 pid=1349 realUid=10021 packageUid=10021 definingUid=10021 user=0
+          process=android.process.acore reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.android.shell
+    Historical Process Exit for uid=2000
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 01:03:51.719 pid=25619 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-12 00:22:56.654 pid=1871 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-08-16 23:41:45.615 pid=1933 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-07-11 00:35:41.964 pid=13549 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=AnrInfo(anrId=431, anrType=5, timeoutMillis=20022, isUserPerceptible=false)
+        ApplicationExitInfo #4:
+          timestamp=2026-07-10 23:07:15.243 pid=10898 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #5:
+          timestamp=2026-07-10 20:59:10.777 pid=5372 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #6:
+          timestamp=2026-07-10 18:23:45.515 pid=1956 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #7:
+          timestamp=2026-07-06 22:59:33.847 pid=1944 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #8:
+          timestamp=2026-07-04 03:31:29.380 pid=1887 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #9:
+          timestamp=2026-07-03 19:13:06.246 pid=1838 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #10:
+          timestamp=2026-07-03 17:50:47.387 pid=1925 realUid=2000 packageUid=2000 definingUid=2000 user=0
+          process=com.android.shell reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.google.android.wearable.app
+    Historical Process Exit for uid=10035
+        ApplicationExitInfo #0:
+          timestamp=2026-08-17 04:55:09.447 pid=6918 realUid=10035 packageUid=10035 definingUid=10035 user=0
+          process=com.google.android.wearable.app reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-08-17 04:55:09.005 pid=6762 realUid=10035 packageUid=10035 definingUid=10035 user=0
+          process=com.google.android.wearable.app reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-08-17 04:55:08.450 pid=1616 realUid=10035 packageUid=10035 definingUid=10035 user=0
+          process=com.google.android.wearable.app reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+  package: com.google.android.healthconnect.controller
+    Historical Process Exit for uid=10067
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 01:38:02.775 pid=25787 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-12 00:22:56.653 pid=2077 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-08-16 23:41:45.614 pid=2101 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-07-11 00:35:41.963 pid=13676 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=AnrInfo(anrId=431, anrType=5, timeoutMillis=20022, isUserPerceptible=false)
+        ApplicationExitInfo #4:
+          timestamp=2026-07-10 23:07:15.235 pid=11035 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #5:
+          timestamp=2026-07-10 21:04:20.262 pid=5518 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #6:
+          timestamp=2026-07-10 18:23:45.514 pid=2110 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #7:
+          timestamp=2026-07-06 22:59:33.846 pid=2148 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #8:
+          timestamp=2026-07-04 03:31:29.379 pid=2075 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #9:
+          timestamp=2026-07-03 19:13:06.245 pid=2022 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #10:
+          timestamp=2026-07-03 17:50:47.387 pid=2174 realUid=10067 packageUid=10067 definingUid=10067 user=0
+          process=com.google.android.healthconnect.controller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.android.managedprovisioning
+    Historical Process Exit for uid=10037
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 01:03:51.720 pid=25523 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-12 00:22:56.655 pid=1812 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-08-16 23:41:45.615 pid=1824 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-07-11 00:35:41.965 pid=13482 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #4:
+          timestamp=2026-07-10 23:07:15.331 pid=10835 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #5:
+          timestamp=2026-07-10 20:59:10.955 pid=5317 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #6:
+          timestamp=2026-07-10 18:23:45.251 pid=1875 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #7:
+          timestamp=2026-07-06 22:59:33.847 pid=1816 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #8:
+          timestamp=2026-07-04 03:31:29.390 pid=1773 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #9:
+          timestamp=2026-07-03 19:13:06.247 pid=1774 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #10:
+          timestamp=2026-07-03 17:50:47.389 pid=1811 realUid=10037 packageUid=10037 definingUid=10037 user=0
+          process=com.android.managedprovisioning reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.android.carrierdefaultapp
+    Historical Process Exit for uid=10047
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 01:03:51.718 pid=25155 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-08-17 11:35:00.238 pid=4892 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-08-16 23:41:45.615 pid=1364 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-07-11 01:29:55.318 pid=13692 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #4:
+          timestamp=2026-07-10 23:07:23.310 pid=11128 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #5:
+          timestamp=2026-07-10 18:23:45.250 pid=1924 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #6:
+          timestamp=2026-07-06 22:59:33.848 pid=1394 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #7:
+          timestamp=2026-07-04 03:31:29.380 pid=1859 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #8:
+          timestamp=2026-07-03 19:13:06.245 pid=1378 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #9:
+          timestamp=2026-07-03 17:50:47.388 pid=1340 realUid=10047 packageUid=10047 definingUid=10047 user=0
+          process=com.android.carrierdefaultapp reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.google.android.tts
+    Historical Process Exit for uid=10019
+        ApplicationExitInfo #0:
+          timestamp=2026-08-16 23:41:45.612 pid=2266 realUid=10019 packageUid=10019 definingUid=10019 user=0
+          process=com.google.android.tts reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-07-03 20:54:14.813 pid=2177 realUid=10019 packageUid=10019 definingUid=10019 user=0
+          process=com.google.android.tts reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.google.android.gms
+    Historical Process Exit for uid=10082
+        ApplicationExitInfo #0:
+          timestamp=2026-09-14 23:01:38.871 pid=4229 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.google.android.gms due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-14 23:01:38.869 pid=25047 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.unstable reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.google.android.gms due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-09-14 23:01:38.865 pid=4147 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.persistent reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.google.android.gms due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-09-14 16:34:56.703 pid=10434 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #4:
+          timestamp=2026-09-14 16:34:56.687 pid=10351 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.persistent reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #5:
+          timestamp=2026-09-14 03:31:56.670 pid=21593 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.persistent reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #6:
+          timestamp=2026-09-14 03:31:56.655 pid=21695 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #7:
+          timestamp=2026-09-13 14:37:51.300 pid=31617 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.persistent reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #8:
+          timestamp=2026-09-13 14:37:51.256 pid=31599 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #9:
+          timestamp=2026-09-13 02:12:15.255 pid=21885 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.persistent reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #10:
+          timestamp=2026-09-13 02:12:15.217 pid=21848 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=300 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #11:
+          timestamp=2026-09-13 00:56:02.586 pid=25527 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.unstable reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #12:
+          timestamp=2026-09-12 13:34:57.662 pid=25006 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.persistent reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #13:
+          timestamp=2026-09-12 13:34:56.514 pid=25445 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #14:
+          timestamp=2026-08-18 08:55:04.000 pid=9390 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms.persistent reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #15:
+          timestamp=2026-08-18 02:31:13.550 pid=9473 realUid=10082 packageUid=10082 definingUid=10082 user=0
+          process=com.google.android.gms reason=9 (EXCESSIVE RESOURCE USAGE) subreason=7 (EXCESSIVE CPU USAGE) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=excessive binder traffic during cached
+          anrInfo=null
+  package: com.google.android.packageinstaller
+    Historical Process Exit for uid=10030
+        ApplicationExitInfo #0:
+          timestamp=2026-09-14 23:01:52.126 pid=25841 realUid=10030 packageUid=10030 definingUid=10030 user=0
+          process=com.google.android.packageinstaller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-08-17 04:55:46.683 pid=2240 realUid=10030 packageUid=10030 definingUid=10030 user=0
+          process=com.google.android.packageinstaller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-07-10 23:53:37.733 pid=11153 realUid=10030 packageUid=10030 definingUid=10030 user=0
+          process=com.google.android.packageinstaller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-07-03 17:50:47.387 pid=2210 realUid=10030 packageUid=10030 definingUid=10030 user=0
+          process=com.google.android.packageinstaller reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.android.keychain
+    Historical Process Exit for uid=1000
+        ApplicationExitInfo #0:
+          timestamp=2026-09-13 00:56:18.537 pid=5424 realUid=1000 packageUid=1000 definingUid=1000 user=0
+          process=com.android.keychain reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-12 01:03:51.720 pid=25294 realUid=1000 packageUid=1000 definingUid=1000 user=0
+          process=com.android.keychain reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-07-10 23:07:15.794 pid=10588 realUid=1000 packageUid=1000 definingUid=1000 user=0
+          process=com.android.keychain reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-07-10 20:59:11.000 pid=5002 realUid=1000 packageUid=1000 definingUid=1000 user=0
+          process=com.android.keychain reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.google.android.wearable.protolayout.renderer
+    Historical Process Exit for uid=10052
+        ApplicationExitInfo #0:
+          timestamp=2026-08-17 04:55:45.681 pid=1667 realUid=10052 packageUid=10052 definingUid=10052 user=0
+          process=com.google.android.wearable.protolayout.renderer reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.google.android.clockwork.sysui
+    Historical Process Exit for uid=10060
+        ApplicationExitInfo #0:
+          timestamp=2026-07-11 01:56:58.600 pid=14501 realUid=10060 packageUid=10060 definingUid=10060 user=0
+          process=com.google.android.clockwork.sysui reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=100 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.google.android.clockwork.sysui due to from pid 18383
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-07-11 00:29:37.627 pid=12559 realUid=10060 packageUid=10060 definingUid=10060 user=0
+          process=com.google.android.clockwork.sysui reason=6 (ANR) subreason=0 (UNKNOWN) status=0
+          importance=100 pss=0.00 rss=0.00 state=empty trace=null
+          description=user request after error: executing service com.google.android.clockwork.sysui/.com.example.app_46af8c.HeadsUpNotificationService, waited 23119ms
+          anrInfo=null
+  package: com.google.android.apps.wearable.settings
+    Historical Process Exit for uid=1000
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 23:51:53.529 pid=25223 realUid=1000 packageUid=1000 definingUid=1000 user=0
+          process=com.google.android.apps.wearable.settings reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.google.android.wearable.dwf.receiver
+    Historical Process Exit for uid=10036
+        ApplicationExitInfo #0:
+          timestamp=2026-09-14 23:01:47.818 pid=5520 realUid=10036 packageUid=10036 definingUid=10036 user=0
+          process=com.google.android.wearable.dwf.receiver reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.android.vending
+    Historical Process Exit for uid=10026
+        ApplicationExitInfo #0:
+          timestamp=2026-09-14 23:01:32.103 pid=25659 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending:background reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=1000 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to pkg removed
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-14 23:01:32.063 pid=15550 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending:quick_launch reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-09-14 23:01:32.062 pid=24826 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending:recovery_mode reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-09-14 23:01:32.061 pid=25663 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending:background reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #4:
+          timestamp=2026-09-14 23:01:32.059 pid=30009 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=125 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #5:
+          timestamp=2026-09-12 00:15:58.350 pid=2567 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=9 (EXCESSIVE RESOURCE USAGE) subreason=7 (EXCESSIVE CPU USAGE) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=excessive binder traffic during cached
+          anrInfo=null
+        ApplicationExitInfo #6:
+          timestamp=2026-08-18 02:30:53.355 pid=10279 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=9 (EXCESSIVE RESOURCE USAGE) subreason=7 (EXCESSIVE CPU USAGE) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=excessive binder traffic during cached
+          anrInfo=null
+        ApplicationExitInfo #7:
+          timestamp=2026-08-17 18:53:37.817 pid=8352 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=1 (EXIT_SELF) subreason=0 (UNKNOWN) status=0
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #8:
+          timestamp=2026-08-17 05:59:00.160 pid=6774 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=1 (EXIT_SELF) subreason=0 (UNKNOWN) status=0
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #9:
+          timestamp=2026-08-17 04:55:08.881 pid=2769 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=1 (EXIT_SELF) subreason=0 (UNKNOWN) status=0
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=null
+          anrInfo=null
+        ApplicationExitInfo #10:
+          timestamp=2026-08-16 23:32:04.422 pid=2766 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending:background reason=10 (USER REQUESTED) subreason=21 (FORCE STOP) status=0
+          importance=1000 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to pkg removed
+          anrInfo=null
+        ApplicationExitInfo #11:
+          timestamp=2026-08-16 23:32:04.367 pid=2434 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending:quick_launch reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #12:
+          timestamp=2026-08-16 23:32:04.365 pid=1969 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending:background reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #13:
+          timestamp=2026-08-16 23:32:04.363 pid=2085 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=16 (PACKAGE UPDATED) subreason=0 (UNKNOWN) status=0
+          importance=230 pss=0.00 rss=0.00 state=empty trace=null
+          description=stop com.android.vending due to killDueToPackageUpdate
+          anrInfo=null
+        ApplicationExitInfo #14:
+          timestamp=2026-07-10 21:03:53.324 pid=6040 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=6 (ANR) subreason=34 (BIND APPLICATION ANR) status=0
+          importance=230 pss=0.00 rss=0.00 state=empty trace=/data/system/procexitstore/anr_2026-07-10-21-03-36-629.gz
+          description=bg anr: Process ProcessRecord{20d6891 6040:com.android.vending/u0a26} failed to complete startup
+          anrInfo=null
+        ApplicationExitInfo #15:
+          timestamp=2026-07-10 21:02:26.194 pid=5941 realUid=10026 packageUid=10026 definingUid=10026 user=0
+          process=com.android.vending reason=6 (ANR) subreason=34 (BIND APPLICATION ANR) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=bg anr: Process ProcessRecord{b47aa0f 5941:com.android.vending/u0a26} failed to complete startup
+          anrInfo=null
+  package: com.google.android.configupdater
+    Historical Process Exit for uid=10051
+        ApplicationExitInfo #0:
+          timestamp=2026-09-12 04:31:42.233 pid=25711 realUid=10051 packageUid=10051 definingUid=10051 user=0
+          process=com.google.android.configupdater reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-12 00:22:56.650 pid=1978 realUid=10051 packageUid=10051 definingUid=10051 user=0
+          process=com.google.android.configupdater reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-08-16 23:41:45.613 pid=2029 realUid=10051 packageUid=10051 definingUid=10051 user=0
+          process=com.google.android.configupdater reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #3:
+          timestamp=2026-07-07 16:36:47.089 pid=2104 realUid=10051 packageUid=10051 definingUid=10051 user=0
+          process=com.google.android.configupdater reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #4:
+          timestamp=2026-07-04 03:31:29.379 pid=1980 realUid=10051 packageUid=10051 definingUid=10051 user=0
+          process=com.google.android.configupdater reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #5:
+          timestamp=2026-07-03 19:49:28.003 pid=1956 realUid=10051 packageUid=10051 definingUid=10051 user=0
+          process=com.google.android.configupdater reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.android.providers.downloads
+    Historical Process Exit for uid=10015
+        ApplicationExitInfo #0:
+          timestamp=2026-07-11 00:35:41.966 pid=13369 realUid=10015 packageUid=10015 definingUid=10015 user=0
+          process=android.process.media reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=AnrInfo(anrId=431, anrType=5, timeoutMillis=20022, isUserPerceptible=false)
+        ApplicationExitInfo #1:
+          timestamp=2026-07-04 02:04:26.317 pid=1587 realUid=10015 packageUid=10015 definingUid=10015 user=0
+          process=android.process.media reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+  package: com.android.providers.calendar
+    Historical Process Exit for uid=10028
+        ApplicationExitInfo #0:
+          timestamp=2026-08-17 02:31:21.077 pid=1869 realUid=10028 packageUid=10028 definingUid=10028 user=0
+          process=com.android.providers.calendar reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #1:
+          timestamp=2026-07-03 23:42:37.918 pid=1806 realUid=10028 packageUid=10028 definingUid=10028 user=0
+          process=com.android.providers.calendar reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null
+        ApplicationExitInfo #2:
+          timestamp=2026-07-03 18:33:04.846 pid=1859 realUid=10028 packageUid=10028 definingUid=10028 user=0
+          process=com.android.providers.calendar reason=13 (OTHER KILLS BY SYSTEM) subreason=3 (TOO MANY EMPTY PROCS) status=0
+          importance=400 pss=0.00 rss=0.00 state=empty trace=null
+          description=too many empty
+          anrInfo=null

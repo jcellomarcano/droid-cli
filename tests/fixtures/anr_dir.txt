@@ -1,0 +1,2 @@
+ls: /data/anr: Permission denied
+ls: /data/anr: Permission denied

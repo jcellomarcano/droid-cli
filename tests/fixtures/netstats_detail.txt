@@ -1,0 +1,788 @@
+Directory:
+  /data/misc/apexdata/com.android.tethering/netstats
+Configs:
+  netstats_combine_subtype_enabled=false 
+  netstats_store_files_in_apexdata=true 
+  netstats_import_legacy_target_attempts=1 
+  platform legacy stats import attempts count=1 
+  platform legacy stats import successes count=1 
+  platform legacy stats import fallbacks count=0 
+  enable_network_stats_event_logger: true
+  store_transport_types: true
+  netstats_fastdatainput_target_attempts=0 
+  FastDataInput successes=0 
+  FastDataInput fallbacks=0 
+  com.example.app_09494d=TrafficStatsRateLimitCacheConfig{isCacheEnabled: true, expiryDurationMs: 1000, maxEntries: 400} 
+Active interfaces:
+  iface=eth0 ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] 
+Active UID interfaces:
+  iface=eth0 ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] 
+All wifi interfaces:
+  
+All mobile interfaces:
+  eth0 
+Top openSession callers:
+  {uid=1000,package=android}=728
+
+Poll counts per reason:
+  DUMPSYS: 0
+  FORCE_UPDATE: 87
+  GLOBAL_ALERT: 7
+  NETWORK_STATUS_CHANGED: 15
+  OPEN_SESSION: 0
+  PERIODIC: 173
+  RAT_CHANGED: 2
+  REG_CALLBACK: 9
+  REMOVE_UIDS: 2
+  UPSTREAM_CHANGED: 1
+
+Recent poll events:
+  2026-09-15T14:55:46.202686 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T14:37:46.313968 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T14:12:45.169661 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T13:55:46.296358 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T13:34:56.638124 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T13:12:45.175077 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T12:55:46.386638 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T12:31:56.589738 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T12:12:45.169028 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T11:55:46.474082 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T11:28:56.566635 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T11:12:45.167534 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T10:55:46.566264 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T10:37:46.683337 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T10:12:45.174741 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T09:55:46.667813 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T09:37:46.758709 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T09:12:45.171037 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T08:55:46.740589 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T08:37:46.836916 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T08:12:45.173992 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T07:55:46.832412 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T07:35:48.129152 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T07:12:45.167377 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T06:55:46.913283 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T06:32:50.582654 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T06:12:45.173576 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T05:55:47.019489 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T05:40:32.149618 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T05:12:45.183187 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T04:55:47.131152 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T04:28:56.550935 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T04:12:45.172185 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T03:55:47.192206 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T03:26:57.299856 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T03:12:45.173989 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T02:55:47.274616 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T02:31:42.641689 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T02:12:45.185835 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T01:55:47.400984 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T01:28:42.607474 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T01:12:45.176722 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-15T00:55:47.482281 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T00:37:47.648151 - Poll(flags=3, PollEvent{reason=REG_CALLBACK})
+  2026-09-15T00:37:47.608678 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-15T00:12:45.173688 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-14T23:55:47.575031 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-14T23:28:26.295119 - Poll(flags=3, PollEvent{reason=PERIODIC})
+  2026-09-14T23:12:45.189177 - Poll(flags=3, PollEvent{reason=FORCE_UPDATE})
+  2026-09-14T23:01:34.685460 - Poll(flags=1, PollEvent{reason=GLOBAL_ALERT})
+
+Stats Providers:
+  OffloadController Xt:
+    NetworkStats: elapsedRealtime=0
+  OffloadController Uid:
+    NetworkStats: elapsedRealtime=0
+  BpfCoordinator Xt:
+    NetworkStats: elapsedRealtime=0
+  BpfCoordinator Uid:
+    NetworkStats: elapsedRealtime=0
+
+Stats Observers:
+  RequestInfo from pid/uid:24357/1000(android) for DataUsageRequest [ requestId=1, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[], matchWifiNetworkKeys=[], thresholdInBytes=0 ] accessLevel:3
+  RequestInfo from pid/uid:24357/1000(android) for DataUsageRequest [ requestId=2, networkTemplate=NetworkTemplate: matchRule=WIFI, matchSubscriberIds=[], matchWifiNetworkKeys=[], thresholdInBytes=0 ] accessLevel:3
+  RequestInfo from pid/uid:24357/1000(android) for DataUsageRequest [ requestId=9, networkTemplate=NetworkTemplate: matchRule=MOBILE, matchSubscriberIds=[310260...], matchWifiNetworkKeys=[], metered=YES, defaultNetwork=NO, thresholdInBytes=3702558 ] accessLevel:3
+
+Dev stats:
+  Pending bytes: 
+  History since boot:
+Xt stats:
+  Pending bytes: 1577453
+  History since boot:
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=-1 set=ALL tag=0x0
+    NetworkStatsHistory: bucketDuration=3600
+      st=1789164000 rb=558 rp=3 tb=1104 tp=12 op=0
+      st=1789178400 rb=0 rp=0 tb=398 tp=6 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=-1 set=ALL tag=0x0
+    NetworkStatsHistory: bucketDuration=3600
+      st=1789164000 rb=136679 rp=323 tb=77392 tp=290 op=0
+      st=1789167600 rb=273734 rp=1301 tb=189849 tp=1225 op=0
+      st=1789171200 rb=56171 rp=970 tb=80819 tp=948 op=0
+      st=1789174800 rb=120624 rp=1067 tb=83160 tp=1033 op=0
+      st=1789178400 rb=37090 rp=915 tb=86736 tp=1399 op=0
+      st=1789182000 rb=36735 rp=907 tb=62633 tp=1030 op=0
+      st=1789185600 rb=36683 rp=906 tb=61849 tp=1018 op=0
+      st=1789189200 rb=36725 rp=906 tb=62228 tp=1024 op=0
+      st=1789192800 rb=36691 rp=907 tb=62034 tp=1021 op=0
+      st=1789196400 rb=36867 rp=908 tb=61795 tp=1017 op=0
+      st=1789200000 rb=36719 rp=907 tb=61664 tp=1015 op=0
+      st=1789203600 rb=36775 rp=907 tb=61938 tp=1019 op=0
+      st=1789207200 rb=36867 rp=908 tb=61932 tp=1019 op=0
+      st=1789210800 rb=36878 rp=909 tb=65690 tp=1078 op=0
+      st=1789214400 rb=36795 rp=907 tb=63007 tp=1035 op=0
+      st=1789218000 rb=36856 rp=908 tb=61888 tp=1018 op=0
+      st=1789221600 rb=36801 rp=908 tb=62047 tp=1021 op=0
+      st=1789225200 rb=36808 rp=907 tb=61558 tp=1013 op=0
+      st=1789228800 rb=36816 rp=908 tb=62084 tp=1021 op=0
+      st=1789232400 rb=36793 rp=907 tb=61768 tp=1016 op=0
+      st=1789236000 rb=36689 rp=906 tb=62053 tp=1021 op=0
+      st=1789239600 rb=36664 rp=906 tb=61841 tp=1018 op=0
+      st=1789243200 rb=36935 rp=909 tb=60914 tp=1004 op=0
+      st=1789246800 rb=36794 rp=907 tb=64660 tp=1058 op=0
+      st=1789250400 rb=36857 rp=908 tb=63591 tp=1045 op=0
+      st=1789254000 rb=36642 rp=906 tb=62611 tp=1030 op=0
+      st=1789257600 rb=36837 rp=908 tb=64765 tp=1063 op=0
+      st=1789261200 rb=36746 rp=906 tb=62468 tp=1027 op=0
+      st=1789264800 rb=36871 rp=908 tb=61847 tp=1018 op=0
+      st=1789268400 rb=36745 rp=906 tb=62618 tp=1029 op=0
+      st=1789272000 rb=36635 rp=905 tb=61488 tp=1012 op=0
+      st=1789275600 rb=36769 rp=906 tb=61825 tp=1017 op=0
+      st=1789279200 rb=36652 rp=905 tb=61449 tp=1013 op=0
+      st=1789282800 rb=36814 rp=907 tb=61619 tp=1014 op=0
+      st=1789286400 rb=36744 rp=906 tb=61817 tp=1017 op=0
+      st=1789290000 rb=36832 rp=907 tb=64286 tp=1052 op=0
+      st=1789293600 rb=36744 rp=906 tb=62873 tp=1033 op=0
+      st=1789297200 rb=36619 rp=904 tb=60770 tp=1002 op=0
+      st=1789300800 rb=36904 rp=908 tb=65347 tp=1072 op=0
+      st=1789304400 rb=36735 rp=906 tb=62838 tp=1032 op=0
+      st=1789308000 rb=36691 rp=905 tb=61816 tp=1018 op=0
+      st=1789311600 rb=36702 rp=905 tb=61780 tp=1016 op=0
+      st=1789315200 rb=36930 rp=908 tb=61594 tp=1013 op=0
+      st=1789318800 rb=36643 rp=905 tb=61741 tp=1017 op=0
+      st=1789322400 rb=36776 rp=905 tb=62272 tp=1024 op=0
+      st=1789326000 rb=36639 rp=905 tb=61634 tp=1015 op=0
+      st=1789329600 rb=36705 rp=905 tb=61549 tp=1013 op=0
+      st=1789333200 rb=36619 rp=904 tb=63306 tp=1037 op=0
+      st=1789336800 rb=36745 rp=906 tb=62892 tp=1034 op=0
+      st=1789340400 rb=36768 rp=907 tb=62984 tp=1036 op=0
+      st=1789344000 rb=36682 rp=904 tb=61761 tp=1016 op=0
+      st=1789347600 rb=36712 rp=907 tb=65290 tp=1071 op=0
+      st=1789351200 rb=36817 rp=906 tb=61712 tp=1016 op=0
+      st=1789354800 rb=36553 rp=905 tb=62312 tp=1025 op=0
+      st=1789358400 rb=36728 rp=905 tb=61771 tp=1016 op=0
+      st=1789362000 rb=36649 rp=905 tb=61964 tp=1019 op=0
+      st=1789365600 rb=36657 rp=904 tb=61779 tp=1017 op=0
+      st=1789369200 rb=36585 rp=904 tb=61543 tp=1013 op=0
+      st=1789372800 rb=36769 rp=906 tb=61051 tp=1005 op=0
+      st=1789376400 rb=36696 rp=906 tb=64493 tp=1055 op=0
+      st=1789380000 rb=36715 rp=905 tb=62669 tp=1030 op=0
+      st=1789383600 rb=36721 rp=906 tb=61485 tp=1012 op=0
+      st=1789387200 rb=36543 rp=904 tb=61766 tp=1017 op=0
+      st=1789390800 rb=36672 rp=905 tb=60922 tp=1004 op=0
+      st=1789394400 rb=36867 rp=908 tb=65984 tp=1082 op=0
+      st=1789398000 rb=36649 rp=905 tb=63000 tp=1035 op=0
+      st=1789401600 rb=36924 rp=908 tb=62101 tp=1022 op=0
+      st=1789405200 rb=36772 rp=906 tb=61804 tp=1017 op=0
+      st=1789408800 rb=36745 rp=906 tb=61182 tp=1008 op=0
+      st=1789412400 rb=36618 rp=904 tb=61735 tp=1017 op=0
+      st=1789416000 rb=10682628 rp=8357 tb=227113 tp=2712 op=0
+      st=1789419600 rb=86697469 rp=61103 tb=1032946 tp=13089 op=0
+      st=1789423200 rb=66898 rp=968 tb=68159 tp=946 op=0
+      st=1789426800 rb=115242 rp=1038 tb=77332 tp=998 op=0
+      st=1789430400 rb=147983 rp=1008 tb=72106 tp=959 op=0
+      st=1789434000 rb=381995 rp=1252 tb=120901 tp=1117 op=0
+      st=1789437600 rb=41685 rp=924 tb=60681 tp=910 op=0
+      st=1789441200 rb=41293 rp=932 tb=58254 tp=922 op=0
+      st=1789444800 rb=36953 rp=910 tb=53957 tp=899 op=0
+      st=1789448400 rb=36863 rp=909 tb=54008 tp=900 op=0
+      st=1789452000 rb=43164 rp=930 tb=62965 tp=915 op=0
+      st=1789455600 rb=37038 rp=910 tb=53942 tp=899 op=0
+      st=1789459200 rb=36787 rp=909 tb=53974 tp=899 op=0
+      st=1789462800 rb=445713 rp=1243 tb=76341 tp=1077 op=0
+      st=1789466400 rb=54041 rp=952 tb=61135 tp=943 op=0
+      st=1789470000 rb=36895 rp=909 tb=53942 tp=899 op=0
+      st=1789473600 rb=34562 rp=848 tb=50161 tp=835 op=0
+UID stats:
+  Pending bytes: 297182
+  History since boot:
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1051 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=0 rp=0 tb=128 tp=2 op=0
+      st=1789178400 rb=0 rp=0 tb=128 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1073 set=FOREGROUND tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=167 rp=2 tb=255 tp=4 op=0
+      st=1789178400 rb=0 rp=0 tb=135 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=-4 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789171200 rb=28651 rp=34 tb=2191 tp=25 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=0 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=0 rp=0 tb=184 tp=3 op=0
+      st=1789171200 rb=0 rp=0 tb=80 tp=2 op=0
+      st=1789178400 rb=0 rp=0 tb=40 tp=1 op=0
+      st=1789416000 rb=0 rp=0 tb=6728 tp=32 op=0
+      st=1789423200 rb=0 rp=0 tb=72 tp=1 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1000 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=106764 rp=146 tb=15131 tp=96 op=0
+      st=1789171200 rb=1627 rp=17 tb=0 tp=0 op=0
+      st=1789178400 rb=1674 rp=17 tb=0 tp=0 op=0
+      st=1789185600 rb=1541 rp=16 tb=0 tp=0 op=0
+      st=1789192800 rb=1680 rp=18 tb=0 tp=0 op=0
+      st=1789200000 rb=1583 rp=16 tb=0 tp=0 op=0
+      st=1789207200 rb=1824 rp=19 tb=0 tp=0 op=0
+      st=1789214400 rb=1801 rp=19 tb=0 tp=0 op=0
+      st=1789221600 rb=1728 rp=18 tb=0 tp=0 op=0
+      st=1789228800 rb=1728 rp=18 tb=0 tp=0 op=0
+      st=1789236000 rb=1512 rp=16 tb=0 tp=0 op=0
+      st=1789243200 rb=1848 rp=19 tb=0 tp=0 op=0
+      st=1789250400 rb=1609 rp=17 tb=992 tp=16 op=0
+      st=1789257600 rb=1751 rp=18 tb=0 tp=0 op=0
+      st=1789264800 rb=1824 rp=19 tb=0 tp=0 op=0
+      st=1789272000 rb=1632 rp=17 tb=0 tp=0 op=0
+      st=1789279200 rb=1705 rp=18 tb=0 tp=0 op=0
+      st=1789286400 rb=1824 rp=19 tb=0 tp=0 op=0
+      st=1789293600 rb=1632 rp=17 tb=0 tp=0 op=0
+      st=1789300800 rb=1847 rp=19 tb=0 tp=0 op=0
+      st=1789308000 rb=1686 rp=18 tb=0 tp=0 op=0
+      st=1789315200 rb=1866 rp=19 tb=0 tp=0 op=0
+      st=1789322400 rb=1705 rp=18 tb=0 tp=0 op=0
+      st=1789329600 rb=1632 rp=17 tb=0 tp=0 op=0
+      st=1789336800 rb=1752 rp=18 tb=992 tp=16 op=0
+      st=1789344000 rb=1632 rp=17 tb=0 tp=0 op=0
+      st=1789351200 rb=1608 rp=17 tb=0 tp=0 op=0
+      st=1789358400 rb=1656 rp=17 tb=0 tp=0 op=0
+      st=1789365600 rb=1560 rp=16 tb=0 tp=0 op=0
+      st=1789372800 rb=1704 rp=18 tb=0 tp=0 op=0
+      st=1789380000 rb=1704 rp=18 tb=0 tp=0 op=0
+      st=1789387200 rb=1464 rp=15 tb=0 tp=0 op=0
+      st=1789394400 rb=1704 rp=18 tb=0 tp=0 op=0
+      st=1789401600 rb=1944 rp=20 tb=0 tp=0 op=0
+      st=1789408800 rb=1632 rp=17 tb=0 tp=0 op=0
+      st=1789416000 rb=97310 rp=180 tb=6709 tp=57 op=0
+      st=1789423200 rb=89217 rp=116 tb=6989 tp=62 op=0
+      st=1789430400 rb=1656 rp=17 tb=0 tp=0 op=0
+      st=1789437600 rb=1704 rp=18 tb=0 tp=0 op=0
+      st=1789444800 rb=1560 rp=16 tb=0 tp=0 op=0
+      st=1789452000 rb=1824 rp=19 tb=0 tp=0 op=0
+      st=1789459200 rb=1536 rp=16 tb=0 tp=0 op=0
+      st=1789466400 rb=1752 rp=18 tb=0 tp=0 op=0
+      st=1789473600 rb=960 rp=10 tb=0 tp=0 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1020 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=2346 rp=6 tb=0 tp=0 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1051 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=0 rp=0 tb=480 tp=8 op=0
+      st=1789178400 rb=0 rp=0 tb=960 tp=16 op=0
+      st=1789416000 rb=0 rp=0 tb=544 tp=9 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1073 set=FOREGROUND tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=25003 rp=58 tb=3528 tp=30 op=0
+      st=1789178400 rb=0 rp=0 tb=32249 tp=486 op=0
+      st=1789185600 rb=0 rp=0 tb=15590 tp=236 op=0
+      st=1789192800 rb=0 rp=0 tb=15665 tp=235 op=0
+      st=1789200000 rb=0 rp=0 tb=14920 tp=224 op=0
+      st=1789207200 rb=0 rp=0 tb=15702 tp=237 op=0
+      st=1789214400 rb=0 rp=0 tb=15697 tp=235 op=0
+      st=1789221600 rb=0 rp=0 tb=14968 tp=225 op=0
+      st=1789228800 rb=0 rp=0 tb=16030 tp=240 op=0
+      st=1789236000 rb=0 rp=0 tb=15618 tp=235 op=0
+      st=1789243200 rb=0 rp=0 tb=14948 tp=225 op=0
+      st=1789250400 rb=0 rp=0 tb=15612 tp=235 op=0
+      st=1789257600 rb=0 rp=0 tb=14968 tp=225 op=0
+      st=1789264800 rb=0 rp=0 tb=15961 tp=240 op=0
+      st=1789272000 rb=0 rp=0 tb=15656 tp=235 op=0
+      st=1789279200 rb=0 rp=0 tb=14910 tp=225 op=0
+      st=1789286400 rb=0 rp=0 tb=15671 tp=235 op=0
+      st=1789293600 rb=0 rp=0 tb=15009 tp=225 op=0
+      st=1789300800 rb=0 rp=0 tb=15976 tp=240 op=0
+      st=1789308000 rb=0 rp=0 tb=14830 tp=224 op=0
+      st=1789315200 rb=0 rp=0 tb=15776 tp=236 op=0
+      st=1789322400 rb=0 rp=0 tb=15822 tp=238 op=0
+      st=1789329600 rb=0 rp=0 tb=14774 tp=222 op=0
+      st=1789336800 rb=0 rp=0 tb=15905 tp=240 op=0
+      st=1789344000 rb=0 rp=0 tb=15669 tp=235 op=0
+      st=1789351200 rb=0 rp=0 tb=14962 tp=225 op=0
+      st=1789358400 rb=0 rp=0 tb=16025 tp=240 op=0
+      st=1789365600 rb=0 rp=0 tb=15411 tp=232 op=0
+      st=1789372800 rb=0 rp=0 tb=15230 tp=228 op=0
+      st=1789380000 rb=0 rp=0 tb=15649 tp=235 op=0
+      st=1789387200 rb=0 rp=0 tb=14932 tp=225 op=0
+      st=1789394400 rb=0 rp=0 tb=15935 tp=240 op=0
+      st=1789401600 rb=0 rp=0 tb=15633 tp=235 op=0
+      st=1789408800 rb=0 rp=0 tb=14933 tp=225 op=0
+      st=1789416000 rb=6054 rp=21 tb=9295 tp=129 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10015 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=326 rp=6 tb=202 tp=4 op=2
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10015 set=FOREGROUND tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=477 rp=11 tb=261 tp=6 op=5
+      st=1789416000 rb=1520 rp=24 tb=916 tp=18 op=6
+      st=1789423200 rb=566 rp=12 tb=362 tp=8 op=5
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=23902 rp=44 tb=9279 tp=44 op=0
+      st=1789171200 rb=14115 rp=48 tb=7209 tp=48 op=0
+      st=1789178400 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789200000 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789207200 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789221600 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789243200 rb=0 rp=0 tb=2804 tp=40 op=0
+      st=1789250400 rb=0 rp=0 tb=1120 tp=16 op=0
+      st=1789264800 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789286400 rb=0 rp=0 tb=2804 tp=40 op=0
+      st=1789293600 rb=0 rp=0 tb=520 tp=8 op=0
+      st=1789308000 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789329600 rb=0 rp=0 tb=2544 tp=36 op=0
+      st=1789336800 rb=0 rp=0 tb=820 tp=12 op=0
+      st=1789372800 rb=0 rp=0 tb=2544 tp=36 op=0
+      st=1789380000 rb=0 rp=0 tb=520 tp=8 op=0
+      st=1789394400 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789416000 rb=443484 rp=396 tb=35650 tp=243 op=0
+      st=1789423200 rb=4076 rp=21 tb=4459 tp=22 op=0
+      st=1789430400 rb=454535 rp=435 tb=82835 tp=273 op=0
+      st=1789437600 rb=4341 rp=22 tb=4297 tp=23 op=0
+      st=1789459200 rb=408791 rp=334 tb=22429 tp=179 op=0
+      st=1789466400 rb=17016 rp=41 tb=7178 tp=44 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=FOREGROUND tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=96110286 rp=66239 tb=822379 tp=12962 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=244192 rp=1345 tb=233173 tp=1306 op=0
+      st=1789171200 rb=103573 rp=1901 tb=152188 tp=1878 op=0
+      st=1789178400 rb=72031 rp=1801 tb=115956 tp=1924 op=0
+      st=1789185600 rb=71868 rp=1796 tb=108487 tp=1807 op=0
+      st=1789192800 rb=71877 rp=1797 tb=108163 tp=1802 op=0
+      st=1789200000 rb=71911 rp=1798 tb=108382 tp=1806 op=0
+      st=1789207200 rb=71921 rp=1798 tb=111620 tp=1856 op=0
+      st=1789214400 rb=71851 rp=1796 tb=109198 tp=1818 op=0
+      st=1789221600 rb=71881 rp=1797 tb=108338 tp=1805 op=0
+      st=1789228800 rb=71881 rp=1797 tb=107821 tp=1797 op=0
+      st=1789236000 rb=71840 rp=1796 tb=108277 tp=1804 op=0
+      st=1789243200 rb=71881 rp=1797 tb=107821 tp=1797 op=0
+      st=1789250400 rb=71891 rp=1798 tb=108478 tp=1808 op=0
+      st=1789257600 rb=71831 rp=1795 tb=112265 tp=1865 op=0
+      st=1789264800 rb=71793 rp=1795 tb=108205 tp=1803 op=0
+      st=1789272000 rb=71771 rp=1795 tb=107657 tp=1795 op=0
+      st=1789279200 rb=71761 rp=1794 tb=108158 tp=1802 op=0
+      st=1789286400 rb=71752 rp=1793 tb=107628 tp=1793 op=0
+      st=1789293600 rb=71732 rp=1794 tb=108113 tp=1802 op=0
+      st=1789300800 rb=71791 rp=1794 tb=112210 tp=1864 op=0
+      st=1789308000 rb=71707 rp=1793 tb=108465 tp=1807 op=0
+      st=1789315200 rb=71707 rp=1793 tb=107560 tp=1793 op=0
+      st=1789322400 rb=71711 rp=1793 tb=108083 tp=1801 op=0
+      st=1789329600 rb=71692 rp=1792 tb=107538 tp=1792 op=0
+      st=1789336800 rb=71761 rp=1794 tb=108158 tp=1802 op=0
+      st=1789344000 rb=71762 rp=1794 tb=111382 tp=1852 op=0
+      st=1789351200 rb=71761 rp=1794 tb=109063 tp=1816 op=0
+      st=1789358400 rb=71722 rp=1793 tb=107710 tp=1795 op=0
+      st=1789365600 rb=71681 rp=1792 tb=107910 tp=1798 op=0
+      st=1789372800 rb=71762 rp=1794 tb=107770 tp=1796 op=0
+      st=1789380000 rb=71732 rp=1793 tb=107986 tp=1799 op=0
+      st=1789387200 rb=71751 rp=1794 tb=107755 tp=1796 op=0
+      st=1789394400 rb=71811 rp=1795 tb=112749 tp=1873 op=0
+      st=1789401600 rb=71752 rp=1794 tb=108272 tp=1804 op=0
+      st=1789408800 rb=71731 rp=1794 tb=107985 tp=1800 op=0
+      st=1789416000 rb=595204 rp=2470 tb=375412 tp=2325 op=0
+      st=1789423200 rb=88281 rp=1856 tb=133609 tp=1851 op=0
+      st=1789430400 rb=73788 rp=1808 tb=110172 tp=1803 op=0
+      st=1789437600 rb=76933 rp=1816 tb=114638 tp=1809 op=0
+      st=1789444800 rb=72255 rp=1804 tb=107965 tp=1799 op=0
+      st=1789452000 rb=78378 rp=1821 tb=116907 tp=1814 op=0
+      st=1789459200 rb=72174 rp=1801 tb=107886 tp=1797 op=0
+      st=1789466400 rb=72167 rp=1802 tb=107899 tp=1798 op=0
+      st=1789473600 rb=33602 rp=838 tb=50161 tp=835 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10090 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=6838 rp=11 tb=1612 tp=11 op=0
+      st=1789416000 rb=7141 rp=12 tb=1651 tp=11 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10096 set=DEFAULT tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789171200 rb=7553 rp=7 tb=308 tp=5 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10096 set=FOREGROUND tag=0x0
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789171200 rb=21188 rp=28 tb=2003 tp=23 op=0
+UID tag stats:
+  Pending bytes: 1819384
+  History since boot:
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1051 set=DEFAULT tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=0 rp=0 tb=128 tp=2 op=0
+      st=1789178400 rb=0 rp=0 tb=128 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1073 set=FOREGROUND tag=0xffffff81
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=0 rp=0 tb=120 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=false, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1073 set=FOREGROUND tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=167 rp=2 tb=135 tp=2 op=0
+      st=1789178400 rb=0 rp=0 tb=135 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1000 set=DEFAULT tag=0xffffff01
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=86063 rp=90 tb=6909 tp=62 op=0
+      st=1789416000 rb=86150 rp=87 tb=6709 tp=57 op=0
+      st=1789423200 rb=86209 rp=88 tb=6789 tp=59 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1000 set=DEFAULT tag=0xffffff41
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=76 rp=1 tb=76 tp=1 op=0
+      st=1789423200 rb=76 rp=1 tb=76 tp=1 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1000 set=DEFAULT tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=300 rp=2 tb=124 tp=2 op=0
+      st=1789250400 rb=0 rp=0 tb=992 tp=16 op=0
+      st=1789336800 rb=0 rp=0 tb=992 tp=16 op=0
+      st=1789423200 rb=300 rp=2 tb=124 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1000 set=DEFAULT tag=0xc000608
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=17120 rp=24 tb=8022 tp=31 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1051 set=DEFAULT tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=0 rp=0 tb=480 tp=8 op=0
+      st=1789178400 rb=0 rp=0 tb=960 tp=16 op=0
+      st=1789416000 rb=0 rp=0 tb=544 tp=9 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1073 set=FOREGROUND tag=0xffffff81
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=7185 rp=25 tb=3078 tp=22 op=0
+      st=1789416000 rb=5544 rp=13 tb=1586 tp=12 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=1073 set=FOREGROUND tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=390 rp=5 tb=330 tp=5 op=0
+      st=1789178400 rb=0 rp=0 tb=32249 tp=486 op=0
+      st=1789185600 rb=0 rp=0 tb=15590 tp=236 op=0
+      st=1789192800 rb=0 rp=0 tb=15665 tp=235 op=0
+      st=1789200000 rb=0 rp=0 tb=14920 tp=224 op=0
+      st=1789207200 rb=0 rp=0 tb=15702 tp=237 op=0
+      st=1789214400 rb=0 rp=0 tb=15697 tp=235 op=0
+      st=1789221600 rb=0 rp=0 tb=14968 tp=225 op=0
+      st=1789228800 rb=0 rp=0 tb=16030 tp=240 op=0
+      st=1789236000 rb=0 rp=0 tb=15618 tp=235 op=0
+      st=1789243200 rb=0 rp=0 tb=14948 tp=225 op=0
+      st=1789250400 rb=0 rp=0 tb=15612 tp=235 op=0
+      st=1789257600 rb=0 rp=0 tb=14968 tp=225 op=0
+      st=1789264800 rb=0 rp=0 tb=15961 tp=240 op=0
+      st=1789272000 rb=0 rp=0 tb=15656 tp=235 op=0
+      st=1789279200 rb=0 rp=0 tb=14910 tp=225 op=0
+      st=1789286400 rb=0 rp=0 tb=15671 tp=235 op=0
+      st=1789293600 rb=0 rp=0 tb=15009 tp=225 op=0
+      st=1789300800 rb=0 rp=0 tb=15976 tp=240 op=0
+      st=1789308000 rb=0 rp=0 tb=14830 tp=224 op=0
+      st=1789315200 rb=0 rp=0 tb=15776 tp=236 op=0
+      st=1789322400 rb=0 rp=0 tb=15822 tp=238 op=0
+      st=1789329600 rb=0 rp=0 tb=14774 tp=222 op=0
+      st=1789336800 rb=0 rp=0 tb=15905 tp=240 op=0
+      st=1789344000 rb=0 rp=0 tb=15669 tp=235 op=0
+      st=1789351200 rb=0 rp=0 tb=14962 tp=225 op=0
+      st=1789358400 rb=0 rp=0 tb=16025 tp=240 op=0
+      st=1789365600 rb=0 rp=0 tb=15411 tp=232 op=0
+      st=1789372800 rb=0 rp=0 tb=15230 tp=228 op=0
+      st=1789380000 rb=0 rp=0 tb=15649 tp=235 op=0
+      st=1789387200 rb=0 rp=0 tb=14932 tp=225 op=0
+      st=1789394400 rb=0 rp=0 tb=15935 tp=240 op=0
+      st=1789401600 rb=0 rp=0 tb=15633 tp=235 op=0
+      st=1789408800 rb=0 rp=0 tb=14933 tp=225 op=0
+      st=1789416000 rb=390 rp=5 tb=7629 tp=115 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10015 set=DEFAULT tag=0xffffff01
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=0 rp=0 tb=0 tp=0 op=2
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10015 set=DEFAULT tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=166 rp=2 tb=122 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10015 set=FOREGROUND tag=0xffffff01
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=0 rp=0 tb=0 tp=0 op=5
+      st=1789416000 rb=0 rp=0 tb=0 tp=0 op=6
+      st=1789423200 rb=0 rp=0 tb=0 tp=0 op=5
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10015 set=FOREGROUND tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=77 rp=1 tb=61 tp=1 op=0
+      st=1789416000 rb=800 rp=6 tb=436 tp=6 op=0
+      st=1789423200 rb=166 rp=2 tb=122 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=DEFAULT tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=375 rp=3 tb=215 tp=3 op=0
+      st=1789171200 rb=3710 rp=20 tb=1468 tp=20 op=0
+      st=1789178400 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789200000 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789207200 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789221600 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789243200 rb=0 rp=0 tb=2804 tp=40 op=0
+      st=1789250400 rb=0 rp=0 tb=1120 tp=16 op=0
+      st=1789264800 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789286400 rb=0 rp=0 tb=2804 tp=40 op=0
+      st=1789293600 rb=0 rp=0 tb=520 tp=8 op=0
+      st=1789308000 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789329600 rb=0 rp=0 tb=2544 tp=36 op=0
+      st=1789336800 rb=0 rp=0 tb=820 tp=12 op=0
+      st=1789372800 rb=0 rp=0 tb=2544 tp=36 op=0
+      st=1789380000 rb=0 rp=0 tb=520 tp=8 op=0
+      st=1789394400 rb=0 rp=0 tb=300 tp=4 op=0
+      st=1789416000 rb=4200 rp=22 tb=1572 tp=22 op=0
+      st=1789423200 rb=676 rp=4 tb=280 tp=4 op=0
+      st=1789430400 rb=2494 rp=14 tb=954 tp=14 op=0
+      st=1789437600 rb=676 rp=4 tb=280 tp=4 op=0
+      st=1789459200 rb=1336 rp=8 tb=544 tp=8 op=0
+      st=1789466400 rb=1158 rp=6 tb=540 tp=8 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=DEFAULT tag=0x6900
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=6063 rp=25 tb=10566 tp=27 op=0
+      st=1789423200 rb=2088 rp=9 tb=2899 tp=9 op=0
+      st=1789430400 rb=10851 rp=44 tb=14382 tp=44 op=0
+      st=1789437600 rb=2067 rp=8 tb=2403 tp=8 op=0
+      st=1789459200 rb=6514 rp=11 tb=2443 tp=9 op=0
+      st=1789466400 rb=14466 rp=25 tb=5318 tp=26 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=DEFAULT tag=0x8003
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=0 rp=0 tb=40 tp=1 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=DEFAULT tag=0x4be64f9b
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=18159 rp=23 tb=8131 tp=25 op=0
+      st=1789430400 rb=25558 rp=55 tb=53920 tp=64 op=0
+      st=1789459200 rb=6452 rp=16 tb=5870 tp=13 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=FOREGROUND tag=0xe8d195d1
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=13912 rp=19 tb=6902 tp=16 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=FOREGROUND tag=0xffffff01
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=32404572 rp=21933 tb=172958 tp=4114 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=FOREGROUND tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=6468 rp=44 tb=3474 tp=48 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=FOREGROUND tag=0x6900
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=15109 rp=38 tb=15495 tp=33 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=FOREGROUND tag=0x8003
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=6225 rp=9 tb=2116 tp=8 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=FOREGROUND tag=0x4001803
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=64766 rp=58 tb=5151 tp=42 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10026 set=FOREGROUND tag=0x4be64f9b
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=86481 rp=134 tb=81754 tp=133 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=3169 rp=15 tb=968 tp=15 op=0
+      st=1789171200 rb=2171 rp=8 tb=605 tp=8 op=0
+      st=1789178400 rb=0 rp=0 tb=7998 tp=124 op=0
+      st=1789185600 rb=0 rp=0 tb=685 tp=11 op=0
+      st=1789192800 rb=0 rp=0 tb=347 tp=5 op=0
+      st=1789200000 rb=0 rp=0 tb=516 tp=8 op=0
+      st=1789207200 rb=0 rp=0 tb=3739 tp=58 op=0
+      st=1789214400 rb=0 rp=0 tb=1421 tp=22 op=0
+      st=1789221600 rb=0 rp=0 tb=516 tp=8 op=0
+      st=1789236000 rb=0 rp=0 tb=516 tp=8 op=0
+      st=1789250400 rb=0 rp=0 tb=643 tp=10 op=0
+      st=1789257600 rb=0 rp=0 tb=4517 tp=70 op=0
+      st=1789264800 rb=0 rp=0 tb=516 tp=8 op=0
+      st=1789279200 rb=0 rp=0 tb=516 tp=8 op=0
+      st=1789293600 rb=0 rp=0 tb=516 tp=8 op=0
+      st=1789300800 rb=0 rp=0 tb=4523 tp=70 op=0
+      st=1789308000 rb=0 rp=0 tb=905 tp=14 op=0
+      st=1789322400 rb=0 rp=0 tb=516 tp=8 op=0
+      st=1789336800 rb=0 rp=0 tb=516 tp=8 op=0
+      st=1789344000 rb=0 rp=0 tb=3740 tp=58 op=0
+      st=1789351200 rb=0 rp=0 tb=1420 tp=22 op=0
+      st=1789358400 rb=0 rp=0 tb=128 tp=2 op=0
+      st=1789365600 rb=0 rp=0 tb=388 tp=6 op=0
+      st=1789372800 rb=0 rp=0 tb=128 tp=2 op=0
+      st=1789380000 rb=0 rp=0 tb=388 tp=6 op=0
+      st=1789387200 rb=0 rp=0 tb=128 tp=2 op=0
+      st=1789394400 rb=0 rp=0 tb=5032 tp=78 op=0
+      st=1789401600 rb=0 rp=0 tb=645 tp=10 op=0
+      st=1789408800 rb=0 rp=0 tb=387 tp=6 op=0
+      st=1789416000 rb=4228 rp=20 tb=1354 tp=20 op=0
+      st=1789423200 rb=976 rp=4 tb=272 tp=4 op=0
+      st=1789430400 rb=122 rp=1 tb=34 tp=1 op=0
+      st=1789437600 rb=366 rp=1 tb=102 tp=1 op=0
+      st=1789452000 rb=488 rp=2 tb=136 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x407
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=10640 rp=19 tb=2598 tp=15 op=0
+      st=1789171200 rb=491 rp=9 tb=321 tp=4 op=0
+      st=1789178400 rb=80 rp=2 tb=132 tp=2 op=0
+      st=1789416000 rb=9112 rp=18 tb=2545 tp=14 op=0
+      st=1789423200 rb=494 rp=9 tb=323 tp=4 op=0
+      st=1789430400 rb=442 rp=9 tb=289 tp=5 op=0
+      st=1789437600 rb=416 rp=8 tb=272 tp=4 op=0
+      st=1789444800 rb=494 rp=9 tb=323 tp=4 op=0
+      st=1789452000 rb=416 rp=8 tb=272 tp=4 op=0
+      st=1789459200 rb=442 rp=9 tb=289 tp=5 op=0
+      st=1789466400 rb=416 rp=8 tb=272 tp=4 op=0
+      st=1789473600 rb=286 rp=5 tb=187 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x408
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=17366 rp=38 tb=24125 tp=37 op=0
+      st=1789416000 rb=26266 rp=60 tb=36244 tp=58 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x707
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=39649 rp=992 tb=59474 tp=992 op=0
+      st=1789171200 rb=71887 rp=1797 tb=107830 tp=1797 op=0
+      st=1789178400 rb=71831 rp=1796 tb=107746 tp=1796 op=0
+      st=1789185600 rb=71868 rp=1796 tb=107802 tp=1796 op=0
+      st=1789192800 rb=71877 rp=1797 tb=107816 tp=1797 op=0
+      st=1789200000 rb=71911 rp=1798 tb=107866 tp=1798 op=0
+      st=1789207200 rb=71921 rp=1798 tb=107882 tp=1798 op=0
+      st=1789214400 rb=71851 rp=1796 tb=107776 tp=1796 op=0
+      st=1789221600 rb=71881 rp=1797 tb=107822 tp=1797 op=0
+      st=1789228800 rb=71881 rp=1797 tb=107821 tp=1797 op=0
+      st=1789236000 rb=71840 rp=1796 tb=107761 tp=1796 op=0
+      st=1789243200 rb=71881 rp=1797 tb=107821 tp=1797 op=0
+      st=1789250400 rb=71891 rp=1798 tb=107836 tp=1798 op=0
+      st=1789257600 rb=71831 rp=1795 tb=107747 tp=1795 op=0
+      st=1789264800 rb=71793 rp=1795 tb=107689 tp=1795 op=0
+      st=1789272000 rb=71771 rp=1795 tb=107657 tp=1795 op=0
+      st=1789279200 rb=71761 rp=1794 tb=107642 tp=1794 op=0
+      st=1789286400 rb=71752 rp=1793 tb=107628 tp=1793 op=0
+      st=1789293600 rb=71732 rp=1794 tb=107597 tp=1794 op=0
+      st=1789300800 rb=71791 rp=1794 tb=107687 tp=1794 op=0
+      st=1789308000 rb=71707 rp=1793 tb=107560 tp=1793 op=0
+      st=1789315200 rb=71707 rp=1793 tb=107560 tp=1793 op=0
+      st=1789322400 rb=71711 rp=1793 tb=107567 tp=1793 op=0
+      st=1789329600 rb=71692 rp=1792 tb=107538 tp=1792 op=0
+      st=1789336800 rb=71761 rp=1794 tb=107642 tp=1794 op=0
+      st=1789344000 rb=71762 rp=1794 tb=107643 tp=1794 op=0
+      st=1789351200 rb=71761 rp=1794 tb=107642 tp=1794 op=0
+      st=1789358400 rb=71722 rp=1793 tb=107582 tp=1793 op=0
+      st=1789365600 rb=71681 rp=1792 tb=107522 tp=1792 op=0
+      st=1789372800 rb=71762 rp=1794 tb=107643 tp=1794 op=0
+      st=1789380000 rb=71732 rp=1793 tb=107597 tp=1793 op=0
+      st=1789387200 rb=71751 rp=1794 tb=107627 tp=1794 op=0
+      st=1789394400 rb=71811 rp=1795 tb=107717 tp=1795 op=0
+      st=1789401600 rb=71752 rp=1794 tb=107628 tp=1794 op=0
+      st=1789408800 rb=71731 rp=1794 tb=107597 tp=1794 op=0
+      st=1789416000 rb=71792 rp=1794 tb=107687 tp=1794 op=0
+      st=1789423200 rb=71721 rp=1793 tb=107582 tp=1793 op=0
+      st=1789430400 rb=71762 rp=1794 tb=107642 tp=1794 op=0
+      st=1789437600 rb=71731 rp=1794 tb=107597 tp=1794 op=0
+      st=1789444800 rb=71761 rp=1794 tb=107642 tp=1794 op=0
+      st=1789452000 rb=71751 rp=1794 tb=107627 tp=1794 op=0
+      st=1789459200 rb=71732 rp=1793 tb=107597 tp=1793 op=0
+      st=1789466400 rb=71751 rp=1794 tb=107627 tp=1794 op=0
+      st=1789473600 rb=33316 rp=832 tb=49974 tp=832 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x10101
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=76 rp=1 tb=76 tp=1 op=0
+      st=1789416000 rb=76 rp=1 tb=76 tp=1 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x4000401
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=39108 rp=95 tb=49515 tp=91 op=0
+      st=1789171200 rb=29023 rp=85 tb=43430 tp=66 op=0
+      st=1789416000 rb=50121 rp=125 tb=66351 tp=124 op=0
+      st=1789423200 rb=15050 rp=49 tb=25392 tp=49 op=0
+      st=1789430400 rb=1463 rp=5 tb=2208 tp=4 op=0
+      st=1789437600 rb=4419 rp=13 tb=6666 tp=10 op=0
+      st=1789452000 rb=5723 rp=17 tb=8872 tp=14 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x4000407
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=10084 rp=20 tb=6830 tp=17 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x4001203
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=42306 rp=88 tb=72439 tp=98 op=0
+      st=1789416000 rb=301680 rp=269 tb=83504 tp=141 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x4001803
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=91559 rp=91 tb=23740 tp=54 op=0
+      st=1789416000 rb=91840 rp=93 tb=24726 tp=70 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0x5065fff
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=19035 rp=45 tb=40604 tp=65 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10082 set=FOREGROUND tag=0xc010301
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789416000 rb=10570 rp=15 tb=5211 tp=14 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10090 set=DEFAULT tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=207 rp=1 tb=79 tp=1 op=0
+      st=1789416000 rb=510 rp=2 tb=158 tp=2 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10090 set=DEFAULT tag=0x1
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789164000 rb=6631 rp=10 tb=1533 tp=10 op=0
+      st=1789416000 rb=6631 rp=10 tb=1493 tp=9 op=0
+  ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] uid=10096 set=FOREGROUND tag=0xffffff82
+    NetworkStatsHistory: bucketDuration=7200
+      st=1789171200 rb=237 rp=2 tb=132 tp=2 op=0
+
+InterfaceMapHelper:
+  BPF map status:
+    IfaceIndexNameMap: OK
+  BPF map content:
+    IfaceIndexNameMap:
+      ifaceIndex=2 ifaceName=dummy0
+      ifaceIndex=1 ifaceName=lo
+      ifaceIndex=15 ifaceName=eth0
+
+BPF map status:
+  mCookieTagMap: OK
+  mUidCounterSetMap: OK
+  mAppUidStatsMap: OK
+  mStatsMapA: OK
+  mStatsMapB: OK
+  mIfaceStatsMap: OK
+
+BPF map content:
+  mCookieTagMap:
+    cookie=140783 tag=0x407 uid=10082
+    cookie=151861 tag=0x4be64f9b uid=10026
+    cookie=170473 tag=0x6900 uid=10026
+    cookie=144197 tag=0x407 uid=10082
+    cookie=145311 tag=0x4000401 uid=10082
+    cookie=180660 tag=0x6900 uid=10026
+  mUidCounterSetMap:
+    uid=10022 set=1
+    uid=10064 set=1
+    uid=10060 set=1
+    uid=10032 set=1
+    uid=1068 set=1
+    uid=10077 set=1
+    uid=10045 set=1
+    uid=1001 set=1
+    uid=10035 set=1
+    uid=10096 set=1
+    uid=10082 set=1
+    uid=1002 set=1
+    uid=10031 set=1
+    uid=1073 set=1
+  mAppUidStatsMap:
+    uid rxBytes rxPackets txBytes txPackets
+    2000 84 1 84 1
+    1000 489287 1411 48275 350
+    10026 104455664 73267 1215858 15169
+    1051 0 0 3392 56
+    0 1299 24 3136051 78144
+    10096 28741 35 2311 28
+    10082 32748423 175572 10641024 164306
+    1020 28724 143 12348 69
+    1073 39110 117 543796 8120
+    10090 41414 60 9339 54
+    10015 3446 66 2042 43
+  mStatsMapA:
+    ifaceIndex ifaceName tag_hex uid_int cnt_set rxBytes rxPackets txBytes txPackets
+    15 eth0 0xffffff82 10026 0 482 2 130 2
+    15 eth0 0x6900 10026 0 9686 17 4868 16
+    1 lo 0x0 0 0 0 0 4160 104
+    15 eth0 0x707 10082 1 4160 104 6240 104
+    15 eth0 0x0 1000 0 96 1 0 0
+    1 lo 0x707 10082 1 4160 104 6240 104
+  mStatsMapB:
+    ifaceIndex ifaceName tag_hex uid_int cnt_set rxBytes rxPackets txBytes txPackets
+  mIfaceStatsMap:
+    ifaceIndex ifaceName rxBytes rxPackets txBytes txPackets
+    15 eth0 135008689 173044 7841873 110644
+    2 dummy0 10120 67 25788 232
+    1 lo 7794023 155871 7794023 155871
+
+SkDestroyListener logs:
+
+NetworkStatsFactory logs:
+  Top distinct tag counts in UidTagSets:
+    10082=11
+    10026=7
+    1000=4
+    1073=2
+    10090=2
+    1051=1
+    10015=1
+    10095=1
+    10096=1

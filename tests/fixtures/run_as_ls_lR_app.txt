@@ -1,0 +1,14 @@
+databases:
+total 44
+-rw-rw---- 1 u0_a93 u0_a93 36864 2026-09-15 15:03 leaks.db
+-rw-rw---- 1 u0_a93 u0_a93     0 2026-09-15 15:03 leaks.db-journal
+files:
+total 8
+-rw------- 1 u0_a93 u0_a93 24 2026-07-11 01:29 profileInstalled
+cache:
+total 0
+shared_prefs:
+total 8
+-rw-rw---- 1 u0_a93 u0_a93 1136 2026-07-03 19:09 app_secure_prefs.xml
+code_cache:
+total 0

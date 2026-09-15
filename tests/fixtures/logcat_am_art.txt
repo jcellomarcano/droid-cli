@@ -1,0 +1,43 @@
+2026-09-15 15:03:09.172 10362 10362 I igital.app: hiddenapi: Accessing hidden field Landroid/app/ActivityManager;->IActivityManagerSingleton:Landroid/util/Singleton; (runtime_flags=0, domain=platform, api=unsupported) from Lleakcanary/ServiceWatcher; (domain=app, TargetSdkVersion=37) using reflection: allowed
+2026-09-15 15:03:12.642 24357 25388 D ActivityManager: freezer override set to true
+2026-09-15 15:03:12.642 24357 25388 D ActivityManager: sync unfroze 31352 com.google.android.cellbroadcastreceiver for 19
+2026-09-15 15:03:12.642 24357 25388 D ActivityManager: sync unfroze 30106 com.android.carrierdefaultapp for 19
+2026-09-15 15:03:12.644 24357 25388 D ActivityManager: sync unfroze 25905 com.google.android.tts for 19
+2026-09-15 15:03:12.644 24357 25388 D ActivityManager: sync unfroze 25668 com.android.keychain for 19
+2026-09-15 15:03:12.644 24357 25388 D ActivityManager: sync unfroze 13658 com.google.android.configupdater for 19
+2026-09-15 15:03:12.644 24357 25388 D ActivityManager: sync unfroze 25331 android.process.media for 19
+2026-09-15 15:03:12.646 24357 25388 D ActivityManager: sync unfroze 13659 com.google.android.apps.wearable.settings for 19
+2026-09-15 15:03:12.647 24357 25388 D ActivityManager: sync unfroze 20462 android.process.acore for 19
+2026-09-15 15:03:12.649 24357 25388 D ActivityManager: sync unfroze 25866 com.google.android.permissioncontroller for 19
+2026-09-15 15:03:12.649 24357 25388 D ActivityManager: sync unfroze 25583 com.android.providers.calendar for 19
+2026-09-15 15:03:12.649 24357 25388 D ActivityManager: sync unfroze 26324 com.google.android.gms.unstable for 19
+2026-09-15 15:03:12.649 24357 25388 D ActivityManager: sync unfroze 24776 android.ext.services for 19
+2026-09-15 15:03:12.650 24357 25388 D ActivityManager: sync unfroze 25667 com.android.vending for 19
+2026-09-15 15:03:12.651 24357 25388 D ActivityManager: sync unfroze 25692 com.android.vending:background for 19
+2026-09-15 15:03:12.651 24357 25388 D ActivityManager: sync unfroze 26016 com.android.vending:quick_launch for 19
+2026-09-15 15:03:12.651 24357 25388 D ActivityManager: sync unfroze 25704 com.google.android.rkpdapp for 19
+2026-09-15 15:03:12.785 24357 25388 D ActivityManager: freezer override set to false
+2026-09-15 15:03:12.819 24357 24883 D ActivityManager: freezer override set to true
+2026-09-15 15:03:12.825 24357 24883 D ActivityManager: freezer override set to false
+2026-09-15 15:03:12.853 24357 24883 D ActivityManager: freezer override set to true
+2026-09-15 15:03:12.856 24357 24883 D ActivityManager: freezer override set to false
+2026-09-15 15:03:13.055 24357 24883 D ActivityManager: freezer override set to true
+2026-09-15 15:03:13.057 24357 24883 D ActivityManager: freezer override set to false
+2026-09-15 15:03:13.449 10362 10362 D AndroidRuntime: Shutting down VM
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: FATAL EXCEPTION: main
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: Process: com.example.app, PID: 10362
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: android.app.RemoteServiceException$CrashedByAdbException: shell-induced crash
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at android.app.ActivityThread.throwRemoteServiceException(ActivityThread.java:2581)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at android.app.ActivityThread.-$$Nest$mthrowRemoteServiceException(ActivityThread.java:0)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2950)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at android.os.Handler.dispatchMessageImpl(Handler.java:142)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:125)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:296)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:397)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:9523)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:575)
+2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:939)
+2026-09-15 15:03:13.465 24357 24821 I ActivityManager: Process com.example.app (pid 10362) has died: fg  TOP 
+2026-09-15 15:03:13.468 24357 24378 W ActivityManager: setHasOverlayUi called on unknown pid: 10362
+2026-09-15 15:03:13.767 24357 25389 W ActivityManager: pid 24357 system sent binder code 7 with flags 1 and got error -32

@@ -1,0 +1,48 @@
+ls: /proc/1/cwd: Permission denied
+ls: /proc/1/root: Permission denied
+ls: /proc/1/exe: Permission denied
+total 0
+dr-xr-xr-x   9 root root  0 2026-09-12 00:12 .
+dr-xr-xr-x 329 root root  0 2026-09-12 00:12 ..
+dr-xr-xr-x   2 root root  0 2026-09-15 15:02 attr
+-r--------   1 root root  0 2026-09-15 15:02 auxv
+-r--r--r--   1 root root  0 2026-09-15 15:02 cgroup
+--w-------   1 root root  0 2026-09-15 14:12 clear_refs
+-r--r--r--   1 root root  0 2026-09-12 00:12 cmdline
+-rw-r--r--   1 root root  0 2026-09-15 15:02 comm
+-rw-r--r--   1 root root  0 2026-09-15 15:02 coredump_filter
+-r--r--r--   1 root root  0 2026-09-15 15:02 cpuset
+-r--------   1 root root  0 2026-09-15 15:02 environ
+dr-x------   2 root root 23 2026-09-14 23:01 fd
+dr-xr-xr-x   2 root root  0 2026-09-15 15:02 fdinfo
+-r--------   1 root root  0 2026-09-15 15:02 io
+-r--r--r--   1 root root  0 2026-09-15 15:02 limits
+-rw-r--r--   1 root root  0 2026-09-15 15:02 loginuid
+dr-x------   2 root root  0 2026-09-15 15:02 map_files
+-r--r--r--   1 root root  0 2026-09-15 15:02 maps
+-rw-------   1 root root  0 2026-09-15 15:02 mem
+-r--r--r--   1 root root  0 2026-09-15 15:02 mountinfo
+-r--r--r--   1 root root  0 2026-09-12 00:12 mounts
+-r--------   1 root root  0 2026-09-15 15:02 mountstats
+dr-xr-xr-x  65 root root  0 2026-09-15 15:02 net
+dr-x--x--x   2 root root  0 2026-09-15 15:02 ns
+-rw-r--r--   1 root root  0 2026-09-15 15:02 oom_adj
+-r--r--r--   1 root root  0 2026-09-15 15:02 oom_score
+-rw-r--r--   1 root root  0 2026-09-15 15:02 oom_score_adj
+-r--------   1 root root  0 2026-09-15 15:02 pagemap
+-r--------   1 root root  0 2026-09-15 15:02 personality
+-rw-r--r--   1 root root  0 2026-09-15 15:02 sched
+-r--r--r--   1 root root  0 2026-09-15 15:02 schedstat
+-r--r--r--   1 root root  0 2026-09-15 15:02 sessionid
+-r--r--r--   1 root root  0 2026-09-15 15:02 smaps
+-r--r--r--   1 root root  0 2026-09-15 15:02 smaps_rollup
+-r--------   1 root root  0 2026-09-15 15:02 stack
+-r--r--r--   1 root root  0 2026-09-12 00:12 stat
+-r--r--r--   1 root root  0 2026-09-15 15:02 statm
+-r--r--r--   1 root root  0 2026-09-12 00:12 status
+-r--------   1 root root  0 2026-09-15 15:02 syscall
+dr-xr-xr-x   5 root root  0 2026-09-14 23:01 task
+-r--r--r--   1 root root  0 2026-09-15 15:02 time_in_state
+-rw-r--r--   1 root root  0 2026-09-15 15:02 timens_offsets
+-rw-rw-rw-   1 root root  0 2026-09-15 15:02 timerslack_ns
+-r--r--r--   1 root root  0 2026-09-15 15:02 wchan

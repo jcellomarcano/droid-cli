@@ -1,0 +1,40 @@
+Directory:
+  /data/misc/apexdata/com.android.tethering/netstats
+Configs:
+  netstats_combine_subtype_enabled=false 
+  netstats_store_files_in_apexdata=true 
+  netstats_import_legacy_target_attempts=1 
+  platform legacy stats import attempts count=1 
+  platform legacy stats import successes count=1 
+  platform legacy stats import fallbacks count=0 
+  enable_network_stats_event_logger: true
+  store_transport_types: true
+  netstats_fastdatainput_target_attempts=0 
+  FastDataInput successes=0 
+  FastDataInput fallbacks=0 
+  com.example.app_09494d=TrafficStatsRateLimitCacheConfig{isCacheEnabled: true, expiryDurationMs: 1000, maxEntries: 400} 
+Active interfaces:
+  iface=eth0 ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] 
+Active UID interfaces:
+  iface=eth0 ident=[{type=0, ratType=20, subscriberId=310260..., metered=true, defaultNetwork=true, oemManaged=OEM_NONE, subId=1, transports={0}}] 
+All wifi interfaces:
+  
+All mobile interfaces:
+  eth0 
+Top openSession callers:
+  {uid=1000,package=android}=728
+
+Poll counts per reason:
+  DUMPSYS: 0
+  FORCE_UPDATE: 87
+  GLOBAL_ALERT: 7
+  NETWORK_STATUS_CHANGED: 15
+  OPEN_SESSION: 0
+  PERIODIC: 173
+  RAT_CHANGED: 2
+  REG_CALLBACK: 9
+  REMOVE_UIDS: 2
+  UPSTREAM_CHANGED: 1
+
+Recent poll events:
+  2026-09-15T14:55:46.202686 - Poll(flags=3, PollEvent{reason=PERIODIC})

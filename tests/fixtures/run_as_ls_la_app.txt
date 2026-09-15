@@ -1,0 +1,19 @@
+total 60
+drwx------   7 u0_a93 u0_a93       4096 2026-09-15 15:03 .
+drwxrwx--x 122 system system       8192 2026-09-12 03:50 ..
+drwxrws--x   2 u0_a93 u0_a93_cache 4096 2026-07-03 01:33 cache
+drwxrws--x   2 u0_a93 u0_a93_cache 4096 2026-07-03 01:33 code_cache
+drwxrwx--x   2 u0_a93 u0_a93       4096 2026-09-15 15:03 databases
+drwxrwx--x   2 u0_a93 u0_a93       4096 2026-07-11 01:29 files
+drwxrwx--x   2 u0_a93 u0_a93       4096 2026-07-03 19:09 shared_prefs
+==databases
+total 60
+drwxrwx--x 2 u0_a93 u0_a93  4096 2026-09-15 15:03 .
+drwx------ 7 u0_a93 u0_a93  4096 2026-09-15 15:03 ..
+-rw-rw---- 1 u0_a93 u0_a93 36864 2026-09-15 15:03 leaks.db
+-rw-rw---- 1 u0_a93 u0_a93     0 2026-09-15 15:03 leaks.db-journal
+==files
+total 24
+drwxrwx--x 2 u0_a93 u0_a93 4096 2026-07-11 01:29 .
+drwx------ 7 u0_a93 u0_a93 4096 2026-09-15 15:03 ..
+-rw------- 1 u0_a93 u0_a93   24 2026-07-11 01:29 profileInstalled

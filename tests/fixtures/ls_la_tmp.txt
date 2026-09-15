@@ -1,0 +1,7 @@
+total 48
+drwxrwx--x 4 shell shell 4096 2026-08-17 17:38 .
+drwxr-x--x 5 root  root  4096 2026-07-03 01:32 ..
+drwxrwxr-x 5 shell shell 4096 2026-07-04 03:22 .studio
+drwxrwxrwx 3 shell shell 4096 2026-07-03 17:44 dalvik-cache
+-rw-rw-rw- 1 shell shell   35 2026-07-03 19:10 prefs_mock.pb
+-rw-rw-rw- 1 shell shell   24 2026-07-03 19:04 prefs_new.pb

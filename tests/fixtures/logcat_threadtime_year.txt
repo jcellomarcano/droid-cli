@@ -1,0 +1,400 @@
+--------- beginning of main
+2026-09-15 14:49:24.380   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:26.047   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:27.738   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:29.371   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:30.634 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:49:30.634 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:49:30.634 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:30.634 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:30.634 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:30.634 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:49:30.634 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:49:30.634 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:30.634 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:30.634 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:49:30.635 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:30.635 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:49:30.635 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:30.635 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:49:30.635 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:30.635 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:49:30.635 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:30.635 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:30.635 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:30.648 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:49:30.986   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:32.626   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:34.246   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:35.875   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:37.526   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:39.173   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:40.651 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:49:40.651 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:49:40.651 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:40.651 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:40.651 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:40.652 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:49:40.652 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:49:40.652 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:40.652 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:40.652 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:49:40.652 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:49:40.652 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:40.652 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:40.652 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:40.653 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:49:40.653 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:40.653 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:40.653 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:40.653 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:49:40.653 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:49:40.653 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:40.653 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:40.653 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:49:40.653 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:49:40.653 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:40.653 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:40.653 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:40.657 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:49:40.821   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:42.493   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:44.558   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:46.148   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:47.832   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:49.459   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:50.642 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:49:50.642 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:49:50.642 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:50.642 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:50.642 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:50.643 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:49:50.643 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:49:50.643 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:50.643 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:50.643 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:49:50.644 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:50.644 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:49:50.644 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:50.644 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:49:50.644 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:50.644 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:49:50.644 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:49:50.644 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:49:50.644 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:49:50.663 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:49:51.053   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:52.659   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:54.275   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:55.896   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:57.527   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:49:59.169   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:00.644 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:50:00.644 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:00.644 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:00.644 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:00.644 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:00.644 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:00.644 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:00.645 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:00.646 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:00.646 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:00.646 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:00.646 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:00.646 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:00.646 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:00.646 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:00.646 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:00.646 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:00.646 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:00.657 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:50:00.847   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:02.481   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:04.131   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:05.791   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:07.415   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:09.021   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:10.644   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:10.650 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:50:10.650 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:10.650 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:10.650 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:10.650 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:10.651 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:10.651 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:10.651 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:10.652 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:10.652 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:10.652 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:10.653 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:10.653 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:10.653 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:10.653 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:10.653 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:10.653 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:10.653 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:10.653 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:10.653 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:10.653 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:10.653 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:10.653 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:10.653 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:10.653 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:10.653 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:10.653 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:10.671 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:50:12.280   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:13.924   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:15.556   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:17.162   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:18.770   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:20.434   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:20.654 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:50:20.655 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:20.655 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:20.655 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:20.655 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:20.656 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:20.656 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:20.656 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:20.656 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:20.656 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:20.656 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:20.656 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:20.656 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:20.656 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:20.656 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:20.656 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:20.656 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:20.656 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:20.656 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:20.657 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:20.657 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:20.657 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:20.657 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:20.657 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:20.657 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:20.657 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:20.657 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:20.668 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:50:22.112   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:23.777   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:25.428   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:27.032   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:28.683   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:30.321   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:30.653 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:30.654 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:30.654 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:30.654 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:30.654 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:30.654 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:30.654 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:30.654 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:30.654 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:30.654 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:30.654 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:30.654 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:30.654 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:30.654 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:30.659 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:50:31.953   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:33.599   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:35.212   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:36.850   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:38.487   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:40.122   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:40.659 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:40.660 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:40.660 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:40.660 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:40.660 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:40.660 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:40.660 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:40.660 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:40.660 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:40.660 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:40.660 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:40.660 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:40.661 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:40.661 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:40.661 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:40.661 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:40.669 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:50:41.763   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:43.384   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:45.012   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:46.669   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:48.292   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:49.923   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:50.665 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:50:50.665 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:50.665 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:50.665 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:50.665 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:50.666 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:50.666 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:50.666 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:50.666 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:50:50.666 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:50.666 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:50:50.666 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:50.666 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:50:50.666 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:50:50.666 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:50:50.666 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:50:50.683 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:50:51.590   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:53.267   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:54.907   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:56.554   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:58.180   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:50:59.836   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:00.673 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:51:00.674 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:51:00.674 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:00.674 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:00.674 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:51:00.674 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:51:00.674 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:51:00.674 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:00.674 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:00.674 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:51:00.675 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:51:00.675 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:00.675 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:00.675 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:51:00.675 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:51:00.675 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:00.675 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:00.675 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:51:00.675 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:51:00.675 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:51:00.675 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:00.675 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:00.675 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:51:00.676 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:51:00.676 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:00.676 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:00.676 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:51:00.678 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:51:01.438   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:03.047   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:04.663   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:06.304   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:07.937   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+--------- beginning of system
+2026-09-15 14:51:09.341 24357 24454 D AppOpHistoryHelper: MetricHandler reporting 5 records.
+2026-09-15 14:51:09.567   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:10.679 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:51:10.679 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:51:10.679 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:10.679 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:10.679 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:51:10.681 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:51:10.681 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:51:10.681 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:10.681 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:10.681 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:51:10.682 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:51:10.682 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:10.682 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:10.682 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:51:10.684 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:51:10.684 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:10.684 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:10.684 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:51:10.685 24760 24937 D SatelliteController: getSatellitePerPlmnConfiguration: invalid subId or not supported via carrier.
+2026-09-15 14:51:10.685 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: config: null
+2026-09-15 14:51:10.685 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:10.685 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:10.685 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectTypeViaConfigUpdater: return null (satelliteConfig is null)
+2026-09-15 14:51:10.685 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Falling back to global carrier config connect type: 0
+2026-09-15 14:51:10.685 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:10.685 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:10.685 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
+2026-09-15 14:51:10.698 24665 24665 W SysUI   : [StatusIconTrayListener]Unrecognized RIL radio type 20.
+2026-09-15 14:51:11.189   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:11.522  9354  9354 D WM-DelayedWorkTracker: Scheduling work da57ee49-bcbc-47d5-8c70-48fb02394e5e
+2026-09-15 14:51:11.522  9354  9354 D WM-GreedyScheduler: Starting tracking for da57ee49-bcbc-47d5-8c70-48fb02394e5e
+2026-09-15 14:51:11.526  9354  9382 D WM-ConstraintTracker: rg: initial state = true
+2026-09-15 14:51:11.526  9354  9382 D WM-BrdcstRcvrCnstrntTrc: rg: registering receiver
+2026-09-15 14:51:11.529  9354  9381 D WM-GreedyScheduler: Constraints met: Scheduling work ID WorkGenerationalId(workSpecId=da57ee49-bcbc-47d5-8c70-48fb02394e5e, generation=0)
+2026-09-15 14:51:11.530  9354  9381 D WM-Processor: lw1: processing WorkGenerationalId(workSpecId=da57ee49-bcbc-47d5-8c70-48fb02394e5e, generation=0)
+2026-09-15 14:51:11.550  9354  9354 D WM-WorkerWrapper: Starting work for com.example.other.ComplicationUpdateWorker
+2026-09-15 14:51:11.556  9354  9381 I WM-WorkerWrapper: Worker result SUCCESS for Work [ id=da57ee49-bcbc-47d5-8c70-48fb02394e5e, tags={ com.example.other.ComplicationUpdateWorker } ]
+2026-09-15 14:51:11.564  9354  9354 D WM-Processor: lw1 da57ee49-bcbc-47d5-8c70-48fb02394e5e executed; reschedule = false
+2026-09-15 14:51:11.564  9354  9354 D WM-GreedyScheduler: Stopping tracking for WorkGenerationalId(workSpecId=da57ee49-bcbc-47d5-8c70-48fb02394e5e, generation=0)
+2026-09-15 14:51:11.572  9354  9368 D WM-GreedyScheduler: Cancelling work ID da57ee49-bcbc-47d5-8c70-48fb02394e5e
+2026-09-15 14:51:11.577  9354  9368 D WM-SystemJobScheduler: Scheduling work ID da57ee49-bcbc-47d5-8c70-48fb02394e5eJob ID 333
+2026-09-15 14:51:11.583  9354  9368 D WM-BrdcstRcvrCnstrntTrc: rg: unregistering receiver
+2026-09-15 14:51:12.860   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:14.487   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:16.120   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:17.761   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:19.418   447   447 I adbd    : adbd service requested 'shell,v2,TERM=xterm-256color,raw:echo "MODEL=$(getprop com.example.app_819ada)";echo "MANUF=$(getprop com.example.app_819ada)";echo "REL=$(getprop com.example.app_d3ae37)";echo "SDK=$(getprop com.example.app_d3ae37)";echo "SERIAL=$(getprop ro.serialno)";echo "BATT=$(dumpsys battery 2>/dev/null | grep -m1 ' level:' | tr -dc 0-9)";echo "IPS=$(ip -o -4 addr show 2>/dev/null | awk '{print $2"="$4}' | tr '\n' ' ')"'
+2026-09-15 14:51:20.678 24760 24937 D SatelliteController: isInCarrierRoamingNbIotNtn: satellite is disabled
+2026-09-15 14:51:20.678 24760 24937 D SatelliteController: getCarrierRoamingNtnConnectType: Checking connect type from PLMN config for subId: 1
+2026-09-15 14:51:20.678 24760 24937 D TelephonyConfigUpdateInstallReceiver: getConfigParser: domain=satellite
+2026-09-15 14:51:20.678 24760 24937 V SatelliteController: satelliteConfigParser is not ready
+2026-09-15 14:51:20.678 24760 24937 D SatelliteController: isSatelliteAttachSupportedViaConfigupdater: return null (satelliteConfig is null)
