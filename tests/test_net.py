@@ -25,7 +25,168 @@ def test_uid_totals_sums_rx_tx_for_uid(fake_shell):
 def test_uid_totals_empty_for_unknown_uid(fake_shell):
     fake_shell(fixture_text("netstats_detail"))
     totals = net.uid_totals("S", 999999)
+    assert totals == {"rx": 0, "tx": 0, "rx_pkts": 0, "tx_pkts": 0, "by_type": {}, "source": "detail"}
+
+
+def test_parse_netstats_totals_on_detail_dump():
+    totals = net.parse_netstats_totals(fixture_text("netstats_detail"), 10082)
+    assert totals["rx"] == 7758828
+    assert totals["tx"] == 10409706
+    assert totals["by_type"] == {"MOBILE": (7758828, 10409706)}
+
+
+def test_parse_netstats_totals_on_uid_10001_dump_has_no_st_lines():
+    # netstats_uid_10001.txt es una captura real de `dumpsys netstats --uid 10001` en Android 17: el
+    # dispositivo no filtro nada y ademas la captura fue truncada antes de llegar a las lineas st=, asi
+    # que para cualquier uid el resultado es todo ceros.
+    totals = net.parse_netstats_totals(fixture_text("netstats_uid_10001"), 10001)
     assert totals == {"rx": 0, "tx": 0, "rx_pkts": 0, "tx_pkts": 0, "by_type": {}}
+
+
+def test_uid_totals_tries_uid_form_first_then_falls_back_to_detail_on_full_dump(fake_shell):
+    commands = []
+
+    def respond(cmd):
+        commands.append(cmd)
+        return fixture_text("netstats_detail")
+
+    fake_shell(respond)
+    totals = net.uid_totals("S", 10082)
+    # netstats_detail.txt trae bloques ident=[...] de muchos uids ademas del 10082, asi que la primera
+    # respuesta ("--uid") se detecta como volcado completo y dispara un segundo shell pidiendo "detail".
+    assert commands[0].startswith("dumpsys netstats --uid 10082")
+    assert any("detail" in c for c in commands[1:])
+    assert totals["source"] == "detail"
+    assert totals["rx"] == 7758828
+
+
+def test_uid_totals_does_not_call_detail_when_uid_trial_already_has_only_the_target_uid(fake_shell):
+    commands = []
+    filtered = "  ident=[{type=1}] uid=10082 set=ALL tag=0x0\n      st=1 rb=10 rp=1 tb=20 tp=2 op=0\n"
+
+    def respond(cmd):
+        commands.append(cmd)
+        if "detail" in cmd:
+            raise AssertionError("no deberia llamar a detail cuando --uid ya filtro")
+        return filtered
+
+    fake_shell(respond)
+    net.uid_totals("S", 10082)
+    assert len(commands) == 1
+
+
+def test_uid_totals_uses_uid_form_when_it_really_filtered(fake_shell):
+    filtered = "  ident=[{type=1}] uid=10082 set=ALL tag=0x0\n      st=1 rb=10 rp=1 tb=20 tp=2 op=0\n"
+    fake_shell(filtered)
+    totals = net.uid_totals("S", 10082)
+    assert totals["source"] == "uid"
+    assert totals["rx"] == 10
+    assert totals["tx"] == 20
+
+
+def test_uid_totals_falls_back_to_detail_when_uid_trial_is_garbage(fake_shell):
+    commands = []
+
+    def respond(cmd):
+        commands.append(cmd)
+        if "--uid" in cmd:
+            return "not netstats output at all\njust garbage"
+        return fixture_text("netstats_detail")
+
+    fake_shell(respond)
+    totals = net.uid_totals("S", 10082)
+    assert any("detail" in c for c in commands)
+    assert totals["source"] == "detail"
+    assert totals["rx"] == 7758828
+
+
+def test_probe_qtaguid_true_when_readable(fake_shell):
+    fake_shell("yes")
+    assert net.probe_qtaguid("S") is True
+
+
+def test_probe_qtaguid_false_when_missing(fake_shell):
+    fake_shell("")
+    assert net.probe_qtaguid("S") is False
+
+
+def test_qtaguid_totals_sums_untagged_rows_for_uid(fake_shell):
+    fake_shell(fixture_text("xt_qtaguid_stats"))
+    totals = net.qtaguid_totals("S", 10082)
+    assert totals == {"rx": 2000000, "tx": 1250000}
+
+
+def test_qtaguid_totals_ignores_tagged_and_other_uid_rows(fake_shell):
+    fake_shell(fixture_text("xt_qtaguid_stats"))
+    totals = net.qtaguid_totals("S", 10093)
+    assert totals == {"rx": 50000, "tx": 30000}
+
+
+def test_qtaguid_totals_none_without_the_proc_file(fake_shell):
+    fake_shell("")
+    assert net.qtaguid_totals("S", 10082) is None
+
+
+def _sock(proto, state, local, remote, uid=10082):
+    return net.Socket(proto, state, local, remote, uid)
+
+
+def test_host_table_aggregates_by_remote_ip_port():
+    class FakeDns:
+        def lookup(self, ip):
+            return {"203.0.113.56": "api.example.com"}.get(ip)
+
+    socks = [
+        _sock("tcp", "ESTAB", "10.0.2.15:1", "203.0.113.56:443"),
+        _sock("tcp", "ESTAB", "10.0.2.15:2", "203.0.113.56:443"),
+        _sock("tcp", "TIME_WAIT", "10.0.2.15:3", "203.0.113.56:443"),
+        _sock("udp", "UDP", "10.0.2.15:4", "203.0.113.212:53"),
+    ]
+    table = net.host_table(socks, FakeDns(), now=1000.0)
+    assert len(table) == 2
+    top = table[0]
+    assert top["ip"] == "203.0.113.56"
+    assert top["host"] == "api.example.com"
+    assert top["connections"] == 3
+    assert top["states"] == {"ESTAB": 2, "TIME_WAIT": 1}
+    assert top["first_seen"] == 1000.0
+    assert top["last_seen"] == 1000.0
+    other = table[1]
+    assert other["ip"] == "203.0.113.212"
+    assert other["host"] is None
+
+
+def test_connection_events_detects_new_and_closed():
+    prev = [_sock("tcp", "ESTAB", "10.0.2.15:1", "203.0.113.56:443"),
+            _sock("tcp", "ESTAB", "10.0.2.15:2", "203.0.113.99:80")]
+    cur = [_sock("tcp", "ESTAB", "10.0.2.15:1", "203.0.113.56:443"),
+           _sock("tcp", "ESTAB", "10.0.2.15:3", "203.0.113.5:22")]
+    events = net.connection_events(prev, cur, now=42.0)
+    kinds = {(e["kind"], e["remote"]) for e in events}
+    assert kinds == {("new", "203.0.113.5:22"), ("closed", "203.0.113.99:80")}
+    for e in events:
+        assert e["t"] == 42.0
+        assert e["proto"] == "tcp"
+
+
+def test_reverse_dns_success_failure_and_cache(monkeypatch):
+    calls = []
+
+    def fake_gethostbyaddr(ip):
+        calls.append(ip)
+        if ip == "203.0.113.1":
+            return ("host1.example.com", [], [ip])
+        raise OSError("no address associated")
+
+    monkeypatch.setattr(net.socketmod, "gethostbyaddr", fake_gethostbyaddr)
+    dns = net.ReverseDns()
+    assert dns.lookup("203.0.113.1") == "host1.example.com"
+    assert dns.lookup("203.0.113.1") == "host1.example.com"
+    assert calls == ["203.0.113.1"]  # segunda llamada vino de cache, no del socket real
+
+    assert dns.lookup("203.0.113.2") is None
+    assert dns.lookup("203.0.113.2") is None
+    assert calls == ["203.0.113.1", "203.0.113.2"]  # el fallo tambien se cachea
 
 
 def test_iface_counters_parses_proc_net_dev(fake_shell):

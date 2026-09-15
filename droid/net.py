@@ -2,9 +2,11 @@
 y tasa por interfaz (/proc/net/dev). Android no expone bytes por app en tiempo real sin root, así que la gráfica
 por segundo es por interfaz (WiFi/móvil) y los totales por app se refrescan cuando el sistema los consolida."""
 import re
+import socket as socketmod
 import threading
 import time
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Callable, Deque, Dict, List, Optional, Tuple
 
@@ -22,16 +24,16 @@ def uid_of(serial: str, package: str) -> Optional[int]:
     return int(m.group(1)) if m else None
 
 
-def uid_totals(serial: str, uid: int) -> dict:
-    """Bytes rx/tx acumulados por tipo de red (WIFI/MOBILE/…) para un uid, desde dumpsys netstats detail."""
-    text = adbmod.shell(serial, "dumpsys netstats detail 2>/dev/null", timeout=60)
+def parse_netstats_totals(text: str, uid: int) -> dict:
+    """Bytes rx/tx acumulados por tipo de red (WIFI/MOBILE/…) para un uid, desde un dump de netstats
+    (`dumpsys netstats detail` o, cuando de verdad filtra, `dumpsys netstats --uid <uid>`)."""
     by_type: Dict[str, List[int]] = {}
     cur_type = None
     cur_uid = None
     for line in text.splitlines():
         s = line.strip()
         if "ident=[" in s and "uid=" in s:
-            m = re.search(r"uid=(\d+)", s)
+            m = re.search(r"uid=(-?\d+)", s)
             cur_uid = int(m.group(1)) if m else None
             t = re.search(r"type=(\w+)", s)
             cur_type = (t.group(1) if t else "?").upper()
@@ -52,6 +54,39 @@ def uid_totals(serial: str, uid: int) -> dict:
     tx = sum(v[1] for v in by_type.values())
     return {"rx": rx, "tx": tx, "rx_pkts": sum(v[2] for v in by_type.values()), "tx_pkts": sum(v[3] for v in by_type.values()),
             "by_type": {k: (v[0], v[1]) for k, v in by_type.items()}}
+
+
+def _looks_like_full_dump(text: str, uid: int) -> bool:
+    """`dumpsys netstats --uid <uid>` deberia filtrar, pero en algunas versiones (Android 17) no filtra e
+    imprime el dump entero: detectamos eso viendo bloques ident=[...] de otros uids, o la ausencia total
+    de lineas st= (nada que parsear, asi que tampoco vale la pena confiar en el filtrado)."""
+    has_st = False
+    other_uid = False
+    for line in text.splitlines():
+        s = line.strip()
+        if "ident=[" in s and "uid=" in s:
+            m = re.search(r"uid=(-?\d+)", s)
+            if m and int(m.group(1)) != uid:
+                other_uid = True
+            continue
+        if s.startswith("st="):
+            has_st = True
+    return other_uid or not has_st
+
+
+def uid_totals(serial: str, uid: int) -> dict:
+    """Bytes rx/tx acumulados por tipo de red (WIFI/MOBILE/…) para un uid. Intenta primero
+    `dumpsys netstats --uid <uid>` (mas rapido cuando de verdad filtra); si el dispositivo lo ignora
+    y devuelve el volcado completo (o uno vacio de lineas st=), recurre a `dumpsys netstats detail`."""
+    trial = adbmod.shell(serial, f"dumpsys netstats --uid {uid} 2>/dev/null", timeout=30)
+    if _looks_like_full_dump(trial, uid):
+        text = adbmod.shell(serial, "dumpsys netstats detail 2>/dev/null", timeout=60)
+        result = parse_netstats_totals(text, uid)
+        result["source"] = "detail"
+        return result
+    result = parse_netstats_totals(trial, uid)
+    result["source"] = "uid"
+    return result
 
 
 def iface_counters(serial: str) -> Dict[str, Tuple[int, int]]:
@@ -89,6 +124,58 @@ def _hex_addr(h: str) -> str:
     return f"{ip}:{p}"
 
 
+def probe_qtaguid(serial: str) -> bool:
+    out = adbmod.shell(serial, "test -r /proc/net/xt_qtaguid/stats && echo yes", timeout=10)
+    return out.strip() == "yes"
+
+
+def qtaguid_totals(serial: str, uid: int) -> Optional[dict]:
+    """Contadores legados por uid+iface de /proc/net/xt_qtaguid/stats (root/kernels antiguos): suma
+    rx_bytes/tx_bytes de las filas sin tag (acct_tag_hex=0x0) que pertenecen al uid pedido."""
+    out = adbmod.shell(serial, "cat /proc/net/xt_qtaguid/stats 2>/dev/null", timeout=10)
+    lines = out.splitlines()
+    if not lines or not lines[0].strip().startswith("idx"):
+        return None
+    rx = 0
+    tx = 0
+    for line in lines[1:]:
+        parts = line.split()
+        if len(parts) < 9:
+            continue
+        acct_tag_hex = parts[2]
+        try:
+            uid_tag_int = int(parts[3])
+            rx_bytes = int(parts[5])
+            tx_bytes = int(parts[7])
+        except ValueError:
+            continue
+        if uid_tag_int != uid or acct_tag_hex != "0x0":
+            continue
+        rx += rx_bytes
+        tx += tx_bytes
+    return {"rx": rx, "tx": tx}
+
+
+class ReverseDns:
+    """Resuelve PTR de IPs remotas fuera del hilo de UI, con cache (incluidos fallos)."""
+
+    def __init__(self, timeout: float = 1.5, max_workers: int = 2):
+        self.timeout = timeout
+        self._cache: Dict[str, Optional[str]] = {}
+        self._executor = ThreadPoolExecutor(max_workers=max_workers)
+
+    def lookup(self, ip: str) -> Optional[str]:
+        if ip in self._cache:
+            return self._cache[ip]
+        future = self._executor.submit(socketmod.gethostbyaddr, ip)
+        try:
+            host = future.result(timeout=self.timeout)[0]
+        except Exception:
+            host = None
+        self._cache[ip] = host
+        return host
+
+
 @dataclass
 class Socket:
     proto: str
@@ -122,12 +209,49 @@ def sockets_for_uid(serial: str, uid: Optional[int]) -> List[Socket]:
     return socks
 
 
+def host_table(sockets: List[Socket], dns: ReverseDns, now: Optional[float] = None) -> List[dict]:
+    """Agrupa los sockets actuales por IP:puerto remoto, con el hostname (si la cache de dns lo tiene)."""
+    now = time.time() if now is None else now
+    rows: Dict[str, dict] = {}
+    for sock in sockets:
+        ip, _, _port = sock.remote.rpartition(":")
+        ip = ip.strip("[]") or sock.remote
+        row = rows.get(sock.remote)
+        if row is None:
+            row = {"host": dns.lookup(ip), "ip": ip, "connections": 0,
+                   "states": {}, "first_seen": now, "last_seen": now}
+            rows[sock.remote] = row
+        row["connections"] += 1
+        row["states"][sock.state] = row["states"].get(sock.state, 0) + 1
+        row["last_seen"] = now
+    return sorted(rows.values(), key=lambda r: (-r["connections"], r["ip"]))
+
+
+def connection_events(prev: List[Socket], cur: List[Socket], now: float) -> List[dict]:
+    """Diferencia por (proto, local, remote) entre dos lecturas de sockets: altas y bajas."""
+    def key(s: Socket) -> Tuple[str, str, str]:
+        return (s.proto, s.local, s.remote)
+
+    prev_by_key = {key(s): s for s in prev}
+    cur_by_key = {key(s): s for s in cur}
+    events: List[dict] = []
+    for k, s in cur_by_key.items():
+        if k not in prev_by_key:
+            events.append({"t": now, "kind": "new", "proto": s.proto, "local": s.local, "remote": s.remote, "state": s.state})
+    for k, s in prev_by_key.items():
+        if k not in cur_by_key:
+            events.append({"t": now, "kind": "closed", "proto": s.proto, "local": s.local, "remote": s.remote, "state": s.state})
+    return events
+
+
 @dataclass
 class NetSample:
     t: float
     rates: Dict[str, Tuple[float, float]] = field(default_factory=dict)   # iface -> (rx B/s, tx B/s)
     counters: Dict[str, Tuple[int, int]] = field(default_factory=dict)
     interval: float = 0.0
+    app_rx_rate: Optional[float] = None
+    app_tx_rate: Optional[float] = None
 
     @property
     def rx_rate(self) -> float:
@@ -159,6 +283,13 @@ class NetMonitor:
         self._thread: Optional[threading.Thread] = None
         self._tot_thread: Optional[threading.Thread] = None
         self._tot_last = 0.0
+        self.qtaguid_available = False
+        self.cadence_label = f"por app acumulado cada {int(self.totals_every)} s (dumpsys netstats)"
+        self._prev_qtaguid: Optional[Tuple[float, dict]] = None
+        self.dns = ReverseDns()
+        self.events: Deque[dict] = deque(maxlen=500)
+        self.hosts: List[dict] = []
+        self._prev_sockets: List[Socket] = []
 
     def start(self) -> None:
         self.running = True
@@ -176,6 +307,12 @@ class NetMonitor:
                 self.on_status("info", f"{self.package}: uid {self.uid}" if self.uid else f"no encuentro el uid de {self.package}")
             except Exception as e:
                 self.on_status("warn", str(e))
+        try:
+            self.qtaguid_available = probe_qtaguid(serial)
+        except Exception:
+            self.qtaguid_available = False
+        self.cadence_label = ("por app cada 1 s (xt_qtaguid)" if self.qtaguid_available else
+                               f"por app acumulado cada {int(self.totals_every)} s (dumpsys netstats)")
         while self.running:
             t0 = time.time()
             try:
@@ -189,6 +326,19 @@ class NetMonitor:
                         prx, ptx = pc.get(name, (rx, tx))
                         s.rates[name] = (max(0.0, (rx - prx) / s.interval), max(0.0, (tx - ptx) / s.interval))
                 self._prev = (now, counters)
+                if self.qtaguid_available and self.uid is not None:
+                    try:
+                        qt = qtaguid_totals(serial, self.uid)
+                    except Exception:
+                        qt = None
+                    if qt is not None:
+                        if self._prev_qtaguid:
+                            pqt_t, pqt = self._prev_qtaguid
+                            dt = now - pqt_t
+                            if dt > 0:
+                                s.app_rx_rate = max(0.0, (qt["rx"] - pqt["rx"]) / dt)
+                                s.app_tx_rate = max(0.0, (qt["tx"] - pqt["tx"]) / dt)
+                        self._prev_qtaguid = (now, qt)
                 self.samples.append(s)
                 self.on_sample(s)
                 if self.uid is not None and (now - self._tot_last) >= self.totals_every and (self._tot_thread is None or not self._tot_thread.is_alive()):
@@ -204,7 +354,16 @@ class NetMonitor:
 
     def _refresh_totals(self) -> None:
         try:
-            self.sockets = sockets_for_uid(self.dev.serial, self.uid)
+            new_sockets = sockets_for_uid(self.dev.serial, self.uid)
+            now = time.time()
+            for sock in new_sockets:
+                ip, _, _port = sock.remote.rpartition(":")
+                ip = ip.strip("[]") or sock.remote
+                self.dns.lookup(ip)
+            self.events.extend(connection_events(self._prev_sockets, new_sockets, now))
+            self.hosts = host_table(new_sockets, self.dns, now)
+            self._prev_sockets = new_sockets
+            self.sockets = new_sockets
             tot = uid_totals(self.dev.serial, self.uid)
             if self.totals_start is None:
                 self.totals_start = tot

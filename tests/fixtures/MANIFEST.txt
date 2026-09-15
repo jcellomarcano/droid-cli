@@ -31,3 +31,4 @@ thread_comm_app.txt	bccf2c183b5803aec74f4c43353849acab1dafdd500360e9b0aa2f2345c1
 logcat_crash_native.txt	9bd51d50c293bf6b6ec53272e8305549e130941605f1209e95aedf603cf032c0	14	synthetic, hand-written 2026-09-15
 anr_trace.txt	7eb80e83ce88559937aa52eee7f002ece00e00f97985bd737f21b9fd2cff2ea1	21	synthetic, hand-written 2026-09-15
 ls_la_mixed.txt	760ffb7f88ce5dace02d07f220f88069a354bc52da5db390c26a5e4afc466410	9	synthetic, hand-written 2026-09-15
+xt_qtaguid_stats.txt	aeb9d542133ecd3b98ed7cd8116f1de4cffef7cd6f75f78e7c99d1b625d37c2f	6	synthetic, hand-written 2026-09-15
