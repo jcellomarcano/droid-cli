@@ -1,8 +1,37 @@
 """droid.inspector: parseo de /proc/stat, dumpsys meminfo/gfxinfo, exit-info y el sampler rapido."""
+import json
+from types import SimpleNamespace
+
 import pytest
 from tests.helpers import fixture_text
 
 from droid import inspector as insp
+
+_FRAMESTATS_HEADER = ("Flags,FrameTimelineVsyncId,IntendedVsync,Vsync,InputEventId,HandleInputStart,AnimationStart,"
+                      "PerformTraversalsStart,DrawStart,FrameDeadline,FrameStartTime,FrameInterval,WorkloadTarget,"
+                      "AnimationTime,SyncQueued,SyncStart,IssueDrawCommandsStart,SwapBuffers,FrameCompleted,")
+
+
+def _fast_sample_text(total_frames, janky, rows=None):
+    lines = [
+        "cpu  100 0 100 100 0 0 0 0 0 0",
+        "##NCPU 4",
+        "999 (app) S 1 1 0 0 -1 4194624 0 0 0 0 0 0 0 0 -2 0 26 0 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0 17 2 1 1 0 0 0 0 0 0 0 0 0 0 0",
+        "##TASKS", "##STATUS", "VmRSS:      1000 kB", "Threads:        1", "##OOM 0", "##GFX",
+        f"Total frames rendered: {total_frames}", f"Janky frames: {janky} (0.00%)",
+    ]
+    if rows is not None:
+        lines.append(_FRAMESTATS_HEADER)
+        lines.extend(rows)
+    return "\n".join(lines) + "\n"
+
+
+def _fake_session():
+    dev = SimpleNamespace(serial="emulator-5554", name="Pixel", key="pixel1", to_dict=lambda: {})
+    ses = insp.InspectSession(dev, "com.example.app", interval=1.0, record=False)
+    ses.pid = 999
+    ses.debuggable = False
+    return ses
 
 
 def test_parse_stat_line_from_proc_pid_stat():
@@ -70,18 +99,23 @@ def test_parse_exit_info_real_fixture_reports_crash():
     assert rec.rss == "0.00"
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "droid/inspector.py:234 reason=(\\d+) \\((\\w+)\\) subreason=\\d+ \\((\\w+)\\) status=(\\d+) requires "
-    "single-word parenthesized reason/subreason text; real dumpsys output like "
-    "'reason=4 (APP CRASH(EXCEPTION)) subreason=0 (UNKNOWN) status=0' has a space and a nested "
-    "paren, so re.search finds no match at all and reason/subreason/status silently default to "
-    "0/''/0 instead of the real values (reason should be 4/CRASH, not 0/UNKNOWN)."
-))
-def test_parse_exit_info_multiword_reason_is_dropped_bug():
+def test_parse_exit_info_multiword_reason_is_parsed():
     records = insp.parse_exit_info(fixture_text("exit_info_app_after_crash"))
     rec = records[0]
     assert rec.reason == 4
     assert rec.reason_name == "CRASH"
+    assert rec.subreason == "UNKNOWN"
+    assert rec.status == 0
+
+
+def test_parse_exit_info_user_requested_multiword_subreason():
+    records = insp.parse_exit_info(fixture_text("exit_info_all"))
+    user_requested = [r for r in records if r.reason == 10]
+    assert user_requested
+    rec = user_requested[0]
+    assert rec.reason == 10
+    assert isinstance(rec.status, int)
+    assert rec.status == 0
 
 
 def test_parse_exit_info_garbage_returns_empty_list():
@@ -132,3 +166,187 @@ def test_oom_label_known_and_none():
     assert insp.oom_label(0) == "primer plano"
     assert insp.oom_label(1000) == "en caché"
     assert insp.oom_label(99999) == "en caché"
+
+
+def test_fast_sample_script_runs_gfxinfo_framestats():
+    script = insp.fast_sample_script(1234, "com.example.app", debuggable=False)
+    assert "dumpsys gfxinfo com.example.app framestats" in script
+    assert "##GFX" in script
+
+
+def test_parse_framestats_real_fixture():
+    text = fixture_text("gfxinfo_framestats_app")
+    frames = insp.parse_framestats(text)
+    profiledata_start = text.splitlines().index("---PROFILEDATA---") + 1
+    header_line = text.splitlines()[profiledata_start]
+    assert header_line.startswith("Flags,FrameTimelineVsyncId")
+    expected_count = sum(
+        1 for line in text.splitlines()[profiledata_start + 1:]
+        if line[:1].isdigit() and line.split(",", 1)[0] == "0"
+    )
+    assert len(frames) == expected_count
+    assert expected_count > 0
+    for vsync, duration_ms in frames:
+        assert isinstance(vsync, int)
+        assert duration_ms > 0
+
+
+def test_parse_framestats_without_profiledata_returns_empty():
+    assert insp.parse_framestats(fixture_text("gfxinfo_app")) == []
+    assert insp.parse_framestats("") == []
+
+
+def test_new_frames_dedupes_across_ticks():
+    frames = [(100, 5.0), (200, 6.0), (300, 7.0)]
+    ms, last = insp.new_frames(frames, 150)
+    assert ms == [6.0, 7.0]
+    assert last == 300
+    ms2, last2 = insp.new_frames(frames, last)
+    assert ms2 == []
+    assert last2 == 300
+
+
+def test_new_frames_empty_input_keeps_last_vsync():
+    ms, last = insp.new_frames([], 42)
+    assert ms == []
+    assert last == 42
+
+
+def test_load_session_round_trip_with_exits_and_unknown_type(tmp_path):
+    path = tmp_path / "session.jsonl"
+    lines = [
+        {"type": "meta", "device": {}, "package": "com.example.app", "interval": 1.0, "started": "2026-09-15T00:00:00"},
+        {"type": "sample", "t": 1.0, "pid": 123, "alive": True},
+        {"type": "exit", "timestamp": "2026-09-15 00:00:01", "pid": 123, "reason": 4, "reason_name": "CRASH",
+         "subreason": "UNKNOWN", "status": 0, "importance": 100, "description": "crash", "anr": "", "rss": "0.00"},
+        {"type": "future_unknown_type", "whatever": True},
+        {"type": "end", "ended": "2026-09-15T00:00:02", "samples": 1},
+    ]
+    with open(path, "w", encoding="utf-8") as fh:
+        for obj in lines:
+            fh.write(json.dumps(obj) + "\n")
+    out = insp.load_session(path)
+    assert out["meta"]["package"] == "com.example.app"
+    assert len(out["samples"]) == 1
+    assert len(out["exits"]) == 1
+    assert out["exits"][0]["reason"] == 4
+    assert out["end"]["samples"] == 1
+
+
+def test_tick_reconciles_frames_from_framestats_when_counters_static(monkeypatch):
+    ses = _fake_session()
+    tick1 = _fast_sample_text(46, 9, ["0,1,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5000100,"])
+    tick2 = _fast_sample_text(46, 9, [
+        "0,2,200,200,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20000200,",
+        "0,3,300,300,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10000300,",
+    ])
+    outputs = iter([tick1, tick2])
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: next(outputs))
+    ses._tick()
+    ses._tick()
+    last = ses.samples[-1]
+    assert last.gfx_total_frames == 46
+    assert last.frames == 2
+    assert last.janky == 1
+    assert last.fps > 0
+    assert last.jank_pct == pytest.approx(50.0)
+
+
+def test_tick_falls_back_to_counter_delta_without_framestats(monkeypatch):
+    ses = _fake_session()
+    tick1 = _fast_sample_text(46, 9)
+    tick2 = _fast_sample_text(50, 10)
+    outputs = iter([tick1, tick2])
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: next(outputs))
+    ses._tick()
+    ses._tick()
+    last = ses.samples[-1]
+    assert last.frames == 4
+    assert last.janky == 1
+    assert last.fps > 0
+
+
+def test_tick_caps_frame_ms_to_240_entries(monkeypatch):
+    ses = _fake_session()
+    rows = [f"0,{i},{i * 1000},{i * 1000},0,0,0,0,0,0,0,0,0,0,0,0,0,0,{i * 1000 + 5000000}," for i in range(1, 301)]
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: _fast_sample_text(0, 0, []))
+    ses._tick()
+    assert ses.samples[-1].frame_ms == []
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: _fast_sample_text(0, 0, rows))
+    ses._tick()
+    assert len(ses.samples[-1].frame_ms) == 240
+    assert ses.samples[-1].frames_truncated == 60
+    assert ses.samples[-1].frames == 300
+
+
+def test_first_tick_does_not_count_frames_rendered_before_the_session(monkeypatch):
+    ses = _fake_session()
+    rows = [f"0,{i},{i * 1000},{i * 1000},0,0,0,0,0,0,0,0,0,0,0,0,0,0,{i * 1000 + 5000000}," for i in range(1, 20)]
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: _fast_sample_text(0, 0, rows))
+    ses._tick()
+    first = ses.samples[-1]
+    assert first.frame_ms == [] and first.frames == 0
+    ses._tick()
+    second = ses.samples[-1]
+    assert second.frame_ms == [] and second.frames == 0
+    newer = rows + [f"0,{i},{i * 1000},{i * 1000},0,0,0,0,0,0,0,0,0,0,0,0,0,0,{i * 1000 + 20000000}," for i in range(20, 25)]
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: _fast_sample_text(0, 0, newer))
+    ses._tick()
+    third = ses.samples[-1]
+    assert len(third.frame_ms) == 5 and third.frames == 5 and third.fps > 0
+
+
+def test_parse_framestats_merges_multiple_blocks_deduped_by_vsync():
+    text = fixture_text("gfxinfo_framestats_app")
+    lines = text.splitlines()
+    header_idx = next(i for i, l in enumerate(lines) if l.startswith("Flags,FrameTimelineVsyncId"))
+    end_idx = next(i for i in range(header_idx + 1, len(lines)) if lines[i].strip() == "---PROFILEDATA---")
+    block = lines[header_idx:end_idx]
+    header_fields = block[0].rstrip(",").split(",")
+    vsync_i = header_fields.index("IntendedVsync")
+    shifted_rows = []
+    for row in block[1:]:
+        fields = row.rstrip(",").split(",")
+        fields[vsync_i] = str(int(fields[vsync_i]) + 10_000_000_000)
+        shifted_rows.append(",".join(fields) + ",")
+    doubled = "\n".join(block) + "\n" + "\n".join(shifted_rows) + "\n"
+    single = insp.parse_framestats("\n".join(block) + "\n")
+    merged = insp.parse_framestats(doubled)
+    assert len(merged) == 2 * len(single)
+    vsyncs = [v for v, _ in merged]
+    assert len(vsyncs) == len(set(vsyncs))
+
+
+def test_parse_framestats_dedupes_same_vsync_across_blocks():
+    row = "0,1,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5000100,"
+    text = _FRAMESTATS_HEADER + "\n" + row + "\n" + _FRAMESTATS_HEADER + "\n" + row + "\n"
+    frames = insp.parse_framestats(text)
+    assert len(frames) == 1
+
+
+def test_fast_sample_script_filters_framestats_dump_through_grep():
+    script = insp.fast_sample_script(1234, "com.example.app", debuggable=False)
+    assert "framestats 2>/dev/null | grep -E" in script
+    assert "^Flags," in script
+    assert "^[0-9]+," in script
+
+
+def test_device_tz_offset_parses_valid_and_rejects_garbage(monkeypatch):
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: "+0200\n")
+    assert insp.device_tz_offset("emulator-5554") == "+0200"
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: "")
+    assert insp.device_tz_offset("emulator-5554") is None
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("no device")))
+    assert insp.device_tz_offset("emulator-5554") is None
+
+
+def test_counter_fallback_is_not_used_once_framestats_was_seen(monkeypatch):
+    ses = _fake_session()
+    rows = [f"0,{i},{i * 1000},{i * 1000},0,0,0,0,0,0,0,0,0,0,0,0,0,0,{i * 1000 + 5000000}," for i in range(1, 6)]
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: _fast_sample_text(10, 0, rows))
+    ses._tick()
+    ses._tick()
+    monkeypatch.setattr(insp.adbmod, "shell", lambda *a, **k: _fast_sample_text(40, 2))
+    ses._tick()
+    assert ses.samples[-1].frames == 0
+    assert ses.samples[-1].janky == 0

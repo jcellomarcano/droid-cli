@@ -39,3 +39,15 @@ def test_rate_formats_bytes_kilobytes_megabytes():
     assert theme.rate(500) == "500 B/s"
     assert theme.rate(2048) == "2 KB/s"
     assert theme.rate(5 * 1024 * 1024) == "5.0 MB/s"
+
+
+def test_hbar_treats_nan_inf_and_none_as_zero():
+    assert theme.hbar(float("nan"), 100, 20) == "░" * 20
+    assert theme.hbar(float("inf"), 100, 20) == "░" * 20
+    assert theme.hbar(None, 100, 20) == "░" * 20
+    assert theme.hbar(50, float("nan"), 20) == "░" * 20
+
+
+def test_histogram_does_not_raise_on_nan_bucket_value():
+    table = theme.histogram([("a", float("nan")), ("b", 10)], width=20)
+    assert table is not None

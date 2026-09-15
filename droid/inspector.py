@@ -8,16 +8,18 @@ import re
 import threading
 import time
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Deque, Dict, List, Optional
+from typing import Callable, Deque, Dict, List, Optional, Tuple
 
 from . import adb as adbmod
 from . import config
 from .adb import Device, sanitize
 
 INSPECT_DIR = config.DROID_HOME / "inspect"
+SIXTY_HZ_FRAME_DEADLINE_MS = 16.67
+MAX_FRAME_MS_PER_TICK = 240
 
 STAT_RE = re.compile(r"^(?:(?P<path>/proc/\d+/task/(?P<tid>\d+)/stat):)?(?P<id>\d+) \((?P<comm>.*)\) (?P<state>\S) (?P<rest>.*)$")
 EXIT_REASONS = {0: "UNKNOWN", 1: "EXIT_SELF", 2: "SIGNALED", 3: "LOW_MEMORY", 4: "CRASH", 5: "CRASH_NATIVE", 6: "ANR", 7: "INITIALIZATION_FAILURE",
@@ -77,6 +79,9 @@ class Sample:
     gfx_total_frames: int = 0
     gfx_total_janky: int = 0
     interval: float = 0.0
+    frame_ms: List[float] = field(default_factory=list)
+    frames_truncated: int = 0
+    """Duraciones de frame (ms) nuevas en este tick; recortado a las últimas 240 entradas."""
 
     def to_dict(self) -> dict:
         d = {k: v for k, v in self.__dict__.items() if k != "threads"}
@@ -212,6 +217,55 @@ def parse_gfxinfo(text: str) -> dict:
     return out
 
 
+def parse_framestats(text: str) -> List[Tuple[int, float]]:
+    lines = text.splitlines()
+    header_idxs = [i for i, line in enumerate(lines) if line.startswith("Flags,FrameTimelineVsyncId")]
+    by_vsync: Dict[int, float] = {}
+    for header_idx in header_idxs:
+        header = lines[header_idx].rstrip(",").split(",")
+        try:
+            flags_i = header.index("Flags")
+            vsync_i = header.index("IntendedVsync")
+            completed_i = header.index("FrameCompleted")
+        except ValueError:
+            continue
+        need = max(flags_i, vsync_i, completed_i)
+        for line in lines[header_idx + 1:]:
+            s = line.strip()
+            if not s or not (s[0].isdigit() or s[0] == "-"):
+                break
+            fields = s.rstrip(",").split(",")
+            if len(fields) <= need:
+                continue
+            try:
+                flags = int(fields[flags_i])
+                if flags != 0:
+                    continue
+                vsync = int(fields[vsync_i])
+                completed = int(fields[completed_i])
+            except ValueError:
+                continue
+            by_vsync[vsync] = (completed - vsync) / 1e6
+    return sorted(by_vsync.items())
+
+
+def new_frames(frames: List[Tuple[int, float]], last_vsync: int) -> Tuple[List[float], int]:
+    fresh = [(v, ms) for v, ms in frames if v > last_vsync]
+    new_last = max((v for v, _ in fresh), default=last_vsync)
+    return [ms for _, ms in fresh], new_last
+
+
+def _percentile(values: List[float], pct: float) -> float:
+    s = sorted(values)
+    if len(s) == 1:
+        return s[0]
+    k = (len(s) - 1) * pct / 100
+    f, c = int(k), min(int(k) + 1, len(s) - 1)
+    if f == c:
+        return s[f]
+    return s[f] * (c - k) + s[c] * (k - f)
+
+
 def parse_exit_info(text: str) -> List[ExitRecord]:
     records: List[ExitRecord] = []
     cur: Dict[str, str] = {}
@@ -219,7 +273,7 @@ def parse_exit_info(text: str) -> List[ExitRecord]:
     def flush():
         if cur.get("timestamp"):
             reason = int(cur.get("reason", "0"))
-            records.append(ExitRecord(cur.get("timestamp", ""), int(cur.get("pid", "0")), reason, cur.get("reason_name") or EXIT_REASONS.get(reason, "?"),
+            records.append(ExitRecord(cur.get("timestamp", ""), int(cur.get("pid", "0")), reason, EXIT_REASONS.get(reason) or cur.get("reason_name") or "?",
                                       cur.get("subreason", ""), int(cur.get("status", "0")), int(cur.get("importance", "0")),
                                       cur.get("description", ""), cur.get("anr", ""), cur.get("rss", "")))
     for line in text.splitlines():
@@ -231,9 +285,9 @@ def parse_exit_info(text: str) -> List[ExitRecord]:
         m = re.match(r"^timestamp=(\S+ \S+) pid=(\d+)", s)
         if m:
             cur["timestamp"], cur["pid"] = m.group(1), m.group(2)
-        m = re.search(r"reason=(\d+) \((\w+)\) subreason=\d+ \((\w+)\) status=(\d+)", s)
+        m = re.search(r"reason=(\d+) \((.+?)\) subreason=(\d+) \((.+?)\) status=(\d+)", s)
         if m:
-            cur["reason"], cur["reason_name"], cur["subreason"], cur["status"] = m.group(1), m.group(2), m.group(3), m.group(4)
+            cur["reason"], cur["reason_name"], cur["subreason"], cur["status"] = m.group(1), m.group(2), m.group(4), m.group(5)
         m = re.search(r"importance=(\d+) pss=\S+ rss=(\S+)", s)
         if m:
             cur["importance"], cur["rss"] = m.group(1), m.group(2)
@@ -260,6 +314,14 @@ def is_debuggable(serial: str, package: str) -> bool:
     return "uid=" in out and "not debuggable" not in out and "unknown package" not in out
 
 
+def device_tz_offset(serial: str) -> Optional[str]:
+    try:
+        out = adbmod.shell(serial, "date +%z", timeout=8).strip()
+    except Exception:
+        return None
+    return out if re.fullmatch(r"[+-]\d{4}", out) else None
+
+
 def fast_sample_script(pid: int, package: str, debuggable: bool) -> str:
     parts = [
         "head -1 /proc/stat",
@@ -275,7 +337,8 @@ def fast_sample_script(pid: int, package: str, debuggable: bool) -> str:
         parts.append("echo '##PSS'")
         parts.append(f"run-as {package} cat /proc/{pid}/smaps_rollup 2>/dev/null | grep -E '^(Pss|Pss_Anon|Pss_File|Private_Dirty|Swap):'")
     parts.append("echo '##GFX'")
-    parts.append(f"dumpsys gfxinfo {package} 2>/dev/null | grep -E 'Total frames|Janky frames:|percentile|Missed Vsync|Slow UI|deadline missed:'")
+    gfx_grep = "grep -E 'Total frames|Janky frames:|percentile|Missed Vsync|Slow UI|deadline missed:|^Flags,|^[0-9]+,'"
+    parts.append(f"dumpsys gfxinfo {package} framestats 2>/dev/null | {gfx_grep}")
     return "; ".join(parts)
 
 
@@ -331,7 +394,11 @@ def parse_fast_sample(text: str):
                 pss[m.group(1)] = int(m.group(2))
         elif section == "gfx":
             gfx_lines.append(s)
-    return total_ticks, ncpu, proc, threads, status, oom, pss, parse_gfxinfo("\n".join(gfx_lines))
+    gfx_text = "\n".join(gfx_lines)
+    gfx = parse_gfxinfo(gfx_text)
+    if gfx_text.strip():
+        gfx["_raw_text"] = gfx_text  # NEEDS-COMMENT: stashed so _tick can also run parse_framestats without changing this function's 8-item return arity
+    return total_ticks, ncpu, proc, threads, status, oom, pss, gfx
 
 
 class InspectSession:
@@ -351,6 +418,7 @@ class InspectSession:
         self.samples: Deque[Sample] = deque(maxlen=history)
         self.meminfos: Deque[MemInfo] = deque(maxlen=max(10, history // 5))
         self.exits: List[ExitRecord] = []
+        self._exits_written: set = set()
         self.pid: Optional[int] = None
         self.debuggable = False
         self.running = False
@@ -363,11 +431,15 @@ class InspectSession:
         self._fh = None
         self.error: Optional[str] = None
         self.thread_names: Dict[int, str] = {}
+        self._last_vsync: int = 0
+        self._framestats_seen: bool = False
+        self.device_tz_offset: Optional[str] = None
 
     # --- ciclo de vida ---
     def start(self) -> None:
         self.running = True
         self.started = datetime.now()
+        self.device_tz_offset = device_tz_offset(self.dev.serial)
         if self.record:
             INSPECT_DIR.mkdir(parents=True, exist_ok=True)
             d = INSPECT_DIR / f"{sanitize(self.dev.name)}-{self.dev.key}"
@@ -375,7 +447,7 @@ class InspectSession:
             self.path = d / f"{self.started.strftime('%Y%m%d-%H%M%S')}-{sanitize(self.package)}.jsonl"
             self._fh = open(self.path, "a", encoding="utf-8")
             self._write({"type": "meta", "device": self.dev.to_dict(), "package": self.package, "interval": self.interval,
-                         "started": self.started.isoformat(timespec="seconds")})
+                         "started": self.started.isoformat(timespec="seconds"), "device_tz_offset": self.device_tz_offset})
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
 
@@ -458,6 +530,16 @@ class InspectSession:
         s.gfx_total_frames = gfx.get("total_frames", 0)
         s.gfx_total_janky = gfx.get("janky", 0)
         s.p50, s.p90, s.p99 = gfx.get("p50"), gfx.get("p90"), gfx.get("p99")
+        raw_gfx_text = gfx.get("_raw_text", "")
+        frames_raw = parse_framestats(raw_gfx_text)
+        new_ms, self._last_vsync = new_frames(frames_raw, self._last_vsync)
+        if not self._prev:
+            new_ms = []
+        s.frame_ms = new_ms[-MAX_FRAME_MS_PER_TICK:]
+        s.frames_truncated = max(0, len(new_ms) - MAX_FRAME_MS_PER_TICK)
+        if "Flags,FrameTimelineVsyncId" in raw_gfx_text:
+            self._framestats_seen = True
+        has_framestats = self._framestats_seen
         tid_ticks = {tid: ticks for tid, _, _, ticks in threads}
         for tid, name, _, _ in threads:
             self.thread_names[tid] = name
@@ -472,8 +554,12 @@ class InspectSession:
                 th.cpu = (ticks - ptids.get(tid, ticks)) / dt_total * ncpu * 100.0
                 s.threads.append(th)
             s.threads.sort(key=lambda th: -th.cpu)
-            s.frames = max(0, s.gfx_total_frames - pgfx.get("total_frames", s.gfx_total_frames))
-            s.janky = max(0, s.gfx_total_janky - pgfx.get("janky", s.gfx_total_janky))
+            if has_framestats:
+                s.frames = len(new_ms)
+                s.janky = sum(1 for ms in new_ms if ms > SIXTY_HZ_FRAME_DEADLINE_MS)
+            else:
+                s.frames = max(0, s.gfx_total_frames - pgfx.get("total_frames", s.gfx_total_frames))
+                s.janky = max(0, s.gfx_total_janky - pgfx.get("janky", s.gfx_total_janky))
             s.fps = s.frames / s.interval if s.interval > 0 else 0.0
             s.jank_pct = (s.janky / s.frames * 100.0) if s.frames else 0.0
             s.missed_vsync = max(0, gfx.get("missed_vsync", 0) - pgfx.get("missed_vsync", 0))
@@ -498,9 +584,16 @@ class InspectSession:
     def refresh_exits(self) -> None:
         try:
             text = adbmod.shell(self.dev.serial, f"dumpsys activity exit-info {self.package}", timeout=15)
-            self.exits = parse_exit_info(text)
+            records = parse_exit_info(text)
         except Exception:
-            pass
+            return
+        self.exits = records
+        for r in records:
+            key = (r.timestamp, r.pid)
+            if key in self._exits_written:
+                continue
+            self._exits_written.add(key)
+            self._write({"type": "exit", **asdict(r)})
 
     # --- resumen ---
     def summary(self) -> dict:
@@ -518,7 +611,8 @@ class InspectSession:
                 top[th.name] = top.get(th.name, 0.0) + th.cpu * s.interval
         dur = sum(s.interval for s in alive)
         top_threads = sorted(((n, v / dur) for n, v in top.items()), key=lambda x: -x[1])[:8]
-        return {
+        frame_ms = [ms for s in alive for ms in s.frame_ms]
+        out = {
             "samples": len(self.samples), "alive": len(alive), "duration_s": round(dur, 1),
             "cpu_avg": round(sum(cpu) / len(cpu), 1), "cpu_max": round(max(cpu), 1),
             "rss_kb_avg": int(sum(rss) / len(rss)), "rss_kb_max": max(rss),
@@ -528,12 +622,18 @@ class InspectSession:
             "top_threads": [(n, round(v, 1)) for n, v in top_threads],
             "last_meminfo": self.meminfos[-1].to_dict() if self.meminfos else None,
             "exits": len(self.exits),
+            "frame_ms_count": len(frame_ms),
         }
+        if frame_ms:
+            out["p50"] = round(_percentile(frame_ms, 50), 1)
+            out["p90"] = round(_percentile(frame_ms, 90), 1)
+            out["p99"] = round(_percentile(frame_ms, 99), 1)
+        return out
 
 
 def load_session(path: Path) -> dict:
     """Lee un JSONL grabado: {'meta':…, 'samples':[…], 'meminfo':[…]}"""
-    out = {"meta": None, "samples": [], "meminfo": [], "end": None}
+    out = {"meta": None, "samples": [], "meminfo": [], "exits": [], "end": None}
     with open(path, "r", encoding="utf-8") as fh:
         for line in fh:
             try:
@@ -547,6 +647,8 @@ def load_session(path: Path) -> dict:
                 out["samples"].append(o)
             elif t == "meminfo":
                 out["meminfo"].append(o)
+            elif t == "exit":
+                out["exits"].append(o)
             elif t == "end":
                 out["end"] = o
     return out

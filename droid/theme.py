@@ -2,6 +2,7 @@
 
 Colores en 256 (ANSI) para el stream de logs y en markup rich para tablas/menú.
 """
+import math
 from typing import Optional
 
 # --- paletas de identidad (hash estable -> color) ---------------------------
@@ -144,3 +145,127 @@ def rate(bps: float) -> str:
     if bps >= 1024:
         return f"{bps / 1024:.0f} KB/s"
     return f"{bps:.0f} B/s"
+
+
+# --- charts (renderables puros, sin I/O) -------------------------------------
+
+
+def _finite_or_zero(v) -> float:
+    if v is None:
+        return 0.0
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        return 0.0
+    return v if math.isfinite(v) else 0.0
+
+
+def hbar(value: float, max_value: float, width: int = 28, fill: str = "█", empty: str = "░") -> str:
+    if width <= 0:
+        return ""
+    value = _finite_or_zero(value)
+    max_value = _finite_or_zero(max_value)
+    if max_value <= 0:
+        return empty * width
+    v = min(max(value, 0), max_value)
+    filled = min(width, max(0, round(width * v / max_value)))
+    return fill * filled + empty * (width - filled)
+
+
+def _spark_vals(values, width: int):
+    return [float(v) for v in list(values)[-width:] if v is not None]
+
+
+def _default_fmt(v: float) -> str:
+    return f"{v:.1f}"
+
+
+def spark_labeled(values, width: int = 30, lo: Optional[float] = None, hi: Optional[float] = None,
+                   unit: str = "", fmt=None) -> "Text":
+    from rich.text import Text
+    fmt = fmt or _default_fmt
+    glyphs = spark(values, width, lo, hi)
+    vals = _spark_vals(values, width)
+    if not vals:
+        return Text(f"{glyphs} sin datos".strip(), style=hx(MUTED))
+    lo_v = min(vals) if lo is None else lo
+    hi_v = max(vals) if hi is None else hi
+    media = sum(vals) / len(vals)
+    trailer = f" mín {fmt(lo_v)}{unit} · máx {fmt(hi_v)}{unit} · media {fmt(media)}{unit}"
+    text = Text(glyphs)
+    text.append(trailer, style=hx(MUTED))
+    return text
+
+
+def dual_spark(a, b, width: int = 30) -> tuple:
+    vals_a = _spark_vals(a, width)
+    vals_b = _spark_vals(b, width)
+    all_vals = vals_a + vals_b
+    hi = max(all_vals) if all_vals else 0.0
+    lo = 0.0
+    return spark(a, width, lo, hi), spark(b, width, lo, hi)
+
+
+def histogram(buckets, width: int = 28, fmt=None) -> "Table":
+    from rich.table import Table
+    fmt = fmt or (lambda v: f"{_finite_or_zero(v):g}")
+    table = Table(box=None, show_header=False, padding=(0, 1))
+    table.add_column()
+    table.add_column()
+    table.add_column()
+    max_value = max((_finite_or_zero(v) for _, v in buckets), default=0)
+    for label, value in buckets:
+        table.add_row(label, hbar(value, max_value, width), fmt(value))
+    return table
+
+
+def frame_buckets(durations_ms) -> list:
+    labels = ["<16 ms", "16-32 ms", "32-48 ms", ">48 ms"]
+    counts = [0, 0, 0, 0]
+    for d in durations_ms:
+        if d < 16:
+            counts[0] += 1
+        elif d < 32:
+            counts[1] += 1
+        elif d < 48:
+            counts[2] += 1
+        else:
+            counts[3] += 1
+    return list(zip(labels, counts))
+
+
+_TIMELINE_GLYPHS = {"crash": "×", "anr": "!", "death": "†", "gc": "·", "lowmem": "▽"}
+_TIMELINE_PRIORITY = {"crash": 0, "anr": 1, "death": 2, "lowmem": 3, "gc": 4}
+
+
+def _timeline_style(kind: str) -> str:
+    if kind in ("crash", "anr", "death"):
+        return hx(ERR) + " bold"
+    if kind == "lowmem":
+        return hx(WARN)
+    if kind == "gc":
+        return hx(MUTED)
+    return hx(MUTED)
+
+
+def timeline_strip(events, t_start: float, t_end: float, width: int = 30, glyphs=None) -> "Text":
+    from rich.text import Text
+    glyphs = glyphs or _TIMELINE_GLYPHS
+    text = Text()
+    span = t_end - t_start
+    if not events or span <= 0 or width <= 0:
+        text.append(" " * max(0, width))
+        return text
+    slots = [None] * width
+    for t, kind in events:
+        idx = int((t - t_start) / span * width)
+        idx = min(width - 1, max(0, idx))
+        current = slots[idx]
+        if current is None or _TIMELINE_PRIORITY.get(kind, 99) < _TIMELINE_PRIORITY.get(current, 99):
+            slots[idx] = kind
+    for kind in slots:
+        if kind is None:
+            text.append(" ")
+        else:
+            text.append(glyphs.get(kind, "?"), style=_timeline_style(kind))
+    return text

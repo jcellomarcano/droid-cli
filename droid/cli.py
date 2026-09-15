@@ -5,7 +5,7 @@ import os
 import re
 import sys
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
@@ -763,6 +763,124 @@ def _parse_duration(spec: Optional[str]) -> Optional[float]:
     return float(m.group(1)) * {"": 1, "s": 1, "m": 60, "h": 3600}[m.group(2)]
 
 
+_TIMELINE_LEGEND = "× crash  ! anr  † murió  ▽ poca memoria"
+
+
+def _exit_kind(reason: int) -> str:
+    if reason in (4, 5):
+        return "crash"
+    if reason == 6:
+        return "anr"
+    if reason == 3:
+        return "lowmem"
+    return "death"
+
+
+def _device_tzinfo(device_tz_offset: Optional[str]):
+    if not device_tz_offset:
+        return None
+    m = re.fullmatch(r"([+-])(\d{2})(\d{2})", device_tz_offset)
+    if not m:
+        return None
+    sign = 1 if m.group(1) == "+" else -1
+    minutes = sign * (int(m.group(2)) * 60 + int(m.group(3)))
+    return timezone(timedelta(minutes=minutes))
+
+
+def _exit_events(exits, device_tz_offset: Optional[str] = None) -> list:
+    tzinfo = _device_tzinfo(device_tz_offset)
+    events = []
+    for e in exits:
+        ts_raw = e.timestamp if hasattr(e, "timestamp") else e.get("timestamp")
+        reason = e.reason if hasattr(e, "reason") else e.get("reason")
+        try:
+            dt = datetime.strptime(ts_raw, "%Y-%m-%d %H:%M:%S.%f")
+        except (ValueError, TypeError):
+            continue
+        if tzinfo is not None:
+            dt = dt.replace(tzinfo=tzinfo)
+        events.append((dt.timestamp(), _exit_kind(reason)))
+    return events
+
+
+def _heap_buckets(m) -> list:
+    get = (lambda k: getattr(m, k)) if hasattr(m, "java_heap_kb") else (lambda k: m.get(k, 0))
+    return [
+        ("Java heap", get("java_heap_kb")),
+        ("Native heap", get("native_heap_kb")),
+        ("Code", get("code_kb")),
+        ("Stack", get("stack_kb")),
+        ("Graphics", get("graphics_kb")),
+        ("Private other", get("private_other_kb")),
+        ("System", get("system_kb")),
+    ]
+
+
+def _pctl_buckets(sample) -> list:
+    get = (lambda k: getattr(sample, k)) if hasattr(sample, "p50") else (lambda k: sample.get(k))
+    return [("p50", get("p50") or 0), ("p90", get("p90") or 0), ("p99", get("p99") or 0)]
+
+
+def _replay_chart(data):
+    from rich.console import Group
+    from rich.panel import Panel
+    meta = data.get("meta") or {}
+    samples = [x for x in data.get("samples", []) if x.get("alive")]
+    width = max(10, min(40, ui.console.width - 30))
+    if not samples:
+        return Group(Text("sin muestras", style=theme.hx(theme.MUTED)))
+    cpu = [x["cpu"] for x in samples]
+    rss_mb = [x["rss_kb"] / 1024.0 for x in samples]
+    fps = [x["fps"] for x in samples]
+    frames = sum(x["frames"] for x in samples)
+    janky = sum(x["janky"] for x in samples)
+    jank_pct = (janky / frames * 100.0) if frames else 0.0
+    t_start = samples[0]["t"]
+    t_end = samples[-1]["t"]
+    exits = data.get("exits", [])
+    summary = (
+        f"{len(samples)} muestras · {t_end - t_start:.0f}s\n"
+        f"CPU media {sum(cpu) / len(cpu):.1f}% · máx {max(cpu):.1f}%\n"
+        f"RSS media {theme.kb(sum(rss_mb) / len(rss_mb) * 1024)} · máx {theme.kb(max(rss_mb) * 1024)}\n"
+        f"Frames {frames} · jank {jank_pct:.1f}%\n"
+        f"Salidas {len(exits)}"
+    )
+    dev_name = (meta.get("device") or {}).get("model", "?")
+    panel = Panel(summary, title=f"{meta.get('package', '?')} · {dev_name}", border_style=theme.hx(theme.INFO))
+    lines = [panel]
+    t = Text("CPU "); t.append_text(theme.spark_labeled(cpu, width, lo=0, unit="%")); lines.append(t)
+    t = Text("RSS "); t.append_text(theme.spark_labeled(rss_mb, width, fmt=lambda v: f"{v:.0f}", unit=" MB")); lines.append(t)
+    t = Text("FPS "); t.append_text(theme.spark_labeled(fps, width, lo=0, unit=" fps")); lines.append(t)
+    events = _exit_events(exits, meta.get("device_tz_offset"))
+    lines.append(theme.timeline_strip(events, t_start, t_end, width))
+    if events:
+        lines.append(Text(_TIMELINE_LEGEND, style=theme.hx(theme.MUTED)))
+    meminfo_list = data.get("meminfo", [])
+    if meminfo_list:
+        lines.append(Text("Memoria por heap", style="bold"))
+        lines.append(theme.histogram(_heap_buckets(meminfo_list[-1]), width=width, fmt=theme.kb))
+    frame_all = [ms for x in samples for ms in x.get("frame_ms", [])]
+    lines.append(Text("Frames (histograma)", style="bold"))
+    if frame_all:
+        lines.append(theme.histogram(theme.frame_buckets(frame_all), width=width))
+    else:
+        lines.append(theme.histogram(_pctl_buckets(samples[-1]), width=width, fmt=lambda v: f"{v:.0f} ms"))
+    top: dict = {}
+    counts: dict = {}
+    for x in samples:
+        for th in x.get("threads", []):
+            top[th["name"]] = top.get(th["name"], 0.0) + th["cpu"]
+            counts[th["name"]] = counts.get(th["name"], 0) + 1
+    top_avg = sorted(((n, v / counts[n]) for n, v in top.items()), key=lambda kv: -kv[1])[:8]
+    if top_avg:
+        tt = Table(box=box.SIMPLE_HEAD, title="Hilos con más CPU (media)", title_justify="left")
+        tt.add_column("Hilo"); tt.add_column(""); tt.add_column("%CPU", justify="right")
+        for name, avg in top_avg:
+            tt.add_row(theme.paint(escape(name), theme.thread_color(name)), theme.hbar(avg, 100, 24), f"{avg:.1f}")
+        lines.append(tt)
+    return Group(*lines)
+
+
 def _inspect_view(ses, top: int, thread_pat: Optional[str]):
     from rich.console import Group
     from rich.panel import Panel
@@ -779,20 +897,29 @@ def _inspect_view(ses, top: int, thread_pat: Optional[str]):
     else:
         head.append("proceso no corriendo", style=f"bold {theme.hx(theme.ERR)}")
     lines = [head]
+    width = max(10, min(40, ui.console.width - 30))
     if last and last.alive:
         cpu_hist = [x.cpu for x in samples]
-        rss_hist = [x.rss_kb for x in samples]
+        rss_hist_mb = [x.rss_kb / 1024.0 for x in samples]
         fps_hist = [x.fps for x in samples]
         t = Text()
         t.append("CPU ", style="bold"); t.append(f"{last.cpu:5.1f}%", style=theme.hx(theme.cpu_color(last.cpu)))
-        t.append(f" de 1 core ({last.cpu_total_pct:.1f}% de {last.ncpu}) ", style="dim"); t.append(theme.spark(cpu_hist, 40, lo=0), style=theme.hx(theme.ERR))
+        t.append(f" de 1 core ({last.cpu_total_pct:.1f}% de {last.ncpu}) ", style="dim")
+        t.append_text(theme.spark_labeled(cpu_hist, width, lo=0, unit="%"))
         lines.append(t)
+        if ses.samples:
+            t_start = ses.samples[0].t
+            t_end = ses.samples[-1].t
+            events = _exit_events(ses.exits, getattr(ses, "device_tz_offset", None))
+            lines.append(theme.timeline_strip(events, t_start, t_end, width))
+            if events:
+                lines.append(Text(_TIMELINE_LEGEND, style=theme.hx(theme.MUTED)))
         t = Text()
         t.append("RSS ", style="bold"); t.append(theme.kb(last.rss_kb), style=theme.hx(theme.WARN))
         t.append(f" (anon {theme.kb(last.rss_anon_kb)} · file {theme.kb(last.rss_file_kb)} · swap {theme.kb(last.swap_kb)}) ", style="dim")
         if last.pss_kb is not None:
             t.append("PSS ", style="bold"); t.append(theme.kb(last.pss_kb) + " ", style=theme.hx(theme.WARN))
-        t.append(theme.spark(rss_hist, 40), style=theme.hx(theme.WARN))
+        t.append_text(theme.spark_labeled(rss_hist_mb, width, fmt=lambda v: f"{v:.0f}", unit=" MB"))
         lines.append(t)
         if ses.meminfos:
             m = ses.meminfos[-1]
@@ -802,13 +929,21 @@ def _inspect_view(ses, top: int, thread_pat: Optional[str]):
                      + f" · Native {theme.kb(m.native_heap_kb)} · Graphics {theme.kb(m.graphics_kb)} · Code {theme.kb(m.code_kb)}"
                      + f" · Views {m.views} · Activities {m.activities}", style="dim")
             lines.append(t)
+            lines.append(Text("Memoria por heap", style="bold"))
+            lines.append(theme.histogram(_heap_buckets(m), width=width, fmt=theme.kb))
         t = Text()
         t.append("Frames ", style="bold")
         t.append(f"{last.fps:4.1f} fps ", style=theme.hx(theme.OK if last.fps > 0 else theme.MUTED))
         t.append(f"jank {last.jank_pct:.0f}% ", style=theme.hx(theme.ERR if last.jank_pct > 10 else theme.OK))
         t.append(f"p50 {last.p50}ms p90 {last.p90}ms p99 {last.p99}ms · vsync perdidos {last.missed_vsync} · UI lenta {last.slow_ui} ", style="dim")
-        t.append(theme.spark(fps_hist, 40, lo=0), style=theme.hx(theme.OK))
+        t.append_text(theme.spark_labeled(fps_hist, width, lo=0, unit=" fps"))
         lines.append(t)
+        frame_all = [ms for x in samples for ms in x.frame_ms]
+        lines.append(Text("Frames (histograma)", style="bold"))
+        if frame_all:
+            lines.append(theme.histogram(theme.frame_buckets(frame_all), width=width))
+        else:
+            lines.append(theme.histogram(_pctl_buckets(last), width=width, fmt=lambda v: f"{v:.0f} ms"))
     tbl = Table(box=box.SIMPLE_HEAD, title="Hilos por CPU" + (f" (filtro: {thread_pat})" if thread_pat else ""), title_justify="left", expand=False)
     for col in ("TID", "Hilo", "%CPU", "", "Estado"):
         tbl.add_column(col, justify="right" if col in ("TID", "%CPU") else "left")
@@ -819,7 +954,7 @@ def _inspect_view(ses, top: int, thread_pat: Optional[str]):
             pat = thread_pat.lower()
             ths = [th for th in ths if fnmatch.fnmatchcase(th.name.lower(), pat) or pat in th.name.lower()]
         for th in ths[:top]:
-            bar = "█" * min(30, int(th.cpu / 100 * 30 + 0.5))
+            bar = theme.hbar(th.cpu, 100, 24)
             tbl.add_row(str(th.tid), theme.paint(escape(th.name), theme.thread_color(th.name), bold=(th.name == "main")),
                         theme.paint(f"{th.cpu:.1f}", theme.cpu_color(th.cpu)), theme.paint(bar, theme.cpu_color(th.cpu)),
                         {"R": "[bold]R corriendo[/]", "S": "[dim]S[/]", "D": "[yellow]D io[/]", "Z": "[red]Z[/]", "T": "[red]T parado[/]"}.get(th.state, th.state))
@@ -857,6 +992,9 @@ def cmd_inspect(args) -> int:
         if not path.exists():
             raise ui.UserError(f"No existe {path}")
         data = insp.load_session(path)
+        if getattr(args, "chart", False):
+            ui.console.print(_replay_chart(data))
+            return 0
         samples = [x for x in data["samples"] if x.get("alive")]
         meta = data["meta"] or {}
         ui.console.print(f"[bold]{meta.get('package')}[/] · {meta.get('device', {}).get('model')} · {meta.get('started')} → {(data['end'] or {}).get('ended', '?')} · {len(samples)} muestras")
@@ -1059,10 +1197,13 @@ def _net_view(mon):
         for iface, (rx, tx) in sorted(last.rates.items()):
             if rx == 0 and tx == 0 and not any(s.rates.get(iface, (0, 0)) != (0, 0) for s in samples[-30:]):
                 continue
+            rx_hist = [s.rates.get(iface, (0, 0))[0] for s in samples]
+            tx_hist = [s.rates.get(iface, (0, 0))[1] for s in samples]
+            rx_spark, tx_spark = theme.dual_spark(rx_hist, tx_hist, 30)
             t = Text()
             t.append(f"{iface:<10}", style="bold")
-            t.append(f"↓ {theme.rate(rx):>10} ", style=theme.hx(theme.OK)); t.append(theme.spark([s.rates.get(iface, (0, 0))[0] for s in samples], 30, lo=0), style=theme.hx(theme.OK))
-            t.append(f"  ↑ {theme.rate(tx):>10} ", style=theme.hx(theme.INFO)); t.append(theme.spark([s.rates.get(iface, (0, 0))[1] for s in samples], 30, lo=0), style=theme.hx(theme.INFO))
+            t.append(f"↓ {theme.rate(rx):>10} ", style=theme.hx(theme.OK)); t.append(rx_spark, style=theme.hx(theme.OK))
+            t.append(f"  ↑ {theme.rate(tx):>10} ", style=theme.hx(theme.INFO)); t.append(tx_spark, style=theme.hx(theme.INFO))
             lines.append(t)
     if mon.totals:
         t = Text()
@@ -1073,6 +1214,15 @@ def _net_view(mon):
         t.append(" · " + " ".join(f"{k}: ↓{ui.human_size(v[0])} ↑{ui.human_size(v[1])}" for k, v in mon.totals["by_type"].items()), style="dim")
         lines.append(t)
         lines.append(Text("(los totales por app los consolida Android periódicamente; la tasa por segundo es por interfaz)", style="dim"))
+        by_type = mon.totals.get("by_type") or {}
+        if by_type:
+            max_total = max((v[0] + v[1] for v in by_type.values()), default=0)
+            tipo = Text("Por tipo ", style="bold")
+            for k, v in by_type.items():
+                tipo.append(f"{k} ", style="dim")
+                tipo.append(theme.hbar(v[0] + v[1], max_total, 16), style=theme.hx(theme.WARN))
+                tipo.append("  ")
+            lines.append(tipo)
     tbl = Table(box=box.SIMPLE_HEAD, title=f"Sockets ({len(mon.sockets)})", title_justify="left")
     for col in ("Proto", "Estado", "Local", "Remoto"):
         tbl.add_column(col)
@@ -1311,6 +1461,7 @@ def build_parser() -> argparse.ArgumentParser:
     ins.add_argument("--no-record", action="store_true", help="no guardar la sesión en ~/.droid/inspect")
     ins.add_argument("--list", action="store_true", help="lista sesiones guardadas")
     ins.add_argument("--replay", metavar="ARCHIVO|#", help="resumen de una sesión guardada")
+    ins.add_argument("--chart", action="store_true", help="con --replay: gráficos (sparks, histogramas) en vez de resumen de texto")
     ins.set_defaults(func=cmd_inspect)
 
     dbp = sub.add_parser("db", help="bases de datos SQLite de una app debuggable (run-as): tablas, filas, SQL, CSV, prefs")
