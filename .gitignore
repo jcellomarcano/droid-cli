@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.claude/
+.mcp.json
+tests/fixtures/raw/
+.DS_Store

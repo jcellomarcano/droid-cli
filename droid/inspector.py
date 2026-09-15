@@ -1,0 +1,558 @@
+"""Fase 1 del inspector: CPU por hilo, memoria (RSS/PSS/heaps), frames/jank, estado del proceso y salidas de la app.
+
+Todo vía adb shell (dumpsys + /proc). Muestreo rápido cada tick (CPU, /proc/status, gfxinfo) y muestreo lento en
+un hilo aparte (dumpsys meminfo) porque puede tardar segundos. Cada sesión se guarda en ~/.droid/inspect/ como JSONL.
+"""
+import json
+import re
+import threading
+import time
+from collections import deque
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Callable, Deque, Dict, List, Optional
+
+from . import adb as adbmod
+from . import config
+from .adb import Device, sanitize
+
+INSPECT_DIR = config.DROID_HOME / "inspect"
+
+STAT_RE = re.compile(r"^(?:(?P<path>/proc/\d+/task/(?P<tid>\d+)/stat):)?(?P<id>\d+) \((?P<comm>.*)\) (?P<state>\S) (?P<rest>.*)$")
+EXIT_REASONS = {0: "UNKNOWN", 1: "EXIT_SELF", 2: "SIGNALED", 3: "LOW_MEMORY", 4: "CRASH", 5: "CRASH_NATIVE", 6: "ANR", 7: "INITIALIZATION_FAILURE",
+                8: "PERMISSION_CHANGE", 9: "EXCESSIVE_RESOURCE_USAGE", 10: "USER_REQUESTED", 11: "USER_STOPPED", 12: "DEPENDENCY_DIED",
+                13: "OTHER", 14: "FREEZER", 15: "PACKAGE_STATE_CHANGE", 16: "PACKAGE_UPDATED"}
+OOM_STATES = [(0, "primer plano"), (100, "visible"), (200, "perceptible"), (250, "perceptible"), (300, "backup"), (400, "servicio pesado"),
+              (500, "servicio A"), (600, "home"), (700, "actividad previa"), (800, "servicio B"), (900, "en caché"), (1000, "en caché")]
+
+
+def oom_label(adj: Optional[int]) -> str:
+    if adj is None:
+        return "?"
+    label = "en caché"
+    for limit, name in OOM_STATES:
+        if adj <= limit:
+            label = name
+            break
+    return label
+
+
+# ----------------------------------------------------------------------------- muestras
+
+@dataclass
+class ThreadSample:
+    tid: int
+    name: str
+    state: str
+    ticks: int
+    cpu: float = 0.0        # % de un core en el intervalo
+
+
+@dataclass
+class Sample:
+    t: float
+    pid: Optional[int]
+    alive: bool
+    cpu: float = 0.0                       # % de un core (100 = un core saturado)
+    cpu_total_pct: float = 0.0             # % del total de cores
+    ncpu: int = 1
+    threads: List[ThreadSample] = field(default_factory=list)
+    nthreads: int = 0
+    rss_kb: int = 0
+    rss_anon_kb: int = 0
+    rss_file_kb: int = 0
+    swap_kb: int = 0
+    pss_kb: Optional[int] = None           # de smaps_rollup vía run-as (apps debuggables)
+    oom_adj: Optional[int] = None
+    frames: int = 0                        # frames renderizados en el intervalo
+    janky: int = 0
+    fps: float = 0.0
+    jank_pct: float = 0.0
+    p50: Optional[int] = None
+    p90: Optional[int] = None
+    p99: Optional[int] = None
+    missed_vsync: int = 0
+    slow_ui: int = 0
+    gfx_total_frames: int = 0
+    gfx_total_janky: int = 0
+    interval: float = 0.0
+
+    def to_dict(self) -> dict:
+        d = {k: v for k, v in self.__dict__.items() if k != "threads"}
+        d["threads"] = [{"tid": th.tid, "name": th.name, "state": th.state, "cpu": round(th.cpu, 1)} for th in self.threads if th.cpu >= 0.05]
+        return d
+
+
+@dataclass
+class MemInfo:
+    """dumpsys meminfo (lento): App Summary + heaps + objetos."""
+    t: float
+    pss_total_kb: int = 0
+    rss_total_kb: int = 0
+    java_heap_kb: int = 0
+    native_heap_kb: int = 0
+    code_kb: int = 0
+    stack_kb: int = 0
+    graphics_kb: int = 0
+    private_other_kb: int = 0
+    system_kb: int = 0
+    dalvik_heap_size_kb: int = 0
+    dalvik_heap_alloc_kb: int = 0
+    dalvik_heap_free_kb: int = 0
+    native_heap_size_kb: int = 0
+    native_heap_alloc_kb: int = 0
+    native_heap_free_kb: int = 0
+    views: int = 0
+    view_roots: int = 0
+    activities: int = 0
+    app_contexts: int = 0
+    error: str = ""
+
+    def to_dict(self) -> dict:
+        return dict(self.__dict__)
+
+
+@dataclass
+class ExitRecord:
+    timestamp: str
+    pid: int
+    reason: int
+    reason_name: str
+    subreason: str
+    status: int
+    importance: int
+    description: str
+    anr: str
+    rss: str
+
+
+# ----------------------------------------------------------------------------- parsers
+
+def parse_stat_line(line: str):
+    m = STAT_RE.match(line.strip())
+    if not m:
+        return None
+    rest = m.group("rest").split()
+    # campos tras state: ppid(4) pgrp session tty tpgid flags minflt cminflt majflt cmajflt utime(14) stime(15)
+    try:
+        ticks = int(rest[10]) + int(rest[11])
+    except (IndexError, ValueError):
+        return None
+    tid = int(m.group("tid") or m.group("id"))
+    return tid, m.group("comm"), m.group("state"), ticks
+
+
+def parse_meminfo(text: str, t: Optional[float] = None) -> MemInfo:
+    mi = MemInfo(t=t or time.time())
+    if "IOException" in text or "Timeout" in text:
+        mi.error = "timeout de dumpsys meminfo"
+    summary = {}
+    in_summary = False
+    heaps = []
+    for line in text.splitlines():
+        s = line.strip()
+        if s.startswith("App Summary"):
+            in_summary = True
+            continue
+        if in_summary:
+            m = re.match(r"^(Java Heap|Native Heap|Code|Stack|Graphics|Private Other|System|Unknown):\s+(\d+)", s)
+            if m:
+                summary[m.group(1)] = int(m.group(2))
+                continue
+            m = re.match(r"^TOTAL PSS:\s+(\d+)\s+TOTAL RSS:\s+(\d+)", s)
+            if m:
+                mi.pss_total_kb, mi.rss_total_kb = int(m.group(1)), int(m.group(2))
+                in_summary = False
+                continue
+            m = re.match(r"^TOTAL:\s+(\d+)", s)
+            if m:
+                mi.pss_total_kb = int(m.group(1))
+                in_summary = False
+                continue
+        m = re.search(r"Heap Size:\s+(\d+)\s+Heap Alloc:\s+(\d+)\s+Heap Free:\s+(\d+)", s)
+        if m:
+            heaps.append((int(m.group(1)), int(m.group(2)), int(m.group(3))))
+        m = re.match(r"^Views:\s+(\d+)\s+ViewRootImpl:\s+(\d+)", s)
+        if m:
+            mi.views, mi.view_roots = int(m.group(1)), int(m.group(2))
+        m = re.match(r"^AppContexts:\s+(\d+)\s+Activities:\s+(\d+)", s)
+        if m:
+            mi.app_contexts, mi.activities = int(m.group(1)), int(m.group(2))
+        m = re.match(r"^TOTAL PSS:\s+(\d+)", s)
+        if m and not mi.pss_total_kb:
+            mi.pss_total_kb = int(m.group(1))
+    mi.java_heap_kb = summary.get("Java Heap", 0)
+    mi.native_heap_kb = summary.get("Native Heap", 0)
+    mi.code_kb = summary.get("Code", 0)
+    mi.stack_kb = summary.get("Stack", 0)
+    mi.graphics_kb = summary.get("Graphics", 0)
+    mi.private_other_kb = summary.get("Private Other", 0)
+    mi.system_kb = summary.get("System", 0)
+    if heaps:
+        mi.dalvik_heap_size_kb, mi.dalvik_heap_alloc_kb, mi.dalvik_heap_free_kb = heaps[0]
+    if len(heaps) > 1:
+        mi.native_heap_size_kb, mi.native_heap_alloc_kb, mi.native_heap_free_kb = heaps[1]
+    return mi
+
+
+def parse_gfxinfo(text: str) -> dict:
+    out: dict = {}
+    pats = {
+        "total_frames": r"Total frames rendered:\s+(\d+)", "janky": r"Janky frames:\s+(\d+)",
+        "p50": r"50th percentile:\s+(\d+)ms", "p90": r"90th percentile:\s+(\d+)ms", "p95": r"95th percentile:\s+(\d+)ms", "p99": r"99th percentile:\s+(\d+)ms",
+        "missed_vsync": r"Number Missed Vsync:\s+(\d+)", "slow_ui": r"Number Slow UI thread:\s+(\d+)",
+        "slow_bitmap": r"Number Slow bitmap uploads:\s+(\d+)", "slow_draw": r"Number Slow issue draw commands:\s+(\d+)",
+        "deadline_missed": r"Number Frame deadline missed:\s+(\d+)",
+    }
+    for k, p in pats.items():
+        m = re.search(p, text)
+        if m:
+            out[k] = int(m.group(1))
+    return out
+
+
+def parse_exit_info(text: str) -> List[ExitRecord]:
+    records: List[ExitRecord] = []
+    cur: Dict[str, str] = {}
+
+    def flush():
+        if cur.get("timestamp"):
+            reason = int(cur.get("reason", "0"))
+            records.append(ExitRecord(cur.get("timestamp", ""), int(cur.get("pid", "0")), reason, cur.get("reason_name") or EXIT_REASONS.get(reason, "?"),
+                                      cur.get("subreason", ""), int(cur.get("status", "0")), int(cur.get("importance", "0")),
+                                      cur.get("description", ""), cur.get("anr", ""), cur.get("rss", "")))
+    for line in text.splitlines():
+        s = line.strip()
+        if s.startswith("ApplicationExitInfo #"):
+            flush()
+            cur = {}
+            continue
+        m = re.match(r"^timestamp=(\S+ \S+) pid=(\d+)", s)
+        if m:
+            cur["timestamp"], cur["pid"] = m.group(1), m.group(2)
+        m = re.search(r"reason=(\d+) \((\w+)\) subreason=\d+ \((\w+)\) status=(\d+)", s)
+        if m:
+            cur["reason"], cur["reason_name"], cur["subreason"], cur["status"] = m.group(1), m.group(2), m.group(3), m.group(4)
+        m = re.search(r"importance=(\d+) pss=\S+ rss=(\S+)", s)
+        if m:
+            cur["importance"], cur["rss"] = m.group(1), m.group(2)
+        if s.startswith("description="):
+            cur["description"] = s[len("description="):]
+        if s.startswith("anrInfo=") and not s.startswith("anrInfo=null"):
+            cur["anr"] = s[len("anrInfo="):]
+    flush()
+    return records
+
+
+# ----------------------------------------------------------------------------- recolección
+
+def resolve_pid(serial: str, package: str) -> Optional[int]:
+    out = adbmod.shell(serial, f"pidof {package} 2>/dev/null", timeout=8).split()
+    for tok in out:
+        if tok.isdigit():
+            return int(tok)
+    return None
+
+
+def is_debuggable(serial: str, package: str) -> bool:
+    out = adbmod.shell(serial, f"run-as {package} id 2>&1", timeout=8)
+    return "uid=" in out and "not debuggable" not in out and "unknown package" not in out
+
+
+def fast_sample_script(pid: int, package: str, debuggable: bool) -> str:
+    parts = [
+        "head -1 /proc/stat",
+        "echo \"##NCPU $(grep -c '^cpu[0-9]' /proc/stat)\"",
+        f"cat /proc/{pid}/stat",
+        "echo '##TASKS'",
+        f"grep '' /proc/{pid}/task/*/stat 2>/dev/null",
+        "echo '##STATUS'",
+        f"grep -E 'VmRSS|RssAnon|RssFile|VmSwap|Threads' /proc/{pid}/status 2>/dev/null",
+        f"echo \"##OOM $(cat /proc/{pid}/oom_score_adj 2>/dev/null)\"",
+    ]
+    if debuggable:
+        parts.append("echo '##PSS'")
+        parts.append(f"run-as {package} cat /proc/{pid}/smaps_rollup 2>/dev/null | grep -E '^(Pss|Pss_Anon|Pss_File|Private_Dirty|Swap):'")
+    parts.append("echo '##GFX'")
+    parts.append(f"dumpsys gfxinfo {package} 2>/dev/null | grep -E 'Total frames|Janky frames:|percentile|Missed Vsync|Slow UI|deadline missed:'")
+    return "; ".join(parts)
+
+
+def parse_fast_sample(text: str):
+    """Devuelve (total_ticks, ncpu, proc_ticks, threads[(tid,name,state,ticks)], status{}, oom, pss{}, gfx{})."""
+    section = "cpu"
+    total_ticks = 0
+    ncpu = 1
+    proc = None
+    threads = []
+    status: Dict[str, int] = {}
+    oom = None
+    pss: Dict[str, int] = {}
+    gfx_lines = []
+    for line in text.splitlines():
+        s = line.rstrip()
+        if s.startswith("##NCPU"):
+            try:
+                ncpu = max(1, int(s.split()[1]))
+            except (IndexError, ValueError):
+                pass
+            continue
+        if s.startswith("##TASKS"):
+            section = "tasks"; continue
+        if s.startswith("##STATUS"):
+            section = "status"; continue
+        if s.startswith("##OOM"):
+            try:
+                oom = int(s.split()[1])
+            except (IndexError, ValueError):
+                oom = None
+            continue
+        if s.startswith("##PSS"):
+            section = "pss"; continue
+        if s.startswith("##GFX"):
+            section = "gfx"; continue
+        if section == "cpu":
+            if s.startswith("cpu "):
+                total_ticks = sum(int(x) for x in s.split()[1:] if x.isdigit())
+            elif s and s[0].isdigit():
+                proc = parse_stat_line(s)
+        elif section == "tasks":
+            r = parse_stat_line(s)
+            if r:
+                threads.append(r)
+        elif section == "status":
+            m = re.match(r"^(\w+):\s+(\d+)", s)
+            if m:
+                status[m.group(1)] = int(m.group(2))
+        elif section == "pss":
+            m = re.match(r"^(\w+):\s+(\d+)", s)
+            if m:
+                pss[m.group(1)] = int(m.group(2))
+        elif section == "gfx":
+            gfx_lines.append(s)
+    return total_ticks, ncpu, proc, threads, status, oom, pss, parse_gfxinfo("\n".join(gfx_lines))
+
+
+class InspectSession:
+    """Muestreo periódico de una app en un dispositivo, con historial en memoria y grabación JSONL."""
+
+    def __init__(self, dev: Device, package: str, interval: float = 1.0, meminfo_every: float = 10.0, record: bool = True,
+                 history: int = 600, on_sample: Optional[Callable[[Sample], None]] = None, on_meminfo: Optional[Callable[[MemInfo], None]] = None,
+                 on_status: Optional[Callable[[str, str], None]] = None):
+        self.dev = dev
+        self.package = package
+        self.interval = max(0.3, interval)
+        self.meminfo_every = meminfo_every
+        self.record = record
+        self.on_sample = on_sample or (lambda s: None)
+        self.on_meminfo = on_meminfo or (lambda m: None)
+        self.on_status = on_status or (lambda k, t: None)
+        self.samples: Deque[Sample] = deque(maxlen=history)
+        self.meminfos: Deque[MemInfo] = deque(maxlen=max(10, history // 5))
+        self.exits: List[ExitRecord] = []
+        self.pid: Optional[int] = None
+        self.debuggable = False
+        self.running = False
+        self.started = None
+        self._prev = None            # (t, total_ticks, proc_ticks, {tid: ticks}, gfx)
+        self._thread: Optional[threading.Thread] = None
+        self._mem_thread: Optional[threading.Thread] = None
+        self._mem_last = 0.0
+        self.path: Optional[Path] = None
+        self._fh = None
+        self.error: Optional[str] = None
+        self.thread_names: Dict[int, str] = {}
+
+    # --- ciclo de vida ---
+    def start(self) -> None:
+        self.running = True
+        self.started = datetime.now()
+        if self.record:
+            INSPECT_DIR.mkdir(parents=True, exist_ok=True)
+            d = INSPECT_DIR / f"{sanitize(self.dev.name)}-{self.dev.key}"
+            d.mkdir(parents=True, exist_ok=True)
+            self.path = d / f"{self.started.strftime('%Y%m%d-%H%M%S')}-{sanitize(self.package)}.jsonl"
+            self._fh = open(self.path, "a", encoding="utf-8")
+            self._write({"type": "meta", "device": self.dev.to_dict(), "package": self.package, "interval": self.interval,
+                         "started": self.started.isoformat(timespec="seconds")})
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._thread.start()
+
+    def stop(self) -> None:
+        self.running = False
+        if self._fh:
+            try:
+                self._write({"type": "end", "ended": datetime.now().isoformat(timespec="seconds"), "samples": len(self.samples)})
+                self._fh.close()
+            except Exception:
+                pass
+            self._fh = None
+
+    def _write(self, obj: dict) -> None:
+        if self._fh:
+            try:
+                self._fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
+                self._fh.flush()
+            except Exception:
+                pass
+
+    # --- bucle ---
+    def _loop(self) -> None:
+        serial = self.dev.serial
+        try:
+            self.debuggable = is_debuggable(serial, self.package)
+            self.on_status("info", f"{self.package}: {'debuggable (PSS vía run-as)' if self.debuggable else 'no debuggable (PSS solo con dumpsys meminfo)'}")
+            self.refresh_exits()
+        except Exception as e:
+            self.on_status("warn", f"no pude comprobar debuggable: {e}")
+        while self.running:
+            t0 = time.time()
+            try:
+                self._tick()
+            except Exception as e:
+                self.error = str(e)
+                self.on_status("err", f"muestra fallida: {e}")
+            if self.running and time.time() - self._mem_last >= self.meminfo_every and self.pid and (self._mem_thread is None or not self._mem_thread.is_alive()):
+                self._mem_last = time.time()
+                self._mem_thread = threading.Thread(target=self._meminfo, args=(self.pid,), daemon=True)
+                self._mem_thread.start()
+            elapsed = time.time() - t0
+            wait = max(0.05, self.interval - elapsed)
+            end = time.time() + wait
+            while self.running and time.time() < end:
+                time.sleep(0.05)
+
+    def _tick(self) -> None:
+        serial = self.dev.serial
+        if not self.pid:
+            self.pid = resolve_pid(serial, self.package)
+            if not self.pid:
+                s = Sample(t=time.time(), pid=None, alive=False)
+                self.samples.append(s)
+                self.on_sample(s)
+                return
+            self._prev = None
+            self.on_status("ok", f"proceso {self.package} pid {self.pid}")
+        text = adbmod.shell(serial, fast_sample_script(self.pid, self.package, self.debuggable), timeout=15)
+        total, ncpu, proc, threads, status, oom, pss, gfx = parse_fast_sample(text)
+        now = time.time()
+        if proc is None:
+            # el proceso murió o cambió
+            self.on_status("warn", f"proceso {self.pid} ya no existe; buscando de nuevo…")
+            self.pid = None
+            self._prev = None
+            s = Sample(t=now, pid=None, alive=False)
+            self.samples.append(s)
+            self.on_sample(s)
+            self.refresh_exits()
+            return
+        s = Sample(t=now, pid=self.pid, alive=True, ncpu=ncpu)
+        s.nthreads = status.get("Threads", len(threads))
+        s.rss_kb = status.get("VmRSS", 0)
+        s.rss_anon_kb = status.get("RssAnon", 0)
+        s.rss_file_kb = status.get("RssFile", 0)
+        s.swap_kb = status.get("VmSwap", 0)
+        s.pss_kb = pss.get("Pss") if pss else None
+        s.oom_adj = oom
+        s.gfx_total_frames = gfx.get("total_frames", 0)
+        s.gfx_total_janky = gfx.get("janky", 0)
+        s.p50, s.p90, s.p99 = gfx.get("p50"), gfx.get("p90"), gfx.get("p99")
+        tid_ticks = {tid: ticks for tid, _, _, ticks in threads}
+        for tid, name, _, _ in threads:
+            self.thread_names[tid] = name
+        if self._prev:
+            pt, ptotal, pproc, ptids, pgfx = self._prev
+            dt_total = max(1, total - ptotal)
+            s.interval = now - pt
+            s.cpu = (proc[3] - pproc) / dt_total * ncpu * 100.0
+            s.cpu_total_pct = (proc[3] - pproc) / dt_total * 100.0
+            for tid, name, state, ticks in threads:
+                th = ThreadSample(tid=tid, name=("main" if tid == self.pid else name), state=state, ticks=ticks)
+                th.cpu = (ticks - ptids.get(tid, ticks)) / dt_total * ncpu * 100.0
+                s.threads.append(th)
+            s.threads.sort(key=lambda th: -th.cpu)
+            s.frames = max(0, s.gfx_total_frames - pgfx.get("total_frames", s.gfx_total_frames))
+            s.janky = max(0, s.gfx_total_janky - pgfx.get("janky", s.gfx_total_janky))
+            s.fps = s.frames / s.interval if s.interval > 0 else 0.0
+            s.jank_pct = (s.janky / s.frames * 100.0) if s.frames else 0.0
+            s.missed_vsync = max(0, gfx.get("missed_vsync", 0) - pgfx.get("missed_vsync", 0))
+            s.slow_ui = max(0, gfx.get("slow_ui", 0) - pgfx.get("slow_ui", 0))
+        else:
+            for tid, name, state, ticks in threads:
+                s.threads.append(ThreadSample(tid=tid, name=("main" if tid == self.pid else name), state=state, ticks=ticks))
+        self._prev = (now, total, proc[3], tid_ticks, gfx)
+        self.samples.append(s)
+        self._write({"type": "sample", **s.to_dict()})
+        self.on_sample(s)
+
+    def _meminfo(self, pid: int) -> None:
+        text = adbmod.shell(self.dev.serial, f"dumpsys meminfo {pid}", timeout=20)
+        mi = parse_meminfo(text, time.time())
+        if mi.error:
+            self.on_status("warn", f"dumpsys meminfo: {mi.error}")
+        self.meminfos.append(mi)
+        self._write({"type": "meminfo", **mi.to_dict()})
+        self.on_meminfo(mi)
+
+    def refresh_exits(self) -> None:
+        try:
+            text = adbmod.shell(self.dev.serial, f"dumpsys activity exit-info {self.package}", timeout=15)
+            self.exits = parse_exit_info(text)
+        except Exception:
+            pass
+
+    # --- resumen ---
+    def summary(self) -> dict:
+        alive = [s for s in self.samples if s.alive and s.interval > 0]
+        if not alive:
+            return {"samples": len(self.samples), "alive": 0}
+        cpu = [s.cpu for s in alive]
+        rss = [s.rss_kb for s in alive]
+        pss = [s.pss_kb for s in alive if s.pss_kb is not None]
+        frames = sum(s.frames for s in alive)
+        janky = sum(s.janky for s in alive)
+        top: Dict[str, float] = {}
+        for s in alive:
+            for th in s.threads:
+                top[th.name] = top.get(th.name, 0.0) + th.cpu * s.interval
+        dur = sum(s.interval for s in alive)
+        top_threads = sorted(((n, v / dur) for n, v in top.items()), key=lambda x: -x[1])[:8]
+        return {
+            "samples": len(self.samples), "alive": len(alive), "duration_s": round(dur, 1),
+            "cpu_avg": round(sum(cpu) / len(cpu), 1), "cpu_max": round(max(cpu), 1),
+            "rss_kb_avg": int(sum(rss) / len(rss)), "rss_kb_max": max(rss),
+            "pss_kb_avg": int(sum(pss) / len(pss)) if pss else None, "pss_kb_max": max(pss) if pss else None,
+            "frames": frames, "janky": janky, "jank_pct": round(janky / frames * 100, 1) if frames else 0.0,
+            "fps_avg": round(frames / dur, 1) if dur else 0.0,
+            "top_threads": [(n, round(v, 1)) for n, v in top_threads],
+            "last_meminfo": self.meminfos[-1].to_dict() if self.meminfos else None,
+            "exits": len(self.exits),
+        }
+
+
+def load_session(path: Path) -> dict:
+    """Lee un JSONL grabado: {'meta':…, 'samples':[…], 'meminfo':[…]}"""
+    out = {"meta": None, "samples": [], "meminfo": [], "end": None}
+    with open(path, "r", encoding="utf-8") as fh:
+        for line in fh:
+            try:
+                o = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            t = o.get("type")
+            if t == "meta":
+                out["meta"] = o
+            elif t == "sample":
+                out["samples"].append(o)
+            elif t == "meminfo":
+                out["meminfo"].append(o)
+            elif t == "end":
+                out["end"] = o
+    return out
+
+
+def list_sessions() -> List[Path]:
+    if not INSPECT_DIR.exists():
+        return []
+    return sorted(INSPECT_DIR.glob("*/*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)

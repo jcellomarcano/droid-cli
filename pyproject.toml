@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "droid-cli"
+version = "0.1.0"
+description = "CLI para gestionar dispositivos ADB (USB/WiFi), logs con color y caché post-mortem"
+requires-python = ">=3.9"
+dependencies = ["rich>=13.7", "textual>=0.80", "textual-autocomplete>=4.0"]
+
+[project.scripts]
+droid = "droid.cli:main"
+
+[tool.setuptools]
+packages = ["droid"]

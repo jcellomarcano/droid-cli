@@ -1,0 +1,3 @@
+rich>=13.7
+textual>=0.80
+textual-autocomplete>=4.0
