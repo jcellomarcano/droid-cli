@@ -1514,11 +1514,8 @@ class FilesPane(Vertical):
             if yes:
                 self._do_delete(entry, True)
 
-        app.call_from_thread(
-            app.push_screen,
-            Confirm(f"Directorio con {count} elemento(s): se borrarán todos. ¿Seguro?"),
-            _after_second,
-        )
+        message = f"Directorio con {count} elemento(s): se borrarán todos. ¿Seguro?"
+        app.call_from_thread(lambda: app.push_screen(Confirm(message), _after_second))
 
     @work(thread=True, exclusive=True, group="files_delete")
     def _do_delete(self, entry, is_dir: bool) -> None:
