@@ -1228,40 +1228,56 @@ def cmd_files(args) -> int:
     path = (args.path or "").strip("/")
 
     if args.cat:
-        text, truncated = filesmod.preview(dev.serial, root, path, package)
+        text, truncated = filesmod.preview(dev.serial, root, path, package, pid=pid)
         sys.stdout.write(text)
         if truncated:
             ui.errc.print("[dim](truncado)[/]")
         return 0
 
     if args.pull:
+        if not path:
+            raise ui.UserError("indica qué bajar: una ruta dentro de la raíz (con --recursive para un directorio)")
+        kind = _files_entry_kind(filesmod, dev.serial, root, path, package, pid)
+        if kind == "dir" and not args.recursive:
+            raise ui.UserError(f"{path} es un directorio: usa --recursive junto con --pull para bajarlo entero")
         dest = Path(args.pull).expanduser()
-        pulled = filesmod.pull_path(dev.serial, root, path, package, dest)
+        pulled = filesmod.pull_path(dev.serial, root, path, package, dest, pid=pid)
         for p in pulled:
             ui.errc.print(f"[dim]{p}[/]")
         return 0
 
     if args.rm:
+        if root == "proc":
+            raise ui.UserError("no se borra bajo /proc")
+        if not path:
+            raise ui.UserError("no se borra la raíz: indica una ruta dentro de ella")
         kind = _files_entry_kind(filesmod, dev.serial, root, path, package, pid)
         is_dir = kind == "dir"
+        if is_dir and not args.recursive:
+            raise ui.UserError(f"{path or root} es un directorio: usa --recursive junto con --rm para borrarlo")
         if not args.yes:
             label = "directorio (recursivo)" if is_dir else "archivo"
             if not ui.confirm(f"¿Borrar el {label} {path or root}?"):
                 ui.info("Cancelado.")
                 return 0
-        ok2, out = filesmod.delete_path(dev.serial, root, path, package, is_dir, confirmed=True)
+        ok2, out = filesmod.delete_path(dev.serial, root, path, package, is_dir,
+                                         confirmed=True, pid=pid, device_key=dev.key)
         if not ok2:
             raise ui.UserError(f"No se pudo borrar: {out}")
         ui.info(f"Borrado {path or root}")
         return 0
 
-    entries = filesmod.list_dir(dev.serial, root, path, package, pid)
-    entries = [e for e in entries if e.kind != "error"]
-    entries.sort(key=lambda e: (e.kind != "dir", e.name.lower()))
+    all_entries = filesmod.list_dir(dev.serial, root, path, package, pid)
 
     if args.json:
-        print(json.dumps([e.to_dict() for e in entries], ensure_ascii=False, indent=2))
+        json_entries = sorted(all_entries, key=lambda e: (e.kind not in ("dir",), e.name.lower()))
+        print(json.dumps([e.to_dict() for e in json_entries], ensure_ascii=False, indent=2))
+        if json_entries and all(e.kind == "error" for e in json_entries):
+            return 1
         return 0
+
+    entries = [e for e in all_entries if e.kind != "error"]
+    entries.sort(key=lambda e: (e.kind != "dir", e.name.lower()))
 
     t = Table(box=box.SIMPLE_HEAD, title=f"{root}:/{path} · {theme.device_markup(dev.key, escape(dev.display))}", title_justify="left")
     for col in ("", "Nombre", "Tamaño", "Modificado", "Permisos"):
@@ -1659,6 +1675,8 @@ def build_parser() -> argparse.ArgumentParser:
     filesp.add_argument("--pull", metavar="DEST", help="descarga PATH a este directorio local")
     filesp.add_argument("--cat", action="store_true", help="imprime el contenido de PATH (como preview)")
     filesp.add_argument("--rm", action="store_true", help="borra PATH (pide confirmación salvo -y)")
+    filesp.add_argument("--recursive", action="store_true",
+                         help="con --rm sobre un directorio: obligatorio además de -y para poder borrarlo")
     filesp.add_argument("-y", "--yes", action="store_true", help="con --rm: no pedir confirmación")
     filesp.add_argument("--json", action="store_true", help="lista el contenido de PATH como JSON")
     filesp.set_defaults(func=cmd_files)
@@ -1731,6 +1749,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     except adbmod.AdbError as e:
         ui.fail(str(e))
         return 2
+    except ValueError as e:
+        ui.fail(str(e))
+        return 1
     except KeyboardInterrupt:
         return 130
 

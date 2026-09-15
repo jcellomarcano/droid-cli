@@ -7,6 +7,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, asdict
+from pathlib import Path
 from typing import List, Optional, Dict
 
 from . import config
@@ -73,14 +74,33 @@ def shell(serial: str, cmd: str, timeout: float = 15) -> str:
 
 
 def exec_out(serial: str, args: List[str], dest, timeout: float = 120) -> subprocess.CompletedProcess:
-    """`adb -s <serial> exec-out <args...>` con stdout volcado a `dest`. Lanza AdbError si rc != 0."""
+    """`adb -s <serial> exec-out <args...>` con stdout volcado a `dest`. Lanza AdbError si rc != 0.
+
+    Escribe primero a `dest` + ".part" y solo renombra al destino final si el proceso
+    termina con rc == 0, para no dejar nunca un fichero truncado a medio nombre en caso
+    de fallo (timeout, run-as caido, dispositivo desconectado a medio volcado, etc.)."""
+    dest_path = Path(dest)
+    part_path = dest_path.with_suffix(dest_path.suffix + ".part")
     cmd = [adb_path(), "-s", serial, "exec-out", *args]
-    with open(dest, "wb") as fh:
-        r = subprocess.run(cmd, stdout=fh, stderr=subprocess.PIPE, timeout=timeout)
+    try:
+        with open(part_path, "wb") as fh:
+            r = subprocess.run(cmd, stdout=fh, stderr=subprocess.PIPE, timeout=timeout)
+    except Exception:
+        _unlink_quiet(part_path)
+        raise
     if r.returncode != 0:
+        _unlink_quiet(part_path)
         err = r.stderr.decode("utf-8", "replace") if isinstance(r.stderr, bytes) else (r.stderr or "")
         raise AdbError(f"exec-out falló: {err.strip()[:300]}")
+    part_path.replace(dest_path)
     return r
+
+
+def _unlink_quiet(p: Path) -> None:
+    try:
+        p.unlink()
+    except OSError:
+        pass
 
 
 def sanitize(s: str) -> str:

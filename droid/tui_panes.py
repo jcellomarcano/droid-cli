@@ -1175,6 +1175,7 @@ class FilesPane(Vertical):
         self.rel_segments: List[str] = []
         self.entries: dict = {}
         self.last_pulled: Optional[Path] = None
+        self._prefs_warned = False   # INV-04: aviso de shared_prefs, una vez por sesion
 
     def compose(self) -> ComposeResult:
         with Horizontal(classes="bar"):
@@ -1249,7 +1250,10 @@ class FilesPane(Vertical):
         if root == "proc" and not pid:
             app.call_from_thread(app.notify, "indica un pid", severity="warning")
             return
-        ok, msg = filesmod.check_access(dev.serial, root, pkg, pid)
+        try:
+            ok, msg = filesmod.check_access(dev.serial, root, pkg, pid)
+        except Exception as e:
+            ok, msg = False, str(e)
         if not ok:
             app.call_from_thread(app.notify, f"acceso denegado: {msg[:120]}", severity="error", timeout=8)
             app.call_from_thread(self._apply_entries, [], False)
@@ -1279,7 +1283,8 @@ class FilesPane(Vertical):
             glyph = self.GLYPH.get(e.kind, "⛔")
             key = e.path or e.name
             self.entries[key] = e
-            t.add_row(glyph, e.name, human_size(e.size) if e.kind == "file" else "", e.mtime, e.perm, key=key)
+            display_name = f"{e.name} -> {e.link_target}" if e.kind == "link" and e.link_target else e.name
+            t.add_row(glyph, display_name, human_size(e.size) if e.kind == "file" else "", e.mtime, e.perm, key=key)
         self._update_breadcrumb()
         hint = f"[dim]{len(self.entries)} elemento(s)"
         if truncated:
@@ -1303,11 +1308,13 @@ class FilesPane(Vertical):
         entry = self.entries.get(key)
         if entry is None:
             return
-        if entry.kind in ("dir", "link"):
+        if entry.kind == "dir":
             self.rel_segments.append(entry.name)
             self._load()
         elif entry.kind == "file":
             self._preview_entry(entry)
+        # kind == "link" (F5-B11/F5-C2): no se navega ni se previsualiza; el
+        # destino ya se muestra en la columna Nombre como "nombre -> destino".
 
     def _selected_entry(self):
         t = self.query_one("#f_list", DataTable)
@@ -1340,20 +1347,33 @@ class FilesPane(Vertical):
             return
         pkg = self.query_one("#f_pkg", Input).value.strip() or None
         pid = self.query_one("#f_pid", Input).value.strip() or None
-        rel = f"{self._rel()}/{entry.name}" if self._rel() else entry.name
-        try:
-            text, truncated = filesmod.preview(dev.serial, self.root, rel, pkg)
-        except Exception as e:
-            app.call_from_thread(app.notify, f"preview: {e}", severity="error")
-            return
+        rel_dir = self._rel()
+        rel = f"{rel_dir}/{entry.name}" if rel_dir else entry.name
+        if not self._prefs_warned and filesmod.is_prefs_path(rel_dir, entry.name):
+            self._prefs_warned = True
+            app.call_from_thread(
+                app.notify,
+                "puede contener secretos: no lo copies fuera sin revisarlo",
+                severity="warning", timeout=8,
+            )
         if filesmod.is_text_name(entry.name):
+            try:
+                text, truncated = filesmod.preview(dev.serial, self.root, rel, pkg, pid=pid)
+            except Exception as e:
+                app.call_from_thread(app.notify, f"preview: {e}", severity="error")
+                return
             title = entry.path or entry.name
             if truncated:
                 title += " (truncado)"
             app.call_from_thread(self._show_preview, text, title)
         else:
-            hexdump = " ".join(f"{ord(c) & 0xff:02x}" for c in text[:512])
-            note = f"archivo binario, primeros 512 bytes en hex:\n\n{hexdump}"
+            try:
+                raw = filesmod.preview_binary(dev.serial, self.root, rel, pkg, pid=pid)
+            except Exception as e:
+                app.call_from_thread(app.notify, f"preview: {e}", severity="error")
+                return
+            hexdump = " ".join(f"{b:02x}" for b in raw)
+            note = f"archivo binario, primeros {len(raw)} bytes en hex:\n\n{hexdump}"
             app.call_from_thread(self._show_preview, note, f"{entry.name} (binario)")
 
     def _show_preview(self, text: str, title: str) -> None:
@@ -1366,21 +1386,57 @@ class FilesPane(Vertical):
         if not dev:
             app.notify("No hay dispositivo actual", severity="warning")
             return
-        file_entries = [e for e in self.entries.values() if e.kind == "file"]
-        if not file_entries:
-            app.notify("No hay archivos que descargar en este listado", severity="warning")
+        entry = self._selected_entry()
+        if entry is None:
+            app.notify("Selecciona un archivo o directorio", severity="warning")
             return
-        self._do_pull(dev, file_entries)
+        if entry.kind == "file":
+            self._do_pull(dev, [entry], self._rel())
+        elif entry.kind == "dir":
+            rel = f"{self._rel()}/{entry.name}" if self._rel() else entry.name
+            self._confirm_dir_pull(dev, entry, rel)
+        else:
+            app.notify("Solo se puede bajar un archivo o un directorio", severity="warning")
+
+    @work(thread=True, exclusive=True, group="files_pull_count")
+    def _confirm_dir_pull(self, dev, entry, rel) -> None:
+        from . import files as filesmod
+        from .tui import Confirm
+        app = self.app
+        pkg = self.query_one("#f_pkg", Input).value.strip() or None
+        pid = self.query_one("#f_pid", Input).value.strip() or None
+        try:
+            children = filesmod.list_dir(dev.serial, self.root, rel, pkg, pid)
+        except Exception as e:
+            app.call_from_thread(app.notify, f"pull: {e}", severity="error", timeout=8)
+            return
+        file_children = [c for c in children if c.kind == "file"]
+        if not file_children:
+            app.call_from_thread(app.notify, "No hay archivos directos en este directorio", severity="warning")
+            return
+
+        def _after(yes: bool) -> None:
+            if yes:
+                self._do_pull(dev, file_children, rel)
+
+        app.call_from_thread(
+            app.push_screen,
+            Confirm(f"¿Bajar {len(file_children)} archivo(s) de {escape(rel)}?"),
+            _after,
+        )
 
     @work(thread=True, exclusive=True, group="files_pull")
-    def _do_pull(self, dev, file_entries) -> None:
+    def _do_pull(self, dev, file_entries, rel) -> None:
         from . import files as filesmod
         app = self.app
         pkg = self.query_one("#f_pkg", Input).value.strip() or None
-        rel = self._rel()
-        dest_dir = config.DROID_HOME / "pull" / dev.key / self.root / rel
+        pid = self.query_one("#f_pid", Input).value.strip() or None
+        if self.root == "sandbox" and pkg:
+            dest_dir = config.DROID_HOME / "pull" / dev.key / pkg / rel
+        else:
+            dest_dir = config.DROID_HOME / "pull" / dev.key / self.root / rel
         try:
-            pulled = filesmod.pull_path(dev.serial, self.root, rel, pkg, dest_dir, entries=file_entries)
+            pulled = filesmod.pull_path(dev.serial, self.root, rel, pkg, dest_dir, entries=file_entries, pid=pid)
         except Exception as e:
             app.call_from_thread(app.notify, f"pull: {e}", severity="error", timeout=8)
             return
@@ -1395,6 +1451,9 @@ class FilesPane(Vertical):
         clip.open_file(self.last_pulled)
 
     def action_open_db(self) -> None:
+        if self.root != "sandbox":
+            self.app.notify("Solo disponible en el sandbox de la app", severity="warning")
+            return
         entry = self._selected_entry()
         if entry is None or not entry.name.lower().endswith(".db"):
             self.app.notify("Selecciona un archivo .db", severity="warning")
@@ -1417,6 +1476,9 @@ class FilesPane(Vertical):
         if entry is None:
             self.app.notify("Selecciona un archivo o directorio", severity="warning")
             return
+        if self.root == "proc":
+            self.app.notify("no se borra bajo /proc", severity="warning")
+            return
         from .tui import Confirm
         is_dir = entry.kind == "dir"
         path = entry.path or entry.name
@@ -1425,15 +1487,38 @@ class FilesPane(Vertical):
             if not yes:
                 return
             if is_dir:
-                self.app.push_screen(Confirm("Es un directorio: se borra todo lo que contiene. ¿Seguro?"), _after_second)
+                self._confirm_dir_delete(entry)
             else:
                 self._do_delete(entry, is_dir)
 
+        self.app.push_screen(Confirm(f"¿Borrar {escape(path)}?"), _after_first)
+
+    @work(thread=True, exclusive=True, group="files_delete_count")
+    def _confirm_dir_delete(self, entry) -> None:
+        from . import files as filesmod
+        from .tui import Confirm
+        app = self.app
+        dev = app.current
+        if not dev:
+            return
+        pkg = self.query_one("#f_pkg", Input).value.strip() or None
+        pid = self.query_one("#f_pid", Input).value.strip() or None
+        rel = f"{self._rel()}/{entry.name}" if self._rel() else entry.name
+        try:
+            children = filesmod.list_dir(dev.serial, self.root, rel, pkg, pid)
+        except Exception:
+            children = []
+        count = len([c for c in children if c.kind != "error"])
+
         def _after_second(yes: bool) -> None:
             if yes:
-                self._do_delete(entry, is_dir)
+                self._do_delete(entry, True)
 
-        self.app.push_screen(Confirm(f"¿Borrar {path}?"), _after_first)
+        app.call_from_thread(
+            app.push_screen,
+            Confirm(f"Directorio con {count} elemento(s): se borrarán todos. ¿Seguro?"),
+            _after_second,
+        )
 
     @work(thread=True, exclusive=True, group="files_delete")
     def _do_delete(self, entry, is_dir: bool) -> None:
@@ -1443,9 +1528,11 @@ class FilesPane(Vertical):
         if not dev:
             return
         pkg = self.query_one("#f_pkg", Input).value.strip() or None
+        pid = self.query_one("#f_pid", Input).value.strip() or None
         rel = f"{self._rel()}/{entry.name}" if self._rel() else entry.name
         try:
-            ok, msg = filesmod.delete_path(dev.serial, self.root, rel, pkg, is_dir, confirmed=True)
+            ok, msg = filesmod.delete_path(dev.serial, self.root, rel, pkg, is_dir,
+                                            confirmed=True, pid=pid, device_key=dev.key)
         except Exception as e:
             app.call_from_thread(app.notify, f"borrar: {e}", severity="error", timeout=8)
             return
