@@ -1,0 +1,21 @@
+----- pid 1234 at 2026-09-15 12:00:00.123456789+0000 -----
+Cmd line: com.example.app
+
+"main" prio=5 tid=1 Native
+  | group="main" sCount=1 dsCount=0 flags=1 obj=0x12345678 self=0x7f0000000000
+  | sysTid=1234 nice=-10 cgrp=default sched=0/0 handle=0x7f0000001000
+  | state=S schedstat=( 0 0 0 ) utm=12 stm=3 core=0 HZ=100
+  | stack=0x7f0000002000-0x7f0000004000 stackSize=8188KB
+  | held mutexes=
+  native: #00 pc 00012345  /apex/com.android.runtime/lib64/bionic/libc.so (__ioctl+8)
+  native: #01 pc 00023456  /apex/com.android.runtime/lib64/bionic/libc.so (ioctl+128)
+  at com.example.app.MainActivity.onCreate(MainActivity.kt:42)
+  at com.example.app.MainActivity.access$onCreate(MainActivity.kt:15)
+  at android.app.Activity.performCreate(Activity.java:8290)
+  at android.os.Handler.dispatchMessage(Handler.java:106)
+
+"Signal Catcher" daemon prio=5 tid=2 Runnable
+  | group="system" sCount=0 dsCount=0 flags=0 obj=0x12345679 self=0x7f0000005000
+  | sysTid=1235 nice=0 cgrp=default sched=0/0 handle=0x7f0000006000
+  | state=R schedstat=( 0 0 0 ) utm=0 stm=0 core=1 HZ=100
+  native: #00 pc 00034567  /apex/com.android.runtime/lib64/bionic/libc.so (sigwait+24)

@@ -1,0 +1,14 @@
+2026-09-15 15:10:00.001   500   500 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+2026-09-15 15:10:00.002   500   500 F DEBUG   : Build fingerprint: 'generic/sdk_gwear_arm64/emulator64_arm64:17/BP1A.250405.001/12345678:userdebug/dev-keys'
+2026-09-15 15:10:00.003   500   500 F DEBUG   : Revision: '0'
+2026-09-15 15:10:00.004   500   500 F DEBUG   : ABI: 'arm64'
+2026-09-15 15:10:00.005   500   500 F DEBUG   : libc: Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x0 in tid 1234 (Thread), pid 1230 (com.example.app)
+2026-09-15 15:10:00.010   500   500 F DEBUG   : backtrace:
+2026-09-15 15:10:00.011   500   500 F DEBUG   :       #00 pc 0001a2b3  /apex/com.android.runtime/lib64/bionic/libfoo.so (foo_symbol+123) (BuildId: abcd1234ef567890)
+2026-09-15 15:10:00.012   500   500 F DEBUG   :       #01 pc 0002b3c4  /apex/com.android.runtime/lib64/bionic/libc.so (__libc_init+64) (BuildId: abcd1234ef567891)
+2026-09-15 15:10:00.013   500   500 F DEBUG   :       #02 pc 0003c4d5  /system/lib64/libutils.so (android::Looper::pollOnce(int, int*, int*, void**)+256) (BuildId: abcd1234ef567892)
+--------- beginning of crash
+2026-09-15 15:11:00.001   700   700 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+2026-09-15 15:11:00.005   700   700 F DEBUG   : libc: Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE) in tid 1240 (Binder:700_1), pid 1236 (com.example.app)
+2026-09-15 15:11:00.010   700   700 F DEBUG   : backtrace:
+2026-09-15 15:11:00.011   700   700 F DEBUG   :       #00 pc 0000abcd  /apex/com.android.runtime/lib64/bionic/libc.so
