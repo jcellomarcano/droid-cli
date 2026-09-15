@@ -20,7 +20,7 @@ LINE_RE = re.compile(
     r"\s+(?P<pid>\d+)\s+(?P<tid>\d+) (?P<lvl>[VDIWEFS]) (?P<tag>.*?)\s*:\s?(?P<msg>.*)$"
 )
 SEP_RE = re.compile(r"^-{5,} (beginning of|switch to) (\w+)")
-TS_RE = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})")
+TS_RE = re.compile(r"^((?:\d{4}-)?\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})")
 AM_START_RE = re.compile(r"^Start proc (\d+):([^/ ]+)/")
 AM_DIED_RE = re.compile(r"^Process ([^ ]+) \(pid (\d+)\) has died")
 AM_KILL_RE = re.compile(r"^Killing (\d+):([^/ ]+)/")
@@ -47,6 +47,10 @@ def parse(raw: str) -> Optional[LogLine]:
         date = m.group("year") + "-" + date
     return LogLine(raw, date, m.group("time"), int(m.group("pid")), int(m.group("tid")),
                    m.group("lvl"), m.group("tag"), m.group("msg"))
+
+
+def is_replayed(raw: str, ts: str, boundary_ts: str, seen: Set[str]) -> bool:
+    return ts == boundary_ts and raw in seen
 
 
 def normalize_level(s: str) -> str:
@@ -522,7 +526,7 @@ class Renderer:
 class LogcatStream:
     def __init__(self, serial: str, key: str, buffers: Optional[List[str]] = None, tail: Optional[int] = None,
                  clear: bool = False, reconnect: bool = True, status: Optional[Callable[[str, str], None]] = None,
-                 since: Optional[str] = None):
+                 since: Optional[str] = None, boundary: Optional[Tuple[str, Set[str]]] = None):
         self.serial = serial
         self.key = key
         self.buffers = buffers or []
@@ -536,6 +540,16 @@ class LogcatStream:
         self.last_ts: Optional[str] = None
         self.use_year = True
         self.reconnects = 0
+        self._boundary_ts: Optional[str] = boundary[0] if boundary else None
+        self._boundary_seen: Set[str] = set(boundary[1]) if boundary else set()
+        self._boundary_armed = bool(boundary and since and boundary[0] == since)
+        self._reconnect_poll_interval = 1.5
+
+    def boundary(self) -> Optional[Tuple[str, Set[str]]]:
+        """Last delivered millisecond and its raw lines, to resume in another stream without repeating them."""
+        if self._boundary_ts is None:
+            return None
+        return self._boundary_ts, set(self._boundary_seen)
 
     def _cmd(self, since: Optional[str], tail: Optional[int]) -> List[str]:
         cmd = [adbmod.adb_path(), "-s", self.serial, "logcat", "-v", "threadtime,year" if self.use_year else "threadtime"]
@@ -569,7 +583,17 @@ class LogcatStream:
                     first_line = raw
                 m = TS_RE.match(raw)
                 if m:
-                    self.last_ts = m.group(1)
+                    ts = m.group(1)
+                    if self._boundary_armed:
+                        if self._boundary_ts is not None and is_replayed(raw, ts, self._boundary_ts, self._boundary_seen):
+                            continue
+                        if self._boundary_ts is None or ts > self._boundary_ts:
+                            self._boundary_armed = False
+                    if ts != self._boundary_ts:
+                        self._boundary_ts = ts
+                        self._boundary_seen = set()
+                    self._boundary_seen.add(raw)
+                    self.last_ts = ts
                 yield ("line", raw)
             rc = proc.wait()
             if self.stopped:
@@ -591,12 +615,13 @@ class LogcatStream:
             self.reconnects += 1
             self.serial = new_serial
             since = self.last_ts
+            self._boundary_armed = since is not None
             yield ("reconnected", f"reconectado a {new_serial}" + (f" (desde {since})" if since else ""))
 
     def _wait_for_device(self) -> Optional[str]:
         last_connect = 0.0
         while not self.stopped:
-            time.sleep(1.5)
+            time.sleep(self._reconnect_poll_interval)
             try:
                 devs = adbmod.list_devices(details=False)
             except Exception:

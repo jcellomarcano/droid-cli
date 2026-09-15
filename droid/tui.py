@@ -281,12 +281,13 @@ class LiveLogs:
     """Hilo que lee logcat, aplica filtros y encola líneas ANSI para que la UI las vuelque por lotes."""
 
     def __init__(self, dev: Device, filt: Filter, renderer: Renderer, tail: Optional[int] = None, use_cache: bool = True,
-                 since: Optional[str] = None):
+                 since: Optional[str] = None, boundary=None):
         self.dev = dev
         self.filt = filt
         self.renderer = renderer
         self.tail = tail
         self.since = since
+        self.boundary = boundary
         self.use_cache = use_cache
         self.queue: deque = deque(maxlen=50000)
         self.plain: deque = deque(maxlen=50000)   # mismas líneas sin color ni marco, para copiar/revisar
@@ -314,7 +315,7 @@ class LiveLogs:
             if self.use_cache and not record.status_of(self.dev.key):
                 self.session = cache.Session(self.dev, "ui", self.filt.describe())
             stream = LogcatStream(self.dev.serial, self.dev.key, tail=self.tail, reconnect=bool(config.get("reconnect")),
-                                  status=lambda k, t: self._banner(t, k), since=self.since)
+                                  status=lambda k, t: self._banner(t, k), since=self.since, boundary=self.boundary)
             self.stream = stream
 
             def _sync() -> None:
@@ -1064,8 +1065,10 @@ class DroidApp(App):
         renderer = Renderer(color=True, tag_width=int(config.get("tag_width")), wrap=True, highlight=(filt.grep.pattern if filt.grep else None),
                             show_thread=show_thread, thread_name=filt.thread_name, show_proc=show_proc, proc_name=filt.proc_name)
         since = getattr(self, "_resume_since", None)
+        boundary = getattr(self, "_resume_boundary", None)
         self._resume_since = None
-        self.live = LiveLogs(dev, filt, renderer, tail=None, since=since)
+        self._resume_boundary = None
+        self.live = LiveLogs(dev, filt, renderer, tail=None, since=since, boundary=boundary)
         self._fit_renderer()
         self.live.start()
         self.query_one("#log", RichLog).focus()
@@ -1116,6 +1119,7 @@ class DroidApp(App):
         if self.live and self.live.running:
             same_dev = self.current and self.live.dev.key == self.current.key
             self._resume_since = self.live.stream.last_ts if (same_dev and self.live.stream) else None
+            self._resume_boundary = self.live.stream.boundary() if (same_dev and self.live.stream) else None
             self.live.stop()
             self.query_one("#log", RichLog).write(Text.from_ansi(self.live.renderer.banner("filtros cambiados · continúa desde la última línea", "info")))
             self.set_timer(0.4, self.action_logs_toggle)
