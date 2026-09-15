@@ -8,14 +8,16 @@ import re
 import threading
 import time
 from collections import deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields as dc_fields
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Deque, Dict, List, Optional, Tuple
 
 from . import adb as adbmod
 from . import config
+from . import memoria
 from .adb import Device, sanitize
+from .watch import LogWatcher
 
 INSPECT_DIR = config.DROID_HOME / "inspect"
 SIXTY_HZ_FRAME_DEADLINE_MS = 16.67
@@ -88,6 +90,15 @@ class Sample:
         d["threads"] = [{"tid": th.tid, "name": th.name, "state": th.state, "cpu": round(th.cpu, 1)} for th in self.threads if th.cpu >= 0.05]
         return d
 
+    @classmethod
+    def from_dict(cls, d: dict) -> "Sample":
+        names = {f.name for f in dc_fields(cls)}
+        kwargs = {k: v for k, v in d.items() if k in names and k != "threads"}
+        s = cls(**kwargs)
+        s.threads = [ThreadSample(tid=t["tid"], name=t.get("name", ""), state=t.get("state", ""), ticks=0, cpu=t.get("cpu", 0.0))
+                     for t in d.get("threads", [])]
+        return s
+
 
 @dataclass
 class MemInfo:
@@ -116,6 +127,11 @@ class MemInfo:
 
     def to_dict(self) -> dict:
         return dict(self.__dict__)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "MemInfo":
+        names = {f.name for f in dc_fields(cls)}
+        return cls(**{k: v for k, v in d.items() if k in names})
 
 
 @dataclass
@@ -419,6 +435,9 @@ class InspectSession:
         self.meminfos: Deque[MemInfo] = deque(maxlen=max(10, history // 5))
         self.exits: List[ExitRecord] = []
         self._exits_written: set = set()
+        self.gc_events: Deque[memoria.GcEvent] = deque(maxlen=500)
+        self.leak_flags: List[memoria.LeakFlag] = []
+        self._watcher: Optional[LogWatcher] = None
         self.pid: Optional[int] = None
         self.debuggable = False
         self.running = False
@@ -453,6 +472,9 @@ class InspectSession:
 
     def stop(self) -> None:
         self.running = False
+        if self._watcher:
+            self._watcher.stop()
+            self._watcher = None
         if self._fh:
             try:
                 self._write({"type": "end", "ended": datetime.now().isoformat(timespec="seconds"), "samples": len(self.samples)})
@@ -506,6 +528,7 @@ class InspectSession:
                 return
             self._prev = None
             self.on_status("ok", f"proceso {self.package} pid {self.pid}")
+            self._ensure_watcher()
         text = adbmod.shell(serial, fast_sample_script(self.pid, self.package, self.debuggable), timeout=15)
         total, ncpu, proc, threads, status, oom, pss, gfx = parse_fast_sample(text)
         now = time.time()
@@ -572,6 +595,28 @@ class InspectSession:
         self._write({"type": "sample", **s.to_dict()})
         self.on_sample(s)
 
+    def _ensure_watcher(self) -> None:
+        if self._watcher is None:
+            self._watcher = LogWatcher(self.dev.serial, self.dev.key, self._on_log_line, pid=self.pid)
+            self._watcher.start()
+        else:
+            self._watcher.set_pid(self.pid)
+
+    def _on_log_line(self, ll, raw: str) -> None:
+        ev = memoria.parse_gc_line(raw)
+        if ev is None:
+            return
+        self.gc_events.append(ev)
+        self._write({"type": "gc", **ev.to_dict()})
+
+    def _check_leaks(self) -> None:
+        flags = memoria.LeakDetector().detect_all(list(self.meminfos), list(self.gc_events))
+        prev_metrics = {f.metric for f in self.leak_flags}
+        self.leak_flags = flags
+        for flag in flags:
+            if flag.metric not in prev_metrics:
+                self._write({"type": "leak", **flag.to_dict()})
+
     def _meminfo(self, pid: int) -> None:
         text = adbmod.shell(self.dev.serial, f"dumpsys meminfo {pid}", timeout=20)
         mi = parse_meminfo(text, time.time())
@@ -580,6 +625,7 @@ class InspectSession:
         self.meminfos.append(mi)
         self._write({"type": "meminfo", **mi.to_dict()})
         self.on_meminfo(mi)
+        self._check_leaks()
 
     def refresh_exits(self) -> None:
         try:
@@ -597,9 +643,14 @@ class InspectSession:
 
     # --- resumen ---
     def summary(self) -> dict:
+        gc_summary = {
+            "gc_count": len(self.gc_events),
+            "gc_pause_ms_total": round(sum(g.pause_ms for g in self.gc_events), 1),
+            "leak_metrics": [f.metric for f in self.leak_flags],
+        }
         alive = [s for s in self.samples if s.alive and s.interval > 0]
         if not alive:
-            return {"samples": len(self.samples), "alive": 0}
+            return {"samples": len(self.samples), "alive": 0, **gc_summary}
         cpu = [s.cpu for s in alive]
         rss = [s.rss_kb for s in alive]
         pss = [s.pss_kb for s in alive if s.pss_kb is not None]
@@ -623,6 +674,7 @@ class InspectSession:
             "last_meminfo": self.meminfos[-1].to_dict() if self.meminfos else None,
             "exits": len(self.exits),
             "frame_ms_count": len(frame_ms),
+            **gc_summary,
         }
         if frame_ms:
             out["p50"] = round(_percentile(frame_ms, 50), 1)
@@ -633,7 +685,7 @@ class InspectSession:
 
 def load_session(path: Path) -> dict:
     """Lee un JSONL grabado: {'meta':…, 'samples':[…], 'meminfo':[…]}"""
-    out = {"meta": None, "samples": [], "meminfo": [], "exits": [], "end": None}
+    out = {"meta": None, "samples": [], "meminfo": [], "exits": [], "gc": [], "leak": [], "end": None}
     with open(path, "r", encoding="utf-8") as fh:
         for line in fh:
             try:
@@ -649,6 +701,10 @@ def load_session(path: Path) -> dict:
                 out["meminfo"].append(o)
             elif t == "exit":
                 out["exits"].append(o)
+            elif t == "gc":
+                out["gc"].append(o)
+            elif t == "leak":
+                out["leak"].append(o)
             elif t == "end":
                 out["end"] = o
     return out

@@ -350,3 +350,80 @@ def test_counter_fallback_is_not_used_once_framestats_was_seen(monkeypatch):
     ses._tick()
     assert ses.samples[-1].frames == 0
     assert ses.samples[-1].janky == 0
+
+
+def test_load_session_round_trip_with_gc_and_leak_lines(tmp_path):
+    path = tmp_path / "session.jsonl"
+    lines = [
+        {"type": "meta", "device": {}, "package": "com.example.app", "interval": 1.0, "started": "2026-09-15T00:00:00"},
+        {"type": "gc", "t": 1000.0, "kind": "Explicit concurrent mark compact GC", "freed_kb": 10130.0, "los_kb": 704.0,
+         "free_pct": 95, "heap_used_kb": 9010.0, "heap_total_kb": 196608.0, "pause_ms": 0.881, "total_ms": 19.749},
+        {"type": "leak", "metric": "java_heap_kb", "slope_kb_per_min": 12.3, "samples": 7, "since_t": 1000.0, "until_t": 1090.0,
+         "first_kb": 20000.0, "last_kb": 38000.0, "gc_backed": False, "epistemic": "Inferido"},
+        {"type": "end", "ended": "2026-09-15T00:00:02", "samples": 1},
+    ]
+    with open(path, "w", encoding="utf-8") as fh:
+        for obj in lines:
+            fh.write(json.dumps(obj) + "\n")
+    out = insp.load_session(path)
+    assert len(out["gc"]) == 1
+    assert out["gc"][0]["kind"] == "Explicit concurrent mark compact GC"
+    assert len(out["leak"]) == 1
+    assert out["leak"][0]["metric"] == "java_heap_kb"
+
+
+def _meminfo_text(java_kb: int) -> str:
+    return (
+        " App Summary\n"
+        "                        Pss(KB)                        Rss(KB)\n"
+        "                         ------                         ------\n"
+        f"            Java Heap:    {java_kb}                          49520\n"
+        "          Native Heap:     4516                           7408\n"
+        "                 Code:     2000                            3000\n"
+        "                Stack:      500                             600\n"
+        "             Graphics:        0                               0\n"
+        "        Private Other:     4896\n"
+        "               System:    15072\n"
+        "              Unknown:                                   14468\n"
+        "\n"
+        "            TOTAL PSS:   60000            TOTAL RSS:   255416       TOTAL SWAP PSS:       38\n"
+        "\n"
+        " Objects\n"
+        "               Views:       18         ViewRootImpl:        1\n"
+    )
+
+
+def test_meminfo_java_heap_growth_writes_one_leak_record(monkeypatch, tmp_path):
+    ses = _fake_session()
+    ses.record = True
+    ses.path = tmp_path / "session.jsonl"
+    ses._fh = open(ses.path, "a", encoding="utf-8")
+
+    t = [1000.0]
+
+    def fake_time():
+        t[0] += 15.0
+        return t[0]
+
+    monkeypatch.setattr(insp.time, "time", fake_time)
+
+    calls = {"n": 0}
+
+    def fake_shell(serial, cmd, timeout=15):
+        calls["n"] += 1
+        java = 20000 + (calls["n"] - 1) * 3000
+        return _meminfo_text(java)
+
+    monkeypatch.setattr(insp.adbmod, "shell", fake_shell)
+
+    for _ in range(7):
+        ses._meminfo(ses.pid)
+
+    assert len(ses.leak_flags) == 1
+    assert ses.leak_flags[0].metric == "java_heap_kb"
+
+    ses._fh.close()
+    written = [json.loads(l) for l in ses.path.read_text().splitlines()]
+    leak_lines = [o for o in written if o.get("type") == "leak"]
+    assert len(leak_lines) == 1
+    assert leak_lines[0]["metric"] == "java_heap_kb"

@@ -125,6 +125,36 @@ def test_replay_chart_renders_summary_sparks_and_exit_glyph(tmp_path):
     assert "Frames (histograma)" in out
 
 
+def _write_session_jsonl_with_gc_leak(path):
+    _write_session_jsonl(path)
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"type": "gc", "t": 1000.5, "kind": "Explicit concurrent mark compact GC",
+                             "freed_kb": 10130.0, "los_kb": 704.0, "free_pct": 95, "heap_used_kb": 9010.0,
+                             "heap_total_kb": 196608.0, "pause_ms": 0.881, "total_ms": 19.749}) + "\n")
+        fh.write(json.dumps({"type": "leak", "metric": "java_heap_kb", "slope_kb_per_min": 12.3, "samples": 7,
+                             "since_t": 1000.0, "until_t": 1090.0, "first_kb": 20000.0, "last_kb": 38000.0,
+                             "gc_backed": False, "epistemic": "Inferido"}) + "\n")
+
+
+def test_replay_chart_shows_gc_and_leak_lines(tmp_path):
+    path = tmp_path / "session_gc.jsonl"
+    _write_session_jsonl_with_gc_leak(path)
+    data = insp.load_session(path)
+    out = _render(cli._replay_chart(data))
+    assert "GC: 1 colecciones · pausa total 1 ms" in out
+    assert "Posible fuga: java_heap_kb" in out
+
+
+def test_cmd_inspect_replay_plain_shows_gc_leak_count(tmp_path, capsys):
+    path = tmp_path / "session_gc.jsonl"
+    _write_session_jsonl_with_gc_leak(path)
+    args = SimpleNamespace(list=False, replay=str(path))
+    rc = cli.cmd_inspect(args)
+    assert rc == 0
+    captured = capsys.readouterr()
+    assert "GC: 1 colecciones · pausa total 1 ms · fugas posibles: 1" in captured.out
+
+
 def test_replay_chart_empty_session_does_not_raise(tmp_path):
     path = tmp_path / "empty.jsonl"
     with open(path, "w", encoding="utf-8") as fh:

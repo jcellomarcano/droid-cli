@@ -852,9 +852,22 @@ def _replay_chart(data):
     t = Text("RSS "); t.append_text(theme.spark_labeled(rss_mb, width, fmt=lambda v: f"{v:.0f}", unit=" MB")); lines.append(t)
     t = Text("FPS "); t.append_text(theme.spark_labeled(fps, width, lo=0, unit=" fps")); lines.append(t)
     events = _exit_events(exits, meta.get("device_tz_offset"))
-    lines.append(theme.timeline_strip(events, t_start, t_end, width))
-    if events:
+    gc_list = data.get("gc", [])
+    events_all = events + [(g["t"], "gc") for g in gc_list]
+    lines.append(theme.timeline_strip(events_all, t_start, t_end, width))
+    if events_all:
         lines.append(Text(_TIMELINE_LEGEND, style=theme.hx(theme.MUTED)))
+    if gc_list:
+        total_pause = sum(g.get("pause_ms", 0.0) for g in gc_list)
+        lines.append(Text(f"GC: {len(gc_list)} colecciones · pausa total {total_pause:.0f} ms", style=theme.hx(theme.MUTED)))
+    leak_list = data.get("leak", [])
+    if leak_list:
+        parts = []
+        for f in leak_list:
+            growth_mb = (f.get("last_kb", 0) - f.get("first_kb", 0)) / 1024.0
+            span_s = max(0.0, f.get("until_t", 0) - f.get("since_t", 0))
+            parts.append(f"{f.get('metric')} +{growth_mb:.1f} MB en {span_s:.0f} s")
+        lines.append(Text("Posible fuga: " + " · ".join(parts) + " (heurística)", style=theme.hx(theme.WARN) + " bold"))
     meminfo_list = data.get("meminfo", [])
     if meminfo_list:
         lines.append(Text("Memoria por heap", style="bold"))
@@ -1017,6 +1030,11 @@ def cmd_inspect(args) -> int:
         if data["meminfo"]:
             m = data["meminfo"][-1]
             ui.console.print(f"[dim]último meminfo: PSS {theme.kb(m.get('pss_total_kb'))} · Java {theme.kb(m.get('java_heap_kb'))} · Native {theme.kb(m.get('native_heap_kb'))} · Views {m.get('views')} · Activities {m.get('activities')}[/]")
+        if data.get("gc") or data.get("leak"):
+            gc_n = len(data.get("gc", []))
+            leak_n = len(data.get("leak", []))
+            pause_total = sum(g.get("pause_ms", 0.0) for g in data.get("gc", []))
+            ui.console.print(f"[dim]GC: {gc_n} colecciones · pausa total {pause_total:.0f} ms · fugas posibles: {leak_n}[/]")
         return 0
     devices = adbmod.list_devices()
     dev = ui.select_device(devices, args.device, prompt="¿Qué dispositivo inspeccionar?")

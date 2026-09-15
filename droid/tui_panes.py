@@ -2,6 +2,7 @@
 import fnmatch
 import subprocess
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
@@ -11,7 +12,7 @@ from textual import on, work
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, DataTable, Input, RichLog, Sparkline, Static, TextArea
+from textual.widgets import Button, DataTable, Input, RichLog, Sparkline, Static, TabbedContent, TabPane, TextArea
 from collections import deque
 import threading
 
@@ -52,6 +53,7 @@ class InspectPane(Vertical):
     InspectPane #i_threads { height: 1fr; }
     InspectPane #i_exits { height: 8; }
     InspectPane .hint { color: $text-muted; height: 1; padding: 0 1; }
+    InspectPane #i_switch { height: 1fr; }
     """
     BINDINGS = [
         Binding("s", "toggle", "Iniciar/Parar"),
@@ -59,6 +61,8 @@ class InspectPane(Vertical):
         Binding("m", "meminfo", "meminfo ya"),
         Binding("e", "exits", "Salidas"),
         Binding("f", "focus_pkg", "App"),
+        Binding("o", "view_overview", "Resumen"),
+        Binding("u", "view_memoria", "Memoria"),
     ]
 
     def __init__(self, **kw):
@@ -76,26 +80,38 @@ class InspectPane(Vertical):
             yield DroidAutoComplete(i_int, provider=self.app.suggest.intervals)
             i_thread = Input(placeholder="filtro de hilo (main, OkHttp*)", id="i_thread"); yield i_thread
             yield DroidAutoComplete(i_thread, provider=lambda: self.app.suggest.threads(i_pkg.value, str(self.session.pid) if self.session and self.session.pid else ""))
-        yield Static("[dim]s: iniciar · la app debe estar corriendo (o arrancará el muestreo cuando aparezca)[/]", id="i_head")
-        with Horizontal(id="i_sparks"):
-            with Vertical(classes="spark"):
-                yield Static("CPU", classes="sparklabel", id="lbl_cpu")
-                yield Sparkline([0.0], id="sp_cpu")
-            with Vertical(classes="spark"):
-                yield Static("RSS", classes="sparklabel", id="lbl_mem")
-                yield Sparkline([0.0], id="sp_mem")
-            with Vertical(classes="spark"):
-                yield Static("FPS", classes="sparklabel", id="lbl_fps")
-                yield Sparkline([0.0], id="sp_fps")
-        yield DataTable(id="i_threads", cursor_type="row", zebra_stripes=True)
-        yield DataTable(id="i_exits", cursor_type="row", zebra_stripes=True)
-        yield Static("", id="i_hint", classes="hint")
+        with TabbedContent(id="i_switch", initial="i_view_overview"):
+            with TabPane("Resumen", id="i_view_overview"):
+                yield Static("[dim]s: iniciar · la app debe estar corriendo (o arrancará el muestreo cuando aparezca)[/]", id="i_head")
+                with Horizontal(id="i_sparks"):
+                    with Vertical(classes="spark"):
+                        yield Static("CPU", classes="sparklabel", id="lbl_cpu")
+                        yield Sparkline([0.0], id="sp_cpu")
+                    with Vertical(classes="spark"):
+                        yield Static("RSS", classes="sparklabel", id="lbl_mem")
+                        yield Sparkline([0.0], id="sp_mem")
+                    with Vertical(classes="spark"):
+                        yield Static("FPS", classes="sparklabel", id="lbl_fps")
+                        yield Sparkline([0.0], id="sp_fps")
+                yield DataTable(id="i_threads", cursor_type="row", zebra_stripes=True)
+                yield DataTable(id="i_exits", cursor_type="row", zebra_stripes=True)
+                yield Static("", id="i_hint", classes="hint")
+            with TabPane("Memoria", id="i_view_memoria"):
+                yield MemoriaView(id="memoria_view")
 
     def on_mount(self) -> None:
         self.query_one("#i_threads", DataTable).add_columns("TID", "Hilo", "%CPU", "", "Estado")
         self.query_one("#i_exits", DataTable).add_columns("Fecha", "Razón", "PID", "Detalle")
-        self.query_one("#i_hint", Static).update("[dim]s: iniciar/parar · l: logs del hilo seleccionado · m: meminfo ahora · e: salidas · f: cambiar app · se guarda en ~/.droid/inspect[/]")
+        self.query_one("#i_hint", Static).update("[dim]s: iniciar/parar · l: logs del hilo seleccionado · m: meminfo ahora · e: salidas · f: cambiar app · o: resumen · u: memoria · se guarda en ~/.droid/inspect[/]")
         self.set_interval(0.5, self._refresh)
+
+    def action_view_overview(self) -> None:
+        self.query_one("#i_switch", TabbedContent).active = "i_view_overview"
+        self.query_one("#i_threads", DataTable).focus()
+
+    def action_view_memoria(self) -> None:
+        self.query_one("#i_switch", TabbedContent).active = "i_view_memoria"
+        self.query_one("#me_breakdown", DataTable).focus()
 
     # --- control ---
     def set_package(self, pkg: str) -> None:
@@ -143,6 +159,7 @@ class InspectPane(Vertical):
         self.session = InspectSession(dev, pkg, interval=interval, meminfo_every=8.0, record=True,
                                       on_status=lambda k, t: app.call_from_thread(app.notify, t, severity={"err": "error", "warn": "warning"}.get(k, "information"), timeout=3))
         self.session.start()
+        self.query_one(MemoriaView).set_session(self.session)
         app.notify(f"Inspeccionando {pkg} en {dev.display}", timeout=2)
 
     def _stop(self) -> None:
@@ -150,6 +167,32 @@ class InspectPane(Vertical):
             self.session.stop()
             s = self.session.summary()
             self.app.notify(f"Sesión guardada: {self.session.path.name if self.session.path else '-'} · CPU media {s.get('cpu_avg')}% · jank {s.get('jank_pct')}%", timeout=6)
+            self.query_one(MemoriaView).set_session(self.session)
+
+    def load_replay(self, path: Path) -> None:
+        """Carga una sesion grabada (JSONL) y la deja disponible para Resumen y Memoria como una sesion de solo lectura."""
+        from types import SimpleNamespace
+
+        from .inspector import ExitRecord, MemInfo, Sample, load_session
+        from .memoria import GcEvent, LeakFlag
+
+        data = load_session(path)
+        meta = data.get("meta") or {}
+        samples = [Sample.from_dict(d) for d in data.get("samples", [])]
+        meminfos = [MemInfo.from_dict(d) for d in data.get("meminfo", [])]
+        gc_events = [GcEvent(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("gc", [])]
+        leak_flags = [LeakFlag(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("leak", [])]
+        exits = [ExitRecord(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("exits", [])]
+        dev_dict = meta.get("device") or {}
+        pid = samples[-1].pid if samples else None
+        replay = SimpleNamespace(
+            dev=SimpleNamespace(key=dev_dict.get("key", "?"), display=dev_dict.get("display", dev_dict.get("model", "?"))),
+            package=meta.get("package", "?"), debuggable=None, path=path, interval=meta.get("interval", 1.0),
+            samples=samples, meminfos=meminfos, exits=exits, gc_events=gc_events, leak_flags=leak_flags,
+            running=False, pid=pid, device_tz_offset=meta.get("device_tz_offset"),
+        )
+        self.session = replay
+        self.query_one(MemoriaView).set_session(self.session)
 
     def action_meminfo(self) -> None:
         if self.session and self.session.running and self.session.pid:
@@ -245,6 +288,117 @@ class InspectPane(Vertical):
             for e in ses.exits[:20]:
                 color = theme.ERR if e.reason in (4, 5, 6) else (theme.WARN if e.reason in (2, 3) else theme.MUTED)
                 ex.add_row(e.timestamp, T(e.reason_name, color, bold=True), str(e.pid), (e.anr or e.description or "")[:100])
+
+
+class MemoriaView(Vertical):
+    DEFAULT_CSS = """
+    MemoriaView { height: 1fr; }
+    MemoriaView #me_head { height: auto; padding: 0 1; }
+    MemoriaView #me_breakdown { height: 10; }
+    MemoriaView #me_sparks { height: 4; }
+    MemoriaView .spark { width: 1fr; height: 3; margin: 0 1; }
+    MemoriaView .sparklabel { width: 1fr; height: 1; padding: 0 1; color: $text-muted; }
+    MemoriaView #me_gc { height: 1fr; }
+    MemoriaView .hint { color: $text-muted; height: 1; padding: 0 1; }
+    """
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.session = None
+        self.java_hist: List[float] = []
+        self.native_hist: List[float] = []
+        self.graphics_hist: List[float] = []
+        self.pss_hist: List[float] = []
+        self._last_mi_t: Optional[float] = None
+        self._gc_n = -1
+
+    def compose(self) -> ComposeResult:
+        yield Static("[dim]esperando meminfo…[/]", id="me_head")
+        yield DataTable(id="me_breakdown", cursor_type="row", zebra_stripes=True)
+        with Horizontal(id="me_sparks"):
+            with Vertical(classes="spark"):
+                yield Static("Java", classes="sparklabel", id="melbl_java")
+                yield Sparkline([0.0], id="sp_java")
+            with Vertical(classes="spark"):
+                yield Static("Native", classes="sparklabel", id="melbl_native")
+                yield Sparkline([0.0], id="sp_native")
+            with Vertical(classes="spark"):
+                yield Static("Graphics", classes="sparklabel", id="melbl_graphics")
+                yield Sparkline([0.0], id="sp_graphics")
+            with Vertical(classes="spark"):
+                yield Static("PSS", classes="sparklabel", id="melbl_pss")
+                yield Sparkline([0.0], id="sp_pss")
+        yield DataTable(id="me_gc", cursor_type="row", zebra_stripes=True)
+        yield Static("m: meminfo ya · o: resumen · u: memoria", id="me_hint", classes="hint")
+
+    def on_mount(self) -> None:
+        self.query_one("#me_breakdown", DataTable).add_columns("Heap", "MB", "")
+        self.query_one("#me_gc", DataTable).add_columns("Hora", "Tipo", "Liberado", "Pausa", "Heap tras GC")
+        self.set_interval(0.5, self._refresh)
+
+    def set_session(self, session) -> None:
+        self.session = session
+        self.java_hist, self.native_hist, self.graphics_hist, self.pss_hist = [], [], [], []
+        self._last_mi_t = None
+        self._gc_n = -1
+
+    def _refresh(self) -> None:
+        ses = self.session
+        if ses is None:
+            return
+        meminfos = list(getattr(ses, "meminfos", None) or [])
+        gc_events = list(getattr(ses, "gc_events", None) or [])
+        leak_flags = list(getattr(ses, "leak_flags", None) or [])
+        head = self.query_one("#me_head", Static)
+        if leak_flags:
+            parts = []
+            for f in leak_flags:
+                growth_mb = (f.last_kb - f.first_kb) / 1024.0
+                span_s = max(0.0, f.until_t - f.since_t)
+                parts.append(f"{f.metric} +{growth_mb:.1f} MB en {span_s:.0f} s")
+            head.update(f"[{theme.hx(theme.WARN)} bold]posible fuga: " + " · ".join(parts) + " (heurística)[/]")
+        elif meminfos:
+            mi = meminfos[-1]
+            head.update(f"[dim]último meminfo · PSS {theme.kb(mi.pss_total_kb)} · Java {theme.kb(mi.java_heap_kb)}[/]")
+        else:
+            head.update("[dim]esperando meminfo…[/]")
+
+        bt = self.query_one("#me_breakdown", DataTable)
+        if meminfos:
+            mi = meminfos[-1]
+            buckets = [
+                ("Java heap", mi.java_heap_kb), ("Native heap", mi.native_heap_kb), ("Code", mi.code_kb),
+                ("Stack", mi.stack_kb), ("Graphics", mi.graphics_kb), ("Private other", mi.private_other_kb),
+                ("System", mi.system_kb), ("PSS total", mi.pss_total_kb),
+            ]
+            max_v = max((v for _, v in buckets), default=0) or 1
+            bt.clear()
+            for name, v in buckets:
+                bt.add_row(name, f"{v / 1024.0:.1f}", theme.hbar(v, max_v, 20))
+            if not self.java_hist or mi.t != self._last_mi_t:
+                self._last_mi_t = mi.t
+                self.java_hist.append(mi.java_heap_kb / 1024.0)
+                self.native_hist.append(mi.native_heap_kb / 1024.0)
+                self.graphics_hist.append(mi.graphics_kb / 1024.0)
+                self.pss_hist.append(mi.pss_total_kb / 1024.0)
+                for h in (self.java_hist, self.native_hist, self.graphics_hist, self.pss_hist):
+                    del h[:-120]
+                self.query_one("#sp_java", Sparkline).data = self.java_hist or [0.0]
+                self.query_one("#sp_native", Sparkline).data = self.native_hist or [0.0]
+                self.query_one("#sp_graphics", Sparkline).data = self.graphics_hist or [0.0]
+                self.query_one("#sp_pss", Sparkline).data = self.pss_hist or [0.0]
+            self.query_one("#melbl_java", Static).update(f"Java {mi.java_heap_kb / 1024:.0f} MB")
+            self.query_one("#melbl_native", Static).update(f"Native {mi.native_heap_kb / 1024:.0f} MB")
+            self.query_one("#melbl_graphics", Static).update(f"Graphics {mi.graphics_kb / 1024:.0f} MB")
+            self.query_one("#melbl_pss", Static).update(f"PSS {mi.pss_total_kb / 1024:.0f} MB")
+
+        gt = self.query_one("#me_gc", DataTable)
+        if self._gc_n != len(gc_events):
+            self._gc_n = len(gc_events)
+            gt.clear()
+            for ev in gc_events[-50:]:
+                hora = datetime.fromtimestamp(ev.t).strftime("%H:%M:%S")
+                gt.add_row(hora, ev.kind, theme.kb(ev.freed_kb), f"{ev.pause_ms:.1f} ms", theme.kb(ev.heap_used_kb))
 
 
 # ============================================================================ Base de datos
