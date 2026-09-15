@@ -25,7 +25,7 @@ from .adb import Device
 from .apps import find_project_apps, scan_projects
 from .logs import SEP_RE, Filter, LogcatStream, PidWatcher, Renderer, list_pids, list_processes, list_threads, parse, thread_cpu
 from .ui import UserError, human_size
-from .tui_panes import ConsolePane, DbPane, InspectPane, NetPane
+from .tui_panes import ConsolePane, DbPane, FilesPane, InspectPane, NetPane
 from .suggest import DroidAutoComplete, Suggest
 
 
@@ -259,6 +259,7 @@ class HelpScreen(ModalScreen[None]):
 [bold]Inspector[/] (7)  s iniciar/parar · l logs del hilo · m meminfo ahora · e salidas de la app · f cambiar app   (desde Apps: i)
 [bold]DB[/] (8)  Enter en DB: snapshot · Enter en tabla: filas · / SQL · x CSV · p shared_prefs   (desde Apps: d)
 [bold]Red[/] (9)  s iniciar/parar · r sockets · f cambiar app
+[bold]Archivos[/] (F)  Enter: abrir directorio o ver archivo · backspace: subir · p: pull · v: ver · x: borrar (con confirmacion) · b: abrir .db en DB · r: recargar · f: paquete   (desde Apps: f)
 [bold]Consola[/] (0)  área de bloque: pega uno o varios comandos y ctrl+r (o ▶). Si no empiezan por `adb` van enteros a `adb shell` del
           dispositivo actual; si empiezan por `adb` corren en el Mac con adb ya apuntando al dispositivo (`adb shell getprop | grep …`).
           Línea rápida arriba (f): Enter ejecuta, con sugerencias · ctrl+g corta · ctrl+l limpia salida · b vuelve al bloque · ctrl+d cambia dispositivo
@@ -442,6 +443,7 @@ class DroidApp(App):
         Binding("8", "tab('db')", "DB", show=False),
         Binding("9", "tab('net')", "Red", show=False),
         Binding("0", "tab('console')", "Consola", show=False),
+        Binding("F", "tab('files')", "Archivos", show=False),
         Binding("y", "copy", "Copiar"),
         Binding("Y", "copy_all", "Copiar todo", show=False),
         Binding("v", "review", "Revisar/copiar"),
@@ -477,6 +479,7 @@ class DroidApp(App):
         Binding("l", "apps_logs", "Logs de la app"),
         Binding("i", "apps_inspect", "Inspeccionar"),
         Binding("d", "apps_db", "DB"),
+        Binding("f", "apps_files", "Archivos"),
         Binding("a", "apps_all", "Todas"),
         # grabación
         Binding("s", "rec_start", "Grabar actual"),
@@ -489,9 +492,9 @@ class DroidApp(App):
         "logs": {"logs_toggle", "logs_pause", "logs_clear", "logs_filters", "logs_errors", "logs_thread", "logs_proc"},
         "cache": {"cache_follow", "cache_delete", "cache_open"},
         "procs": {"procs_threads", "procs_logs", "procs_auto"},
-        "apps": {"apps_logs", "apps_all", "apps_inspect", "apps_db"},
+        "apps": {"apps_logs", "apps_all", "apps_inspect", "apps_db", "apps_files"},
         "record": {"rec_start", "rec_start_all", "rec_stop", "rec_stop_all"},
-        "inspect": set(), "db": set(), "net": set(), "console": set(),
+        "inspect": set(), "db": set(), "net": set(), "console": set(), "files": set(),
     }
     ALL_TAB_ACTIONS = set().union(*TAB_ACTIONS.values())
 
@@ -568,6 +571,8 @@ class DroidApp(App):
                 yield NetPane(id="net_pane")
             with TabPane("0 Consola", id="console"):
                 yield ConsolePane(id="console_pane")
+            with TabPane("F Archivos", id="files"):
+                yield FilesPane(id="files_pane")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -582,7 +587,7 @@ class DroidApp(App):
         self.query_one("#log_status", Static).update("[dim]s: iniciar · f: filtros · e: solo W+ · t: hilo · n: proceso · p: pausa · x: limpiar[/]")
         self.query_one("#cache_hint", Static).update("[dim]Enter: abrir sesión · f: seguir · x: borrar · o: Finder[/]")
         self.query_one("#procs_hint", Static).update("[dim]t: hilos · l: logs del proceso · espacio: auto-refresco[/]")
-        self.query_one("#apps_hint", Static).update("[dim]Enter/l: logs de la app · i: inspeccionar (CPU/RAM/frames) · d: base de datos · a: incluir no instaladas[/]")
+        self.query_one("#apps_hint", Static).update("[dim]Enter/l: logs de la app · i: inspeccionar (CPU/RAM/frames) · d: base de datos · f: archivos · a: incluir no instaladas[/]")
         self.query_one("#rec_hint", Static).update("[dim]s: grabar actual · S: grabar todos · x: parar · X: parar todas[/]")
         self.set_interval(0.1, self._drain_logs)
         self.set_interval(2.0, self._tick_periodic)
@@ -636,11 +641,16 @@ class DroidApp(App):
         elif name == "console":
             self.query_one("#sh_code").focus()
             self.query_one("#console_pane", ConsolePane)._update_hint()
+        elif name == "files":
+            self.query_one("#f_list", DataTable).focus()
+            pane = self.query_one("#files_pane", FilesPane)
+            if not pane.entries:
+                pane.action_reload()
 
     def action_unfocus(self) -> None:
         tab = self.active_tab
         target = {"devices": "#dev_table", "logs": "#log", "cache": "#cache_table", "procs": "#procs_table", "apps": "#apps_table", "record": "#rec_table",
-                  "inspect": "#i_threads", "db": "#db_list", "net": "#n_sockets", "console": "#sh_out"}.get(tab)
+                  "inspect": "#i_threads", "db": "#db_list", "net": "#n_sockets", "console": "#sh_out", "files": "#f_list"}.get(tab)
         if target:
             self.query_one(target).focus()
 
@@ -661,7 +671,7 @@ class DroidApp(App):
     # --- seleccionar / copiar / revisar ---
     TEXT_WIDGETS = {"logs": ["#log"], "cache": ["#cache_view"], "console": ["#sh_out"], "devices": ["#dev_table"],
                     "procs": ["#procs_table"], "apps": ["#apps_table"], "record": ["#rec_table"],
-                    "inspect": ["#i_threads"], "db": ["#db_rows", "#db_tables", "#db_list"], "net": ["#n_sockets"]}
+                    "inspect": ["#i_threads"], "db": ["#db_rows", "#db_tables", "#db_list"], "net": ["#n_sockets"], "files": ["#f_list"]}
 
     def _text_widget(self):
         """Widget de la pestaña activa del que se copia (el primero con contenido)."""
@@ -1152,6 +1162,7 @@ class DroidApp(App):
         self.query_one("#inspect_pane", InspectPane).set_package(pkg)
         self.query_one("#db_pane", DbPane).query_one("#d_pkg", Input).value = pkg
         self.query_one("#net_pane", NetPane).set_package(pkg)
+        self.query_one("#files_pane", FilesPane).set_package(pkg)
 
     # ---------------------------------------------------------------- caché
     def refresh_cache(self) -> None:
@@ -1415,7 +1426,7 @@ class DroidApp(App):
         if self.apps_all:
             for p in rest:
                 t.add_row(T(p.project, theme.color_for(p.project), dim=True), T(p.module, dim=True), T(p.app_id, dim=True), "", T("no instalada", dim=True), "", "", key=f"missing:{p.app_id}")
-        self.query_one("#apps_hint", Static).update(f"[dim]{len(found)} apps de tus proyectos instaladas en {self.current.display if self.current else '?'} · {len(rest)} no instaladas ({'mostradas' if self.apps_all else 'a: mostrar'}) · Enter/l: logs de la app[/]")
+        self.query_one("#apps_hint", Static).update(f"[dim]{len(found)} apps de tus proyectos instaladas en {self.current.display if self.current else '?'} · {len(rest)} no instaladas ({'mostradas' if self.apps_all else 'a: mostrar'}) · Enter/l: logs de la app · f: archivos[/]")
 
     @on(DataTable.RowSelected, "#apps_table")
     def _apps_enter(self, ev: DataTable.RowSelected) -> None:
@@ -1441,6 +1452,12 @@ class DroidApp(App):
             self.set_inspect_package(key)
             self.action_tab("db")
             self.query_one("#db_pane", DbPane).action_reload()
+
+    def action_apps_files(self) -> None:
+        key = self._selected_row_key("#apps_table")
+        if key and not key.startswith("missing:"):
+            self.set_inspect_package(key)
+            self.action_tab("files")
 
     def action_apps_all(self) -> None:
         self.apps_all = not self.apps_all

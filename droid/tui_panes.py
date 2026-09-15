@@ -12,7 +12,7 @@ from textual import on, work
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, DataTable, Input, RichLog, Sparkline, Static, TabbedContent, TabPane, TextArea
+from textual.widgets import Button, DataTable, Input, RichLog, Select, Sparkline, Static, TabbedContent, TabPane, TextArea
 from collections import deque
 import threading
 
@@ -991,3 +991,321 @@ class ConsolePane(Vertical):
                 batch.append(item)
         if batch:
             out.write(Text.from_ansi("\n".join(batch)))
+
+
+# ============================================================================ Archivos
+
+class FilesPane(Vertical):
+    DEFAULT_CSS = """
+    FilesPane { height: 1fr; }
+    FilesPane .bar { height: 3; }
+    FilesPane .bar Input { width: 1fr; }
+    FilesPane .bar Input.narrow { width: 12; }
+    FilesPane .bar Select { width: 28; }
+    FilesPane #f_list { height: 1fr; }
+    FilesPane .hint { color: $text-muted; height: 1; padding: 0 1; }
+    """
+    ROOT_OPTIONS = [
+        ("Sandbox de la app", "sandbox"),
+        ("/sdcard", "sdcard"),
+        ("/data/local/tmp", "tmp"),
+        ("/proc/<pid>", "proc"),
+    ]
+    GLYPH = {"dir": "📁", "link": "🔗", "file": ""}
+
+    BINDINGS = [
+        Binding("backspace", "up", "Subir"),
+        Binding("r", "reload", "Recargar"),
+        Binding("p", "pull", "Pull"),
+        Binding("v", "preview", "Ver"),
+        Binding("b", "open_db", "Abrir DB"),
+        Binding("x", "delete", "Borrar"),
+        Binding("f", "focus_pkg", "App"),
+        Binding("o", "open_pulled", "Abrir pull", show=False),
+    ]
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.root = "sandbox"
+        self.rel_segments: List[str] = []
+        self.entries: dict = {}
+        self.last_pulled: Optional[Path] = None
+
+    def compose(self) -> ComposeResult:
+        with Horizontal(classes="bar"):
+            f_pkg = Input(placeholder="paquete (sandbox)", id="f_pkg"); yield f_pkg
+            yield DroidAutoComplete(f_pkg, provider=lambda: self.app.suggest.packages("pkg"))
+            yield Select(self.ROOT_OPTIONS, value="sandbox", allow_blank=False, id="f_root")
+            f_pid = Input(placeholder="pid", id="f_pid", classes="narrow"); yield f_pid
+        yield Static("", id="f_breadcrumb", classes="hint")
+        yield DataTable(id="f_list", cursor_type="row", zebra_stripes=True)
+        yield Static("", id="f_hint", classes="hint")
+
+    def on_mount(self) -> None:
+        self.query_one("#f_list", DataTable).add_columns("", "Nombre", "Tamaño", "Modificado", "Permisos")
+        self.query_one("#f_hint", Static).update("[dim]Enter: abrir/ver · backspace: subir · p: pull · v: ver · x: borrar · b: abrir como DB · r: recargar · f: paquete[/]")
+        self._update_breadcrumb()
+
+    def _rel(self) -> str:
+        return "/".join(self.rel_segments)
+
+    def _update_breadcrumb(self) -> None:
+        pid = self.query_one("#f_pid", Input).value.strip()
+        base = f"/proc/{pid or '<pid>'}" if self.root == "proc" else {"sandbox": "sandbox", "sdcard": "/sdcard", "tmp": "/data/local/tmp"}.get(self.root, self.root)
+        rel = self._rel()
+        self.query_one("#f_breadcrumb", Static).update(f"[dim]{base}{'/' + rel if rel else ''}[/]")
+
+    def set_package(self, pkg: str) -> None:
+        self.query_one("#f_pkg", Input).value = pkg
+        if self.root == "sandbox":
+            self.rel_segments = []
+            self._load()
+
+    def action_focus_pkg(self) -> None:
+        self.query_one("#f_pkg", Input).focus()
+
+    @on(Input.Submitted)
+    def _submitted(self, ev: Input.Submitted) -> None:
+        if ev.input.id in ("f_pkg", "f_pid"):
+            if ev.input.id == "f_pkg":
+                self.app.suggest.remember("pkg", ev.value)
+            self.rel_segments = []
+            self._load()
+            self.query_one("#f_list", DataTable).focus()
+        ev.stop()
+
+    @on(Select.Changed, "#f_root")
+    def _root_changed(self, ev: "Select.Changed") -> None:
+        self.root = str(ev.value)
+        self.rel_segments = []
+        self._load()
+
+    def action_reload(self) -> None:
+        self._load()
+
+    def action_up(self) -> None:
+        if self.rel_segments:
+            self.rel_segments.pop()
+            self._load()
+
+    @work(thread=True, exclusive=True, group="files")
+    def _load(self) -> None:
+        from . import files as filesmod
+        app = self.app
+        dev = app.current
+        if not dev:
+            return
+        root = self.root
+        pkg = self.query_one("#f_pkg", Input).value.strip() or None
+        pid = self.query_one("#f_pid", Input).value.strip() or None
+        if root == "sandbox" and not pkg:
+            app.call_from_thread(app.notify, "indica un paquete", severity="warning")
+            return
+        if root == "proc" and not pid:
+            app.call_from_thread(app.notify, "indica un pid", severity="warning")
+            return
+        ok, msg = filesmod.check_access(dev.serial, root, pkg, pid)
+        if not ok:
+            app.call_from_thread(app.notify, f"acceso denegado: {msg[:120]}", severity="error", timeout=8)
+            app.call_from_thread(self._apply_entries, [], False)
+            return
+        rel = self._rel()
+        try:
+            entries = filesmod.list_dir(dev.serial, root, rel, pkg, pid)
+        except Exception as e:
+            app.call_from_thread(app.notify, f"files: {e}", severity="error")
+            return
+        truncated = len(entries) > 2000
+        if truncated:
+            entries = entries[:2000]
+        app.call_from_thread(self._apply_entries, entries, truncated)
+
+    def _apply_entries(self, entries: List, truncated: bool) -> None:
+        self.entries = {}
+        t = self.query_one("#f_list", DataTable)
+        t.clear()
+        if self.rel_segments:
+            t.add_row("", "..", "", "", "", key="..")
+        errors = []
+        for e in entries:
+            if e.kind == "error":
+                errors.append(e.message or "error")
+                continue
+            glyph = self.GLYPH.get(e.kind, "⛔")
+            key = e.path or e.name
+            self.entries[key] = e
+            t.add_row(glyph, e.name, human_size(e.size) if e.kind == "file" else "", e.mtime, e.perm, key=key)
+        self._update_breadcrumb()
+        hint = f"[dim]{len(self.entries)} elemento(s)"
+        if truncated:
+            hint += " (truncado a 2000)"
+        hint += " · Enter: abrir/ver · backspace: subir · p: pull · v: ver · x: borrar · b: abrir como DB · r: recargar[/]"
+        self.query_one("#f_hint", Static).update(hint)
+        if errors:
+            self.app.notify(errors[0][:160], severity="error")
+
+    @on(DataTable.RowSelected, "#f_list")
+    def _row_selected(self, ev: DataTable.RowSelected) -> None:
+        key = ev.row_key.value if ev.row_key else None
+        if key:
+            self._enter(key)
+        ev.stop()
+
+    def _enter(self, key: str) -> None:
+        if key == "..":
+            self.action_up()
+            return
+        entry = self.entries.get(key)
+        if entry is None:
+            return
+        if entry.kind in ("dir", "link"):
+            self.rel_segments.append(entry.name)
+            self._load()
+        elif entry.kind == "file":
+            self._preview_entry(entry)
+
+    def _selected_entry(self):
+        t = self.query_one("#f_list", DataTable)
+        if t.row_count == 0 or t.cursor_row is None:
+            return None
+        try:
+            key = t.coordinate_to_cell_key(t.cursor_coordinate).row_key.value
+        except Exception:
+            return None
+        if key is None or key == "..":
+            return None
+        return self.entries.get(key)
+
+    def action_preview(self) -> None:
+        entry = self._selected_entry()
+        if entry is None:
+            self.app.notify("Selecciona un archivo", severity="warning")
+            return
+        if entry.kind != "file":
+            self.app.notify("Solo se puede ver un archivo", severity="warning")
+            return
+        self._preview_entry(entry)
+
+    @work(thread=True, exclusive=True, group="files_preview")
+    def _preview_entry(self, entry) -> None:
+        from . import files as filesmod
+        app = self.app
+        dev = app.current
+        if not dev:
+            return
+        pkg = self.query_one("#f_pkg", Input).value.strip() or None
+        pid = self.query_one("#f_pid", Input).value.strip() or None
+        rel = f"{self._rel()}/{entry.name}" if self._rel() else entry.name
+        try:
+            text, truncated = filesmod.preview(dev.serial, self.root, rel, pkg)
+        except Exception as e:
+            app.call_from_thread(app.notify, f"preview: {e}", severity="error")
+            return
+        if filesmod.is_text_name(entry.name):
+            title = entry.path or entry.name
+            if truncated:
+                title += " (truncado)"
+            app.call_from_thread(self._show_preview, text, title)
+        else:
+            hexdump = " ".join(f"{ord(c) & 0xff:02x}" for c in text[:512])
+            note = f"archivo binario, primeros 512 bytes en hex:\n\n{hexdump}"
+            app.call_from_thread(self._show_preview, note, f"{entry.name} (binario)")
+
+    def _show_preview(self, text: str, title: str) -> None:
+        from .tui import ReviewScreen
+        self.app.push_screen(ReviewScreen(text, title=title, prefix="files"))
+
+    def action_pull(self) -> None:
+        app = self.app
+        dev = app.current
+        if not dev:
+            app.notify("No hay dispositivo actual", severity="warning")
+            return
+        file_entries = [e for e in self.entries.values() if e.kind == "file"]
+        if not file_entries:
+            app.notify("No hay archivos que descargar en este listado", severity="warning")
+            return
+        self._do_pull(dev, file_entries)
+
+    @work(thread=True, exclusive=True, group="files_pull")
+    def _do_pull(self, dev, file_entries) -> None:
+        from . import files as filesmod
+        app = self.app
+        pkg = self.query_one("#f_pkg", Input).value.strip() or None
+        rel = self._rel()
+        dest_dir = config.DROID_HOME / "pull" / dev.key / self.root / rel
+        try:
+            pulled = filesmod.pull_path(dev.serial, self.root, rel, pkg, dest_dir, entries=file_entries)
+        except Exception as e:
+            app.call_from_thread(app.notify, f"pull: {e}", severity="error", timeout=8)
+            return
+        self.last_pulled = dest_dir
+        app.call_from_thread(app.notify, f"{len(pulled)} archivo(s) en {dest_dir} · o: abrir", timeout=8)
+
+    def action_open_pulled(self) -> None:
+        from . import clip
+        if not self.last_pulled:
+            self.app.notify("Todavía no has hecho pull de nada", severity="warning")
+            return
+        clip.open_file(self.last_pulled)
+
+    def action_open_db(self) -> None:
+        entry = self._selected_entry()
+        if entry is None or not entry.name.lower().endswith(".db"):
+            self.app.notify("Selecciona un archivo .db", severity="warning")
+            return
+        pkg = self.query_one("#f_pkg", Input).value.strip()
+        if not pkg:
+            self.app.notify("Falta el paquete", severity="warning")
+            return
+        remote = f"{self._rel()}/{entry.name}" if self._rel() else entry.name
+        app = self.app
+        app.set_inspect_package(pkg)
+        app.action_tab("db")
+        from .tui import DbPane
+        db_pane = app.query_one("#db_pane", DbPane)
+        db_pane.query_one("#d_pkg", Input).value = pkg
+        db_pane._pull(remote)
+
+    def action_delete(self) -> None:
+        entry = self._selected_entry()
+        if entry is None:
+            self.app.notify("Selecciona un archivo o directorio", severity="warning")
+            return
+        from .tui import Confirm
+        is_dir = entry.kind == "dir"
+        path = entry.path or entry.name
+
+        def _after_first(yes: bool) -> None:
+            if not yes:
+                return
+            if is_dir:
+                self.app.push_screen(Confirm("Es un directorio: se borra todo lo que contiene. ¿Seguro?"), _after_second)
+            else:
+                self._do_delete(entry, is_dir)
+
+        def _after_second(yes: bool) -> None:
+            if yes:
+                self._do_delete(entry, is_dir)
+
+        self.app.push_screen(Confirm(f"¿Borrar {path}?"), _after_first)
+
+    @work(thread=True, exclusive=True, group="files_delete")
+    def _do_delete(self, entry, is_dir: bool) -> None:
+        from . import files as filesmod
+        app = self.app
+        dev = app.current
+        if not dev:
+            return
+        pkg = self.query_one("#f_pkg", Input).value.strip() or None
+        rel = f"{self._rel()}/{entry.name}" if self._rel() else entry.name
+        try:
+            ok, msg = filesmod.delete_path(dev.serial, self.root, rel, pkg, is_dir, confirmed=True)
+        except Exception as e:
+            app.call_from_thread(app.notify, f"borrar: {e}", severity="error", timeout=8)
+            return
+        if ok:
+            app.call_from_thread(app.notify, f"Borrado {rel}", timeout=5)
+            app.call_from_thread(self._load)
+        else:
+            app.call_from_thread(app.notify, f"No se pudo borrar: {msg[:160]}", severity="error", timeout=8)

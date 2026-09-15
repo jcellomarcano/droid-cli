@@ -1147,6 +1147,82 @@ def cmd_db(args) -> int:
     return 0
 
 
+def _files_entry_kind(filesmod, serial, root, path, package, pid):
+    if "/" in path:
+        parent, name = path.rsplit("/", 1)
+    else:
+        parent, name = "", path
+    if not name:
+        return None
+    entries = filesmod.list_dir(serial, root, parent, package, pid)
+    for e in entries:
+        if e.name == name:
+            return e.kind
+    return None
+
+
+def cmd_files(args) -> int:
+    from . import files as filesmod
+    devices = adbmod.list_devices()
+    dev = ui.select_device(devices, args.device, prompt="¿Qué dispositivo?")
+    root = args.root
+    package = args.package
+    pid = args.pid
+    if root == "sandbox" and not package:
+        raise ui.UserError("Indica el paquete con -p PKG (root=sandbox)")
+    if root == "proc" and not pid:
+        raise ui.UserError("Indica --pid PID (root=proc)")
+    ok, msg = filesmod.check_access(dev.serial, root, package, pid)
+    if not ok:
+        raise ui.UserError(f"Sin acceso a {root}: {msg}")
+    path = (args.path or "").strip("/")
+
+    if args.cat:
+        text, truncated = filesmod.preview(dev.serial, root, path, package)
+        sys.stdout.write(text)
+        if truncated:
+            ui.errc.print("[dim](truncado)[/]")
+        return 0
+
+    if args.pull:
+        dest = Path(args.pull).expanduser()
+        pulled = filesmod.pull_path(dev.serial, root, path, package, dest)
+        for p in pulled:
+            ui.errc.print(f"[dim]{p}[/]")
+        return 0
+
+    if args.rm:
+        kind = _files_entry_kind(filesmod, dev.serial, root, path, package, pid)
+        is_dir = kind == "dir"
+        if not args.yes:
+            label = "directorio (recursivo)" if is_dir else "archivo"
+            if not ui.confirm(f"¿Borrar el {label} {path or root}?"):
+                ui.info("Cancelado.")
+                return 0
+        ok2, out = filesmod.delete_path(dev.serial, root, path, package, is_dir, confirmed=True)
+        if not ok2:
+            raise ui.UserError(f"No se pudo borrar: {out}")
+        ui.info(f"Borrado {path or root}")
+        return 0
+
+    entries = filesmod.list_dir(dev.serial, root, path, package, pid)
+    entries = [e for e in entries if e.kind != "error"]
+    entries.sort(key=lambda e: (e.kind != "dir", e.name.lower()))
+
+    if args.json:
+        print(json.dumps([e.to_dict() for e in entries], ensure_ascii=False, indent=2))
+        return 0
+
+    t = Table(box=box.SIMPLE_HEAD, title=f"{root}:/{path} · {theme.device_markup(dev.key, escape(dev.display))}", title_justify="left")
+    for col in ("", "Nombre", "Tamaño", "Modificado", "Permisos"):
+        t.add_column(col)
+    glyphs = {"dir": "📁", "link": "🔗", "file": ""}
+    for e in entries:
+        t.add_row(glyphs.get(e.kind, "⛔"), e.name, ui.human_size(e.size) if e.kind == "file" else "", e.mtime, e.perm)
+    ui.console.print(t)
+    return 0
+
+
 def _print_rows(cols, rws, truncated: bool, as_csv: bool, title: str = "") -> None:
     from . import db as dbmod
     if as_csv:
@@ -1531,6 +1607,19 @@ def build_parser() -> argparse.ArgumentParser:
     dbp.add_argument("--prefs", action="store_true", help="muestra shared_prefs/*.xml")
     dbp.set_defaults(func=cmd_db)
 
+    filesp = sub.add_parser("files", help="explorador de archivos: sandbox de apps (run-as) y /sdcard, /data/local/tmp, /proc/<pid>")
+    filesp.add_argument("device", nargs="?")
+    filesp.add_argument("-p", "--package", metavar="PKG")
+    filesp.add_argument("--root", choices=["sandbox", "sdcard", "tmp", "proc"], default="sandbox")
+    filesp.add_argument("--pid", metavar="PID")
+    filesp.add_argument("path", nargs="?", default="", metavar="PATH")
+    filesp.add_argument("--pull", metavar="DEST", help="descarga PATH a este directorio local")
+    filesp.add_argument("--cat", action="store_true", help="imprime el contenido de PATH (como preview)")
+    filesp.add_argument("--rm", action="store_true", help="borra PATH (pide confirmación salvo -y)")
+    filesp.add_argument("-y", "--yes", action="store_true", help="con --rm: no pedir confirmación")
+    filesp.add_argument("--json", action="store_true", help="lista el contenido de PATH como JSON")
+    filesp.set_defaults(func=cmd_files)
+
     netp = sub.add_parser("net", help="red: tasa por interfaz en vivo, totales por app y sockets abiertos")
     netp.add_argument("device", nargs="?")
     netp.add_argument("-p", "--package", metavar="PKG")
@@ -1585,7 +1674,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         argv = sys.argv[1:]
     if not argv and sys.stdin.isatty() and sys.stdout.isatty() and bool(config.get("ui_on_empty")):
         return cmd_ui(argparse.Namespace(device=None))
-    args = parser.parse_args(argv)
+    args, extra = parser.parse_known_args(argv)
+    if extra:
+        if argv and argv[0] == "files" and not getattr(args, "path", "") and len(extra) == 1 and not extra[0].startswith("-"):
+            args.path = extra[0]
+        else:
+            parser.error("argumentos no reconocidos: " + " ".join(extra))
     try:
         return int(args.func(args) or 0)
     except ui.UserError as e:

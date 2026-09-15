@@ -167,3 +167,10 @@ def test_preview_truncated(fake_shell):
 ])
 def test_is_text_name(name, expected):
     assert files.is_text_name(name) is expected
+
+
+def test_list_dir_device_root_lists_the_directory_behind_a_symlink(fake_shell):
+    seen = []
+    fake_shell(lambda cmd: seen.append(cmd) or "total 0\n")
+    files.list_dir("S", "sdcard", "")
+    assert "ls -la /sdcard/ " in seen[-1]

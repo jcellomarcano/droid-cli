@@ -87,7 +87,7 @@ def list_dir(serial: str, root: str, rel: str = "", package: Optional[str] = Non
     rel = (rel or "").strip("/")
     if root in DEVICE_ROOTS:
         abs_path = _device_path(root, rel, pid)
-        cmd = f"ls -la {shlex.quote(abs_path)} 2>&1"
+        cmd = f"ls -la {shlex.quote(abs_path + '/')} 2>&1"
     else:
         dir_path = rel or "."
         cmd = f"run-as {package} sh -c 'ls -la {shlex.quote(dir_path)} 2>&1'"
