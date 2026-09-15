@@ -22,8 +22,7 @@ def test_parse_real_crash_fixture_line():
     line = [l for l in text.splitlines() if "Process:" in l][0]
     ll = parse(line)
     assert ll is not None
-    assert "com.example.app" in ll.msg
-    assert "example" not in ll.msg
+    assert ll.msg.startswith("Process: com.example.app")
 
 
 def test_parse_separator_line_returns_none():

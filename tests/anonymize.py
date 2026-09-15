@@ -20,21 +20,52 @@ OUT_DIR = Path(__file__).parent / "fixtures"
 SOURCES_FILE = RAW_DIR / "SOURCES.txt"
 MANIFEST_FILE = OUT_DIR / "MANIFEST.txt"
 
-FIXED_PKG_MAP = (
-    ("com.example.app", "com.example.app"),
-    ("com.otherapp", "com.example.other"),
-)
-# Prefijo de 2 etiquetas -> placeholder fijo (mapea el token completo, no un
-# str.replace parcial: ver _pkg_replacement_for).
-FIXED_PKG_PREFIX_MAP = {".".join(literal.split(".")[:2]): repl for literal, repl in FIXED_PKG_MAP}
-FIXED_PKG_PREFIXES = tuple(FIXED_PKG_PREFIX_MAP)
-# Matchea el prefijo fijo (2 etiquetas) solo o extendido con mas segmentos
-# en minuscula (com.otherapp, com.otherapp.wear.complication, ...); el token
-# completo que matchee se reemplaza entero por el placeholder fijo, nunca un
-# str.replace() parcial del prefijo.
-FIXED_TOKEN_RE = re.compile(
-    r"\b(" + "|".join(re.escape(p) for p in FIXED_PKG_PREFIXES) + r")(?:\.[a-z0-9_]+)*\b"
-)
+PRIVATE_TERMS_FILE = RAW_DIR / "PRIVATE_TERMS.txt"
+
+
+def load_private_terms(path: Path = PRIVATE_TERMS_FILE) -> Tuple[Tuple[Tuple[str, str], ...], Tuple[str, ...]]:
+    """Lee los terminos privados del propietario desde un fichero ignorado por git:
+    lineas `map<TAB>paquete_real<TAB>placeholder` y `forbid<TAB>subcadena`."""
+    maps: List[Tuple[str, str]] = []
+    forbid: List[str] = []
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            parts = line.rstrip("\n").split("\t")
+            if not parts or parts[0].startswith("#"):
+                continue
+            if parts[0] == "map" and len(parts) == 3:
+                maps.append((parts[1].strip(), parts[2].strip()))
+            elif parts[0] == "forbid" and len(parts) == 2:
+                forbid.append(parts[1].strip())
+            elif parts[0] == "word" and len(parts) == 3:
+                WORD_MAP[parts[1].strip()] = parts[2].strip()
+    return tuple(maps), tuple(forbid)
+
+
+WORD_MAP: Dict[str, str] = {}
+FIXED_PKG_MAP: Tuple[Tuple[str, str], ...] = ()
+FIXED_PKG_PREFIX_MAP: Dict[str, str] = {}
+FIXED_PKG_PREFIXES: Tuple[str, ...] = ()
+FIXED_TOKEN_RE = None
+COMM_MAP: Dict[str, str] = {}
+FORBIDDEN_SUBSTRINGS: Tuple[str, ...] = ("@gmail",)
+
+
+def configure(maps: Tuple[Tuple[str, str], ...], forbid: Tuple[str, ...]) -> None:
+    """Rebinds the private tables: fixed package mappings, their 15-character
+    process-name tails (the `comm` truncation of /proc) and the forbidden substrings."""
+    global FIXED_PKG_MAP, FIXED_PKG_PREFIX_MAP, FIXED_PKG_PREFIXES, FIXED_TOKEN_RE, COMM_MAP, FORBIDDEN_SUBSTRINGS
+    FIXED_PKG_MAP = tuple(maps)
+    FIXED_PKG_PREFIX_MAP = {".".join(literal.split(".")[:2]): repl for literal, repl in FIXED_PKG_MAP}
+    FIXED_PKG_PREFIXES = tuple(FIXED_PKG_PREFIX_MAP)
+    FIXED_TOKEN_RE = re.compile(
+        r"\b(" + "|".join(re.escape(p) for p in FIXED_PKG_PREFIXES) + r")(?:\.[a-z0-9_]+)*\b"
+    ) if FIXED_PKG_PREFIXES else None
+    COMM_MAP = {literal[-15:]: repl[-15:] for literal, repl in FIXED_PKG_MAP if len(literal) > 15}
+    FORBIDDEN_SUBSTRINGS = ("@gmail",) + tuple(forbid) + tuple(literal for literal, _ in FIXED_PKG_MAP) + tuple(WORD_MAP)
+
+
+configure(*load_private_terms())
 
 PKG_ALLOWLIST_PREFIXES = (
     "android.", "androidx.", "com.android.", "com.google.", "com.qualcomm.",
@@ -67,7 +98,6 @@ SERIAL_LABEL_RE = re.compile(r"(\bSerial:\s*)(\S+)")
 SSID_RE = re.compile(r"(\bSSID:\s*)(\S+)")
 ANDROID_ID_RE = re.compile(r"(\bandroidId\s*[:=]\s*)(\S+)")
 
-FORBIDDEN_SUBSTRINGS = ("example", "otherapp", "owner", "@gmail")
 
 ANON_BASE = "203.0.113."
 ANON_V6_NET = ipaddress.ip_network("2001:db8::/32")
@@ -299,10 +329,13 @@ def _pkg_replacement_for(token: str, other_pkg_map: Dict[str, str]):
 
 
 def _apply_fixed_pkg(text: str) -> str:
-    def repl(m):
-        return FIXED_PKG_PREFIX_MAP[m.group(1)]
-
-    return FIXED_TOKEN_RE.sub(repl, text)
+    if FIXED_TOKEN_RE is not None:
+        text = FIXED_TOKEN_RE.sub(lambda m: FIXED_PKG_PREFIX_MAP[m.group(1)], text)
+    for tail, repl in COMM_MAP.items():
+        text = re.sub(r"(?<=[\s:(])" + re.escape(tail) + r"(?=[\s:)]|$)", repl, text)
+    for word, repl in WORD_MAP.items():
+        text = text.replace(word, repl)
+    return text
 
 
 def _apply_pkg_maps(text: str, other_pkg_map: Dict[str, str]) -> str:
@@ -465,7 +498,7 @@ def find_violations(text: str) -> List[Tuple[str, str]]:
 def load_raw() -> Dict[str, str]:
     texts = {}
     for p in sorted(RAW_DIR.glob("*.txt")):
-        if p.name == SOURCES_FILE.name:
+        if p.name in (SOURCES_FILE.name, PRIVATE_TERMS_FILE.name):
             continue
         texts[p.name] = p.read_text(encoding="utf-8", errors="replace")
     return texts
@@ -502,12 +535,23 @@ def write_manifest(out: Dict[str, str]) -> None:
     los fixtures), o 'unknown' si no hay SOURCES.txt.
     """
     source = _source_note()
+    kept: Dict[str, str] = {}
+    if MANIFEST_FILE.exists():
+        for line in MANIFEST_FILE.read_text(encoding="utf-8").splitlines():
+            if line.startswith("#") or "\t" not in line:
+                continue
+            name = line.split("\t", 1)[0]
+            if name not in out and (OUT_DIR / name).exists():
+                kept[name] = line
     lines = ["# name\tsha256\tlines\tsource"]
-    for name in sorted(out):
-        text = out[name]
-        digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
-        line_count = len(text.splitlines())
-        lines.append(f"{name}\t{digest}\t{line_count}\t{source}")
+    for name in sorted(set(out) | set(kept)):
+        if name in out:
+            text = out[name]
+            digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            line_count = len(text.splitlines())
+            lines.append(f"{name}\t{digest}\t{line_count}\t{source}")
+        else:
+            lines.append(kept[name])
     MANIFEST_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

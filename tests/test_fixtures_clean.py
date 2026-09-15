@@ -56,12 +56,16 @@ def test_clean_fixtures_have_no_violations_and_manifest_matches_disk():
 
 
 def test_checker_over_tmp_directory_reports_seeded_violation(tmp_path, monkeypatch):
-    (tmp_path / "leaky.txt").write_text("package com.example.app installed\n", encoding="utf-8")
+    from tests import anonymize as anon
+    anon.configure((("com.private.realapp", "com.example.app"),), ("privateco",))
+    monkeypatch.setattr(anon, "FORBIDDEN_SUBSTRINGS", anon.FORBIDDEN_SUBSTRINGS)
+    (tmp_path / "leaky.txt").write_text("package com.privateco.app installed\n", encoding="utf-8")
     (tmp_path / MANIFEST_NAME).write_text("leaky.txt\ttest\n", encoding="utf-8")
     monkeypatch.setattr("tests.test_fixtures_clean.FIXTURES_DIR", tmp_path)
     problems = check_fixtures_directory()
     assert "leaky.txt" in problems
-    assert ("forbidden_substring", "example") in problems["leaky.txt"]
+    assert ("forbidden_substring", "privateco") in problems["leaky.txt"]
+    anon.configure(*anon.load_private_terms())
 
 
 def test_checker_over_tmp_directory_is_clean_when_no_violations(tmp_path, monkeypatch):

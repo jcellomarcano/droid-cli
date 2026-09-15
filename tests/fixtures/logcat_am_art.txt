@@ -1,4 +1,4 @@
-2026-09-15 15:03:09.172 10362 10362 I igital.app: hiddenapi: Accessing hidden field Landroid/app/ActivityManager;->IActivityManagerSingleton:Landroid/util/Singleton; (runtime_flags=0, domain=platform, api=unsupported) from Lleakcanary/ServiceWatcher; (domain=app, TargetSdkVersion=37) using reflection: allowed
+2026-09-15 15:03:09.172 10362 10362 I com.example.app: hiddenapi: Accessing hidden field Landroid/app/ActivityManager;->IActivityManagerSingleton:Landroid/util/Singleton; (runtime_flags=0, domain=platform, api=unsupported) from Lleakcanary/ServiceWatcher; (domain=app, TargetSdkVersion=37) using reflection: allowed
 2026-09-15 15:03:12.642 24357 25388 D ActivityManager: freezer override set to true
 2026-09-15 15:03:12.642 24357 25388 D ActivityManager: sync unfroze 31352 com.google.android.cellbroadcastreceiver for 19
 2026-09-15 15:03:12.642 24357 25388 D ActivityManager: sync unfroze 30106 com.android.carrierdefaultapp for 19

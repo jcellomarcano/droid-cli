@@ -1,4 +1,4 @@
-/proc/10362/task/10362/comm:igital.app
+/proc/10362/task/10362/comm:com.example.app
 /proc/10362/task/10363/comm:Signal Catcher
 /proc/10362/task/10364/comm:perfetto_hprof_
 /proc/10362/task/10365/comm:ADB-JDWP Connec

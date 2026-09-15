@@ -1,4 +1,4 @@
-2026-09-15 15:09:12.773 13999 14001 I igital.app: Explicit concurrent mark compact GC freed 10130KB AllocSpace bytes, 22(704KB) LOS objects, 95% free, 9010KB/192MB, paused 274us,607us total 19.749ms
-2026-09-15 15:09:30.406 13999 14001 I igital.app: Explicit concurrent mark compact GC freed 160KB AllocSpace bytes, 0(0B) LOS objects, 95% free, 8982KB/192MB, paused 43us,782us total 18.337ms
-2026-09-15 15:09:32.475 13999 14001 I igital.app: Explicit concurrent mark compact GC freed 64KB AllocSpace bytes, 0(0B) LOS objects, 95% free, 8982KB/192MB, paused 77us,635us total 18.373ms
-2026-09-15 15:09:34.537 13999 14001 I igital.app: Explicit concurrent mark compact GC freed 64KB AllocSpace bytes, 0(0B) LOS objects, 95% free, 8982KB/192MB, paused 64us,576us total 19.109ms
+2026-09-15 15:09:12.773 13999 14001 I com.example.app: Explicit concurrent mark compact GC freed 10130KB AllocSpace bytes, 22(704KB) LOS objects, 95% free, 9010KB/192MB, paused 274us,607us total 19.749ms
+2026-09-15 15:09:30.406 13999 14001 I com.example.app: Explicit concurrent mark compact GC freed 160KB AllocSpace bytes, 0(0B) LOS objects, 95% free, 8982KB/192MB, paused 43us,782us total 18.337ms
+2026-09-15 15:09:32.475 13999 14001 I com.example.app: Explicit concurrent mark compact GC freed 64KB AllocSpace bytes, 0(0B) LOS objects, 95% free, 8982KB/192MB, paused 77us,635us total 18.373ms
+2026-09-15 15:09:34.537 13999 14001 I com.example.app: Explicit concurrent mark compact GC freed 64KB AllocSpace bytes, 0(0B) LOS objects, 95% free, 8982KB/192MB, paused 64us,576us total 19.109ms

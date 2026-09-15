@@ -5,6 +5,13 @@ from droid.net import _hex_addr
 from tests import anonymize as anon
 
 
+
+@pytest.fixture
+def private_terms():
+    anon.configure((("com.private.realapp", "com.example.app"), ("com.privateco", "com.example.other")), ("privateco", "realowner"))
+    yield
+    anon.configure(*anon.load_private_terms())
+
 def test_anonymize_all_is_byte_deterministic_when_raw_present():
     if not anon.RAW_DIR.exists():
         pytest.skip("tests/fixtures/raw ausente")
@@ -13,8 +20,8 @@ def test_anonymize_all_is_byte_deterministic_when_raw_present():
     assert out1 == out2
 
 
-def test_fixed_package_mapping_applies():
-    text = "package: com.example.app installed, uses com.otherapp.wear.complication.Worker"
+def test_fixed_package_mapping_applies(private_terms):
+    text = "package: com.private.realapp installed, uses com.privateco.wear.complication.Worker"
     out = anon.anonymize_text(text, {}, {})
     assert "com.example.app" in out
     # El token completo (hasta donde matchea PKG_RE) se reemplaza entero, no un
@@ -22,8 +29,7 @@ def test_fixed_package_mapping_applies():
     # parte del token de paquete y se conserva tal cual.
     assert "com.example.other.Worker" in out
     assert "com.example.other.wear.complication.Worker" not in out
-    assert "example" not in out
-    assert "otherapp" not in out
+    assert "private" not in out
 
 
 def test_android_and_google_packages_are_kept():
@@ -284,8 +290,8 @@ def test_serial_and_ssid_and_android_id_are_redacted():
     assert "0123456789abcdef" not in out
 
 
-def test_find_violations_flags_generic_packages_and_ips_and_macs():
-    text = "io.sentry.android.core and 172.217.116.4 and mac 3a:4b:5c:6d:7e:8f and bob@corp.example and owner was here"
+def test_find_violations_flags_generic_packages_and_ips_and_macs(private_terms):
+    text = "io.sentry.android.core and 172.217.116.4 and mac 3a:4b:5c:6d:7e:8f and bob@corp.example and realowner was here"
     violations = anon.find_violations(text)
     rules = {rule for rule, _snippet in violations}
     assert "package" in rules
@@ -338,7 +344,13 @@ def test_find_violations_empty_for_clean_text():
     assert anon.find_violations(text) == []
 
 
-def test_find_violations_is_independent_of_anonymizer_tables():
-    text = "com.example.app should also be flagged by the broad checker"
+def test_find_violations_is_independent_of_anonymizer_tables(private_terms):
+    text = "com.privateco.thing should also be flagged by the broad checker"
     violations = anon.find_violations(text)
-    assert ("forbidden_substring", "example") in violations
+    assert ("forbidden_substring", "privateco") in violations
+
+
+def test_truncated_process_name_of_a_private_package_is_mapped(private_terms):
+    text = "10362 10362 I private.realapp: Explicit concurrent mark compact GC freed 1KB"
+    out = anon.anonymize_text(text, {}, {})
+    assert "private.realapp" not in out and "com.example.app:" in out
