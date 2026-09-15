@@ -427,3 +427,57 @@ def test_meminfo_java_heap_growth_writes_one_leak_record(monkeypatch, tmp_path):
     leak_lines = [o for o in written if o.get("type") == "leak"]
     assert len(leak_lines) == 1
     assert leak_lines[0]["metric"] == "java_heap_kb"
+
+
+# ------------------------------------------------------------------ Salud: crash/anr/procevent JSONL + summary
+
+def test_load_session_round_trip_with_crash_anr_and_procevent_lines(tmp_path):
+    from droid import salud
+
+    path = tmp_path / "session.jsonl"
+    crash = salud.CrashRecord(t="15:03:13.450", pid=10362, tid=10362, kind="java", exc_type="java.lang.RuntimeException",
+                               message="boom", frames=["com.example.app.Main.onCreate(Main.java:1)"],
+                               raw="FATAL EXCEPTION: main\nraw text", sig="abc123", obfuscated=False)
+    anr = salud.AnrRecord(t="2026-09-15 12:00:00", pid=1234, component="com.example.app/.MainActivity",
+                           reason="Input dispatching timed out", main_frames=["com.example.app.Main.onCreate"],
+                           raw="anr raw", sig="def456")
+    ev = salud.ProcEvent(t=1000.0, kind="died", pid=10362, process="com.example.app", reason_name="", detail="died")
+    lines = [
+        {"type": "meta", "device": {}, "package": "com.example.app", "interval": 1.0, "started": "2026-09-15T00:00:00"},
+        {"type": "crash", **crash.to_dict()},
+        {"type": "anr", **anr.to_dict()},
+        {"type": "procevent", **ev.to_dict()},
+        {"type": "end", "ended": "2026-09-15T00:00:02", "samples": 0},
+    ]
+    with open(path, "w", encoding="utf-8") as fh:
+        for obj in lines:
+            fh.write(json.dumps(obj) + "\n")
+    out = insp.load_session(path)
+    assert len(out["crashes"]) == 1
+    assert out["crashes"][0]["exc_type"] == "java.lang.RuntimeException"
+    assert len(out["anrs"]) == 1
+    assert out["anrs"][0]["component"] == "com.example.app/.MainActivity"
+    assert len(out["procevents"]) == 1
+    assert out["procevents"][0]["kind"] == "died"
+
+
+def test_summary_reports_crash_anr_counts_and_top_groups(monkeypatch, tmp_path):
+    from droid import salud
+
+    ses = _fake_session()
+    lines = ["--------- beginning of crash"] + [
+        "2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: FATAL EXCEPTION: main",
+        "2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: Process: com.example.app, PID: 10362",
+        "2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: java.lang.RuntimeException: boom",
+        "2026-09-15 15:03:13.450 10362 10362 E AndroidRuntime: \tat com.example.app.Main.onCreate(Main.java:1)",
+    ]
+    rec = salud.parse_crash_block(lines)
+    ses.crashes.append(rec)
+    ses._recompute_groups()
+
+    s = ses.summary()
+    assert s["crash_count"] == 1
+    assert s["anr_count"] == 0
+    assert len(s["groups"]) == 1
+    assert s["groups"][0]["count"] == 1
+    assert s["groups"][0]["kind"] == "java"

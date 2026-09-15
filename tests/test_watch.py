@@ -131,3 +131,75 @@ def test_set_pid_retargets(monkeypatch):
     assert watcher.pid is None
     watcher.set_pid(4242)
     assert watcher.pid == 4242
+
+
+def test_log_watcher_extra_tags_defaults_to_empty_set():
+    watcher = LogWatcher("EMU123", "emu123key", lambda ll, raw: None, pid=999)
+    assert watcher.extra_tags == set()
+    watcher2 = LogWatcher("EMU123", "emu123key", lambda ll, raw: None, pid=999, extra_tags=("ActivityManager",))
+    assert watcher2.extra_tags == {"ActivityManager"}
+
+
+# ------------------------------------------------------------------ Salud: sesión + crash/ANR/proc events
+
+def _harness_session(pid=10362, package="com.example.app"):
+    from types import SimpleNamespace
+
+    from droid.inspector import InspectSession
+
+    dev = SimpleNamespace(serial="EMU123", key="emu123key", name="Emu", to_dict=lambda: {})
+    ses = InspectSession(dev, package, interval=1.0, record=False)
+    ses.pid = pid
+    ses.debuggable = False
+    return ses
+
+
+def _feed_fixture(ses, fixture_name, extra_raw_lines=()):
+    import droid.logs as logsmod
+    from tests.helpers import fixture_text
+
+    for raw in fixture_text(fixture_name).splitlines():
+        ll = logsmod.parse(raw)
+        if ll is not None:
+            ses._on_log_line(ll, raw)
+    for raw in extra_raw_lines:
+        ll = logsmod.parse(raw)
+        if ll is not None:
+            ses._on_log_line(ll, raw)
+
+
+def test_session_handler_builds_one_crash_record_and_group_from_fixture():
+    ses = _harness_session()
+    other_tag_line = "2026-09-15 15:03:14.000 10362 10362 I OtherTag: something else"
+    _feed_fixture(ses, "logcat_crash", extra_raw_lines=[other_tag_line])
+    assert len(ses.crashes) == 1
+    assert ses.crashes[0].kind == "java"
+    assert "FATAL EXCEPTION" in ses.crashes[0].raw
+    assert len(ses.groups) == 1
+    assert ses.groups[0].count == 1
+
+
+def test_session_handler_am_died_line_yields_proc_event():
+    import droid.logs as logsmod
+
+    ses = _harness_session()
+    raw = "2026-09-15 15:03:14.000 900 900 I ActivityManager: Process com.example.app (pid 10362) has died"
+    ll = logsmod.parse(raw)
+    ses._on_log_line(ll, raw)
+    assert len(ses.proc_events) == 1
+    assert ses.proc_events[0].kind == "died"
+    assert ses.proc_events[0].pid == 10362
+
+
+def test_session_handler_does_not_raise_on_am_art_fixture_lines():
+    import droid.logs as logsmod
+    from tests.helpers import fixture_text
+
+    ses = _harness_session(pid=24357)
+    for raw in fixture_text("logcat_am_art").splitlines():
+        ll = logsmod.parse(raw)
+        if ll is not None:
+            ses._on_log_line(ll, raw)
+    # No debe lanzar y no debe generar registros espurios de crash/ANR.
+    assert ses.crashes == []
+    assert ses.anrs == []

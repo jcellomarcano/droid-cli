@@ -63,6 +63,7 @@ class InspectPane(Vertical):
         Binding("f", "focus_pkg", "App"),
         Binding("o", "view_overview", "Resumen"),
         Binding("u", "view_memoria", "Memoria"),
+        Binding("h", "view_salud", "Salud"),
     ]
 
     def __init__(self, **kw):
@@ -98,11 +99,13 @@ class InspectPane(Vertical):
                 yield Static("", id="i_hint", classes="hint")
             with TabPane("Memoria", id="i_view_memoria"):
                 yield MemoriaView(id="memoria_view")
+            with TabPane("Salud", id="i_view_salud"):
+                yield SaludView(id="salud_view")
 
     def on_mount(self) -> None:
         self.query_one("#i_threads", DataTable).add_columns("TID", "Hilo", "%CPU", "", "Estado")
         self.query_one("#i_exits", DataTable).add_columns("Fecha", "Razón", "PID", "Detalle")
-        self.query_one("#i_hint", Static).update("[dim]s: iniciar/parar · l: logs del hilo seleccionado · m: meminfo ahora · e: salidas · f: cambiar app · o: resumen · u: memoria · se guarda en ~/.droid/inspect[/]")
+        self.query_one("#i_hint", Static).update("[dim]s: iniciar/parar · l: logs del hilo seleccionado · m: meminfo ahora · e: salidas · f: cambiar app · o: resumen · u: memoria · h: salud · se guarda en ~/.droid/inspect[/]")
         self.set_interval(0.5, self._refresh)
 
     def action_view_overview(self) -> None:
@@ -112,6 +115,10 @@ class InspectPane(Vertical):
     def action_view_memoria(self) -> None:
         self.query_one("#i_switch", TabbedContent).active = "i_view_memoria"
         self.query_one("#me_breakdown", DataTable).focus()
+
+    def action_view_salud(self) -> None:
+        self.query_one("#i_switch", TabbedContent).active = "i_view_salud"
+        self.query_one("#sa_groups", DataTable).focus()
 
     # --- control ---
     def set_package(self, pkg: str) -> None:
@@ -160,6 +167,7 @@ class InspectPane(Vertical):
                                       on_status=lambda k, t: app.call_from_thread(app.notify, t, severity={"err": "error", "warn": "warning"}.get(k, "information"), timeout=3))
         self.session.start()
         self.query_one(MemoriaView).set_session(self.session)
+        self.query_one(SaludView).set_session(self.session)
         app.notify(f"Inspeccionando {pkg} en {dev.display}", timeout=2)
 
     def _stop(self) -> None:
@@ -168,6 +176,7 @@ class InspectPane(Vertical):
             s = self.session.summary()
             self.app.notify(f"Sesión guardada: {self.session.path.name if self.session.path else '-'} · CPU media {s.get('cpu_avg')}% · jank {s.get('jank_pct')}%", timeout=6)
             self.query_one(MemoriaView).set_session(self.session)
+            self.query_one(SaludView).set_session(self.session)
 
     def load_replay(self, path: Path) -> None:
         """Carga una sesion grabada (JSONL) y la deja disponible para Resumen y Memoria como una sesion de solo lectura."""
@@ -175,6 +184,7 @@ class InspectPane(Vertical):
 
         from .inspector import ExitRecord, MemInfo, Sample, load_session
         from .memoria import GcEvent, LeakFlag
+        from . import salud
 
         data = load_session(path)
         meta = data.get("meta") or {}
@@ -183,16 +193,23 @@ class InspectPane(Vertical):
         gc_events = [GcEvent(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("gc", [])]
         leak_flags = [LeakFlag(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("leak", [])]
         exits = [ExitRecord(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("exits", [])]
+        crashes = [salud.CrashRecord(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("crashes", [])]
+        anrs = [salud.AnrRecord(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("anrs", [])]
+        proc_events = [salud.ProcEvent(**{k: v for k, v in d.items() if k != "type"}) for d in data.get("procevents", [])]
+        exit_evs = [e for e in proc_events if e.kind == "exit"] or [salud.exit_to_event(r) for r in exits]
+        groups = salud.group_events(crashes, anrs, exit_evs)
         dev_dict = meta.get("device") or {}
         pid = samples[-1].pid if samples else None
         replay = SimpleNamespace(
             dev=SimpleNamespace(key=dev_dict.get("key", "?"), display=dev_dict.get("display", dev_dict.get("model", "?"))),
             package=meta.get("package", "?"), debuggable=None, path=path, interval=meta.get("interval", 1.0),
             samples=samples, meminfos=meminfos, exits=exits, gc_events=gc_events, leak_flags=leak_flags,
+            crashes=crashes, anrs=anrs, proc_events=proc_events, groups=groups,
             running=False, pid=pid, device_tz_offset=meta.get("device_tz_offset"),
         )
         self.session = replay
         self.query_one(MemoriaView).set_session(self.session)
+        self.query_one(SaludView).set_session(self.session)
 
     def action_meminfo(self) -> None:
         if self.session and self.session.running and self.session.pid:
@@ -399,6 +416,117 @@ class MemoriaView(Vertical):
             for ev in gc_events[-50:]:
                 hora = datetime.fromtimestamp(ev.t).strftime("%H:%M:%S")
                 gt.add_row(hora, ev.kind, theme.kb(ev.freed_kb), f"{ev.pause_ms:.1f} ms", theme.kb(ev.heap_used_kb))
+
+
+class SaludView(Vertical):
+    DEFAULT_CSS = """
+    SaludView { height: 1fr; }
+    SaludView #sa_head { height: auto; padding: 0 1; }
+    SaludView #sa_timeline { height: 3; margin: 0 1; }
+    SaludView #sa_groups { height: 12; }
+    SaludView #sa_detail { height: 1fr; }
+    SaludView .hint { color: $text-muted; height: 1; padding: 0 1; }
+    """
+    BINDINGS = [
+        Binding("l", "logs_pid", "Logs del pid"),
+        Binding("e", "refresh_exits", "Refrescar salidas"),
+    ]
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.session = None
+        self._groups_n = -1
+        self._selected_sig = None
+
+    def compose(self) -> ComposeResult:
+        yield Static("[dim]sin datos de salud…[/]", id="sa_head")
+        yield Sparkline([0.0], id="sa_timeline")
+        yield DataTable(id="sa_groups", cursor_type="row", zebra_stripes=True)
+        yield TextArea("", id="sa_detail", read_only=True)
+        yield Static("Enter: traza · l: logs del pid · e: refrescar salidas · o: resumen", id="sa_hint", classes="hint")
+
+    def on_mount(self) -> None:
+        self.query_one("#sa_groups", DataTable).add_columns("Tipo", "Firma", "Título", "Nº", "Última vez")
+        self.set_interval(0.5, self._refresh)
+
+    def set_session(self, session) -> None:
+        self.session = session
+        self._groups_n = -1
+        self._selected_sig = None
+
+    def _refresh(self) -> None:
+        ses = self.session
+        if ses is None:
+            return
+        crashes = list(getattr(ses, "crashes", None) or [])
+        anrs = list(getattr(ses, "anrs", None) or [])
+        proc_events = list(getattr(ses, "proc_events", None) or [])
+        groups = list(getattr(ses, "groups", None) or [])
+        deaths = sum(1 for e in proc_events if e.kind in ("died", "killed", "exit"))
+
+        head = self.query_one("#sa_head", Static)
+        n_crashes = len(crashes)
+        color = theme.hx(theme.ERR) if n_crashes > 0 else theme.hx(theme.MUTED)
+        head.update(f"[{color} bold]crashes {n_crashes}[/] · ANR {len(anrs)} · muertes {deaths} · grupos {len(groups)}")
+
+        spark = self.query_one("#sa_timeline", Sparkline)
+        buckets = [0.0] * 60
+        n_events = n_crashes + len(anrs) + deaths
+        if n_events:
+            for i in range(n_events):
+                idx = min(59, i * 60 // n_events)
+                buckets[idx] += 1
+        spark.data = buckets if any(buckets) else [0.0]
+
+        t = self.query_one("#sa_groups", DataTable)
+        if self._groups_n != len(groups):
+            self._groups_n = len(groups)
+            t.clear()
+            colors = {"java": theme.ERR, "native": theme.ERR, "anr": theme.WARN, "exit": theme.MUTED}
+            for g in groups[:50]:
+                color = colors.get(g.kind, theme.MUTED)
+                title = (g.title or "")[:60]
+                t.add_row(T(g.kind, color, bold=True), g.sig, title, str(g.count), str(g.last_t), key=g.sig)
+            if groups and self._selected_sig is None:
+                self._show_detail(groups[0].sig)
+
+    @on(DataTable.RowHighlighted, "#sa_groups")
+    def _row_highlighted(self, ev: DataTable.RowHighlighted) -> None:
+        if ev.row_key is not None:
+            self._show_detail(ev.row_key.value)
+
+    @on(DataTable.RowSelected, "#sa_groups")
+    def _row_selected(self, ev: DataTable.RowSelected) -> None:
+        if ev.row_key is not None:
+            self._show_detail(ev.row_key.value)
+
+    def _show_detail(self, sig) -> None:
+        self._selected_sig = sig
+        ses = self.session
+        groups = list(getattr(ses, "groups", None) or []) if ses else []
+        g = next((g for g in groups if g.sig == sig), None)
+        ta = self.query_one("#sa_detail", TextArea)
+        ta.text = g.sample_raw if g else ""
+
+    def action_logs_pid(self) -> None:
+        ses = self.session
+        if not ses:
+            return
+        groups = list(getattr(ses, "groups", None) or [])
+        g = next((g for g in groups if g.sig == self._selected_sig), None)
+        if not g or not g.pids:
+            return
+        exc = (g.title or "").split(":")[0].split(" in ")[0].strip()
+        self.app.open_logs_for(pids=[g.pids[-1]])
+        try:
+            self.app.query_one("#f_grep", Input).value = exc
+        except Exception:
+            pass
+
+    def action_refresh_exits(self) -> None:
+        ses = self.session
+        if ses is not None and hasattr(ses, "refresh_exits"):
+            self.run_worker(ses.refresh_exits, thread=True)
 
 
 # ============================================================================ Base de datos

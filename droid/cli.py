@@ -851,12 +851,50 @@ def _replay_chart(data):
     t = Text("CPU "); t.append_text(theme.spark_labeled(cpu, width, lo=0, unit="%")); lines.append(t)
     t = Text("RSS "); t.append_text(theme.spark_labeled(rss_mb, width, fmt=lambda v: f"{v:.0f}", unit=" MB")); lines.append(t)
     t = Text("FPS "); t.append_text(theme.spark_labeled(fps, width, lo=0, unit=" fps")); lines.append(t)
+    crash_list = data.get("crashes", [])
+    anr_list = data.get("anrs", [])
     events = _exit_events(exits, meta.get("device_tz_offset"))
     gc_list = data.get("gc", [])
     events_all = events + [(g["t"], "gc") for g in gc_list]
+    tzinfo = _device_tzinfo(meta.get("device_tz_offset"))
+
+    def _wallclock_to_epoch(t_str):
+        if not isinstance(t_str, str) or ":" not in t_str:
+            return None
+        try:
+            base = datetime.fromtimestamp(t_start, tz=tzinfo) if tzinfo else datetime.fromtimestamp(t_start)
+            hh, mm, rest = t_str.split(":")
+            ss, _, ms = rest.partition(".")
+            dt = base.replace(hour=int(hh), minute=int(mm), second=int(ss),
+                               microsecond=int((ms or "0").ljust(6, "0")[:6]))
+            return dt.timestamp()
+        except Exception:
+            return None
+
+    for c in crash_list:
+        ep = _wallclock_to_epoch(c.get("t"))
+        if ep is not None:
+            events_all.append((ep, "crash"))
+    for a in anr_list:
+        ep = _wallclock_to_epoch(a.get("t"))
+        if ep is not None:
+            events_all.append((ep, "anr"))
     lines.append(theme.timeline_strip(events_all, t_start, t_end, width))
     if events_all:
         lines.append(Text(_TIMELINE_LEGEND, style=theme.hx(theme.MUTED)))
+    from . import salud as saludmod
+    groups = saludmod.group_events(
+        [saludmod.CrashRecord(**{k: v for k, v in c.items() if k != "type"}) for c in crash_list],
+        [saludmod.AnrRecord(**{k: v for k, v in a.items() if k != "type"}) for a in anr_list],
+        [],
+    )
+    if groups:
+        gt = Table(box=box.SIMPLE_HEAD, title="Salud", title_justify="left")
+        gt.add_column("Tipo"); gt.add_column("Nº", justify="right"); gt.add_column("Título")
+        for g in groups[:5]:
+            color = theme.WARN if g.kind == "anr" else theme.ERR
+            gt.add_row(theme.paint(g.kind, color, bold=True), str(g.count), escape((g.title or "")[:60]))
+        lines.append(gt)
     if gc_list:
         total_pause = sum(g.get("pause_ms", 0.0) for g in gc_list)
         lines.append(Text(f"GC: {len(gc_list)} colecciones · pausa total {total_pause:.0f} ms", style=theme.hx(theme.MUTED)))
@@ -1035,6 +1073,16 @@ def cmd_inspect(args) -> int:
             leak_n = len(data.get("leak", []))
             pause_total = sum(g.get("pause_ms", 0.0) for g in data.get("gc", []))
             ui.console.print(f"[dim]GC: {gc_n} colecciones · pausa total {pause_total:.0f} ms · fugas posibles: {leak_n}[/]")
+        crash_n = len(data.get("crashes", []))
+        anr_n = len(data.get("anrs", []))
+        if crash_n or anr_n:
+            from . import salud as saludmod
+            groups = saludmod.group_events(
+                [saludmod.CrashRecord(**{k: v for k, v in c.items() if k != "type"}) for c in data.get("crashes", [])],
+                [saludmod.AnrRecord(**{k: v for k, v in a.items() if k != "type"}) for a in data.get("anrs", [])],
+                [],
+            )
+            ui.console.print(f"[dim]crashes {crash_n} · ANR {anr_n} · grupos {len(groups)}[/]")
         return 0
     devices = adbmod.list_devices()
     dev = ui.select_device(devices, args.device, prompt="¿Qué dispositivo inspeccionar?")

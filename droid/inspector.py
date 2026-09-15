@@ -11,13 +11,16 @@ from collections import deque
 from dataclasses import asdict, dataclass, field, fields as dc_fields
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Deque, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Callable, Deque, Dict, List, Optional, Tuple
 
 from . import adb as adbmod
 from . import config
 from . import memoria
 from .adb import Device, sanitize
 from .watch import LogWatcher
+
+if TYPE_CHECKING:
+    from . import salud
 
 INSPECT_DIR = config.DROID_HOME / "inspect"
 SIXTY_HZ_FRAME_DEADLINE_MS = 16.67
@@ -437,6 +440,13 @@ class InspectSession:
         self._exits_written: set = set()
         self.gc_events: Deque[memoria.GcEvent] = deque(maxlen=500)
         self.leak_flags: List[memoria.LeakFlag] = []
+        self.crashes: List["salud.CrashRecord"] = []
+        self.anrs: List["salud.AnrRecord"] = []
+        self.proc_events: Deque["salud.ProcEvent"] = deque(maxlen=500)
+        self.groups: List["salud.CrashGroup"] = []
+        self._crash_lines: List[str] = []
+        self._crash_last_t: float = 0.0
+        self._anr_buf: List[str] = []
         self._watcher: Optional[LogWatcher] = None
         self.pid: Optional[int] = None
         self.debuggable = False
@@ -597,17 +607,91 @@ class InspectSession:
 
     def _ensure_watcher(self) -> None:
         if self._watcher is None:
-            self._watcher = LogWatcher(self.dev.serial, self.dev.key, self._on_log_line, pid=self.pid)
+            self._watcher = LogWatcher(self.dev.serial, self.dev.key, self._on_log_line, pid=self.pid,
+                                        buffers=("main", "crash"), extra_tags=("ActivityManager",))
             self._watcher.start()
         else:
             self._watcher.set_pid(self.pid)
 
     def _on_log_line(self, ll, raw: str) -> None:
+        now = time.time()
+        if self._crash_lines and (ll.tag != "AndroidRuntime" or now - self._crash_last_t > 1.0):
+            self._flush_crash_buf()
+        if ll.tag == "AndroidRuntime" and ll.level == "E" and ll.pid == self.pid:
+            self._crash_lines.append(raw)
+            self._crash_last_t = now
+            return
+        if ll.tag == "ActivityManager":
+            self._handle_am_line(ll, raw)
+            return
         ev = memoria.parse_gc_line(raw)
         if ev is None:
             return
         self.gc_events.append(ev)
         self._write({"type": "gc", **ev.to_dict()})
+
+    def _flush_crash_buf(self) -> None:
+        from . import salud
+        lines = self._crash_lines
+        self._crash_lines = []
+        if not lines:
+            return
+        rec = salud.parse_crash_block(lines)
+        if rec is not None:
+            self.crashes.append(rec)
+            self._write({"type": "crash", **rec.to_dict()})
+            self._recompute_groups()
+
+    def _handle_am_line(self, ll, raw: str) -> None:
+        from . import salud
+        msg = ll.msg
+        anr_m = salud.ANR_IN_RE.match(msg)
+        if anr_m and anr_m.group(1).startswith(self.package):
+            self._anr_buf = [raw]
+            return
+        if self._anr_buf:
+            self._anr_buf.append(raw)
+            if salud.ANR_REASON_RE.match(msg):
+                self._flush_anr_buf()
+            elif len(self._anr_buf) > 20:
+                self._anr_buf = []
+            return
+        ev = salud.parse_am_line(raw)
+        if ev is None or not ev.process.startswith(self.package):
+            return
+        self.proc_events.append(ev)
+        self._write({"type": "procevent", **ev.to_dict()})
+        if ev.kind in ("died", "killed"):
+            self.on_status("warn", f"{self.package} {ev.kind} (pid {ev.pid})")
+
+    def _flush_anr_buf(self) -> None:
+        from . import salud
+        lines = self._anr_buf
+        self._anr_buf = []
+        parsed = salud.parse_anr_logcat(lines)
+        if parsed is None:
+            return
+        component, reason = parsed
+        rec = None
+        if self.debuggable:
+            try:
+                text = adbmod.shell(self.dev.serial, f"run-as {self.package} cat /data/anr/traces.txt", timeout=10)
+                rec = salud.parse_anr_trace(text, self.package, component, reason)
+            except Exception:
+                rec = None
+        if rec is None:
+            reason_category = reason.split("(")[0].strip()
+            rec = salud.AnrRecord(t=lines[0][:23] if lines else "", pid=self.pid or 0, component=component,
+                                   reason=reason, main_frames=[], raw="\n".join(lines),
+                                   sig=salud.signature_for("anr", reason_category, [component]))
+        self.anrs.append(rec)
+        self._write({"type": "anr", **rec.to_dict()})
+        self._recompute_groups()
+
+    def _recompute_groups(self) -> None:
+        from . import salud
+        exit_evs = [e for e in self.proc_events if e.kind == "exit"]
+        self.groups = salud.group_events(self.crashes, self.anrs, exit_evs)
 
     def _check_leaks(self) -> None:
         flags = memoria.LeakDetector().detect_all(list(self.meminfos), list(self.gc_events))
@@ -628,6 +712,7 @@ class InspectSession:
         self._check_leaks()
 
     def refresh_exits(self) -> None:
+        from . import salud
         try:
             text = adbmod.shell(self.dev.serial, f"dumpsys activity exit-info {self.package}", timeout=15)
             records = parse_exit_info(text)
@@ -640,6 +725,10 @@ class InspectSession:
                 continue
             self._exits_written.add(key)
             self._write({"type": "exit", **asdict(r)})
+            ev = salud.exit_to_event(r)
+            self.proc_events.append(ev)
+            self._write({"type": "procevent", **ev.to_dict()})
+        self._recompute_groups()
 
     # --- resumen ---
     def summary(self) -> dict:
@@ -647,6 +736,9 @@ class InspectSession:
             "gc_count": len(self.gc_events),
             "gc_pause_ms_total": round(sum(g.pause_ms for g in self.gc_events), 1),
             "leak_metrics": [f.metric for f in self.leak_flags],
+            "crash_count": len(self.crashes),
+            "anr_count": len(self.anrs),
+            "groups": [g.to_dict() for g in self.groups[:5]],
         }
         alive = [s for s in self.samples if s.alive and s.interval > 0]
         if not alive:
@@ -685,7 +777,8 @@ class InspectSession:
 
 def load_session(path: Path) -> dict:
     """Lee un JSONL grabado: {'meta':…, 'samples':[…], 'meminfo':[…]}"""
-    out = {"meta": None, "samples": [], "meminfo": [], "exits": [], "gc": [], "leak": [], "end": None}
+    out = {"meta": None, "samples": [], "meminfo": [], "exits": [], "gc": [], "leak": [],
+           "crashes": [], "anrs": [], "procevents": [], "end": None}
     with open(path, "r", encoding="utf-8") as fh:
         for line in fh:
             try:
@@ -705,6 +798,12 @@ def load_session(path: Path) -> dict:
                 out["gc"].append(o)
             elif t == "leak":
                 out["leak"].append(o)
+            elif t == "crash":
+                out["crashes"].append(o)
+            elif t == "anr":
+                out["anrs"].append(o)
+            elif t == "procevent":
+                out["procevents"].append(o)
             elif t == "end":
                 out["end"] = o
     return out
