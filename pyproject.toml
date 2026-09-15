@@ -9,8 +9,17 @@ description = "CLI para gestionar dispositivos ADB (USB/WiFi), logs con color y 
 requires-python = ">=3.9"
 dependencies = ["rich>=13.7", "textual>=0.80", "textual-autocomplete>=4.0"]
 
+[project.optional-dependencies]
+test = ["pytest>=8", "pytest-asyncio>=0.23"]
+
 [project.scripts]
 droid = "droid.cli:main"
 
 [tool.setuptools]
 packages = ["droid"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = ["allow_adb: el test lanza un adb (falso, en tmp_path) como subproceso; sin el marcador cualquier adb se bloquea"]
